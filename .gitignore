@@ -1,0 +1,13 @@
+build
+devel
+logs
+install
+
+*.pyc
+.ipynb_checkpoints
+
+*~
+*.swp
+
+CATKIN_IGNORE
+*.bag
