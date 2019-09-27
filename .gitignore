@@ -7,6 +7,7 @@ install
 .ipynb_checkpoints
 
 *~
+*.asv
 *.swp
 
 CATKIN_IGNORE
