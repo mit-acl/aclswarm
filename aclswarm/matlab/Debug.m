@@ -58,3 +58,15 @@ end
 hold off
 axis equal
 
+
+
+%%
+
+
+I = eye(2*n);
+Z = zeros(2*n);
+
+Ab = [Z, I;
+      A, -I];
+
+eig(Ab)

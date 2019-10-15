@@ -24,13 +24,13 @@ addpath('Hungarian');
 %% Simulation parameters for triangle formation
 
 % Desired formation as regular N-gon
-n = 6;
-qAng = linspace(0,360,n+1);      % Desired locations of agents on the unit circle given in angle
-qAng(end) = [];
-qs = [cosd(qAng); sind(qAng)] * 3; % Desired locations in x-y coordinates
+n = 10;
+% qAng = linspace(0,360,n+1);      % Desired locations of agents on the unit circle given in angle
+% qAng(end) = [];
+% qs = [cosd(qAng); sind(qAng)] * 3; % Desired locations in x-y coordinates
 
-% % Line formation
-% qs = [(1:n); zeros(1,n)];
+% Line formation
+qs = [(1:n); zeros(1,n)];
 
 n = size(qs,2);       % Number of agents
 
@@ -53,17 +53,17 @@ adj = ones(n) - diag(ones(n,1));  % Complete graph
      
 %% Parameters
 
-Tassign     = 1e-0;              % Reassignment period
+Tassign     = 5e-0;              % Reassignment period
 runAssign   = true;              % Boolean to run assignment
-method      = 'cbaa';            % CBAA assignment
-% method      = 'hungarian';       % Hungarian assignment
+% method      = 'cbaa';            % CBAA assignment
+method      = 'hungarian';       % Hungarian assignment
 runColAvoid = false;             % Boolean to run collision avoidance
 
-T           = [0, 20];           % Simulation time interval 
+T           = [0, 70];           % Simulation time interval 
 numT        = 1000;              % Number of time samples in the simulation
 vSat        = 3;                 % Max speed
-dcoll       = 2;                 % Collision avoidance distance
-rcoll       = 1;                 % Collision avoidance circle radius
+dcoll       = 2;                 % Collision avaoidance distance
+rcoll       = 1;                 % Collision avaoidance circle radius
 
 
 
@@ -95,7 +95,7 @@ A = FindGains(qs(:), adj);
 Tvec = linspace(T(1), T(2), numT);
 
 % Initial state
-state0 = q0(:);                % Initial condition
+state0 = [q0(:); zeros(2*n,1)];                % Initial condition
 
 
 % Parameters passed down to the ODE solver
@@ -114,10 +114,10 @@ par.runColAvoid = runColAvoid;  % Boolean to run collision avoidance
 
 
 % Simulate the dynamic system
-opt = odeset('AbsTol', 1.0e-6, 'RelTol', 1.0e-6);
+opt = odeset('AbsTol', 1.0e-4, 'RelTol', 1.0e-4);
 
-clear sys
-[t,stateMat] = ode45(@Sys, Tvec, state0, opt, par);
+clear SysDynam
+[t,stateMat] = ode45(@SysDynam, Tvec, state0, opt, par);
 
 
 
