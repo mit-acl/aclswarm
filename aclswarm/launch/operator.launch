@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Used by the swarm operator to dispatch formation shapes -->
+<launch>
+    <arg name="dev" default="js0"/>
+    <arg name="room" default="vicon"/>
+    <arg name="leader" default=""/>
+
+    <!-- Load vehicles and room bounds -->
+    <rosparam file="$(find aclswarm)/param/vehicles.yaml" command="load"/>
+    <rosparam ns="room_bounds" file="$(find acl_demos)/room_cfg/$(arg room).yaml" command="load"/>
+
+    <!-- Start operator script -->
+    <node name="operator" pkg="aclswarm" type="operator.py" output="screen">
+        <rosparam file="$(find aclswarm)/param/formations.yaml" command="load"/>
+    </node>
+
+    <!-- Start GUI -->
+    <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui" args="--perspective-file $(find aclswarm)/cfg/controls.perspective"/>
+
+    <!-- Start the joy node if a leader is specified -->
+    <group if="$(eval leader != '')">
+        <node ns="$(arg leader)" pkg="joy" type="joy_node" name="joystick" >
+            <param name="dev" type="string" value="/dev/input/$(arg dev)" />
+            <param name="deadzone" value="0.18" />
+            <param name="autorepeat_rate" value="100" />
+        </node>
+    </group>
+</launch>

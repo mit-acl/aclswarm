@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="veh" />
+
+  <group ns="$(arg veh)">
+
+    <!-- safety state machine -->
+    <node name="safety" pkg="aclswarm" type="safety" output="screen">
+      <param name="takeoff_inc" value="0.0035" />
+      <param name="takeoff_alt" value="1.0" />
+      <param name="takeoff_rel" value="false" />
+      <param name="landing_fast_threshold" value="0.4" />
+      <param name="landing_fast_dec" value="0.0035" />
+      <param name="landing_slow_dec" value="0.001" />
+    </node>
+
+  </group>
+
+</launch>
