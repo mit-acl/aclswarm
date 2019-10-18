@@ -20,6 +20,9 @@ namespace aclswarm {
     DistCntrl();
     ~DistCntrl() = default;
     
+    void set_formation(/*permuted A, permuted d*, name*/);
+
+    void compute(/*my pos, nbhr pos, my vel*/);
   };
 
 } // ns aclswarm

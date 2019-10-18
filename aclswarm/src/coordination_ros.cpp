@@ -41,14 +41,15 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   // Prevent timer tasks from blocking each other
   constexpr int NUM_TASKS = 2; // there are only two timers
-  spinner_ = std::make_unique<ros::AsyncSpinner>(NUM_TASKS, &task_queue_);
+  spinner_ = std::unique_ptr<ros::AsyncSpinner>(
+                            new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
 
   //
   // Instantiate module objects for tasks
   //
 
-  controller_ = std::make_unique<DistCntrl>();
-  assignment_ = std::make_unique<Assignment>();
+  controller_ = std::unique_ptr<DistCntrl>(new DistCntrl());
+  assignment_ = std::unique_ptr<Assignment>(new Assignment());
 
   //
   // ROS pub/sub communication
@@ -108,7 +109,7 @@ void CoordinationROS::assignCb(const ros::TimerEvent& event)
 
 void CoordinationROS::controlCb(const ros::TimerEvent& event)
 {
-  
+  controller_->compute();
 }
 
 } // ms aclswarm

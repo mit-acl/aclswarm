@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(aclswarm)
 
+## Compile as C++11, supported in ROS Indigo and newer
+set(CMAKE_CXX_STANDARD 11)
+add_definitions(-std=c++11) # snapdragon wants it like this :(
+if (NOT CMAKE_BUILD_TYPE)
+    # Options: Debug, Release, MinSizeRel, RelWithDebInfo
+    message(STATUS "No build type selected, default to Release")
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
