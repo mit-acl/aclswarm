@@ -39,9 +39,10 @@ namespace aclswarm {
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 
+    /// \brief Internal state
     enum class Mode { NOT_FLYING, TAKEOFF, FLYING, LANDING };
     Mode mode_ = Mode::NOT_FLYING; ///< current mode derived from global flight mode
-
+    
     geometry_msgs::PoseStamped pose_; ///< current pose of the vehicle
 
     /// \brief Parameters
