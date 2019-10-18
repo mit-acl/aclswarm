@@ -2,7 +2,7 @@
  * @file coordination_ros.h
  * @brief ROS wrapper for coordination components of aclswarm
  * @author Parker Lusk <parkerclusk@gmail.com>
- * @date 15 October 2019
+ * @date 15 Oct 2019
  */
 
 #pragma once

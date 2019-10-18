@@ -144,6 +144,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_executable(safety_node src/safety_node.cpp src/safety.cpp)
 add_executable(coordination_node src/coordination_node.cpp src/coordination_ros.cpp
                                   src/distcntrl.cpp src/assignment.cpp)
+add_executable(localization_node src/localization_node.cpp src/localization_ros.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -151,15 +152,18 @@ add_executable(coordination_node src/coordination_node.cpp src/coordination_ros.
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(safety_node PROPERTIES OUTPUT_NAME safety PREFIX "")
 set_target_properties(coordination_node PROPERTIES OUTPUT_NAME coordination PREFIX "")
+set_target_properties(localization_node PROPERTIES OUTPUT_NAME localization PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(safety_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(coordination_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(localization_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(safety_node ${catkin_LIBRARIES})
 target_link_libraries(coordination_node ${catkin_LIBRARIES})
+target_link_libraries(localization_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##
