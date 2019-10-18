@@ -44,6 +44,13 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   spinner_ = std::make_unique<ros::AsyncSpinner>(NUM_TASKS, &task_queue_);
 
   //
+  // Instantiate module objects for tasks
+  //
+
+  controller_ = std::make_unique<DistCntrl>();
+  assignment_ = std::make_unique<Assignment>();
+
+  //
   // ROS pub/sub communication
   //
 

@@ -17,6 +17,9 @@
 
 #include <aclswarm_msgs/Formation.h>
 
+#include "aclswarm/distcntrl.h"
+#include "aclswarm/assignment.h"
+
 namespace acl {
 namespace aclswarm {
 
@@ -37,6 +40,10 @@ namespace aclswarm {
 
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
+
+    /// \brief Modules
+    std::unique_ptr<DistCntrl> controller_; ///< module for control task
+    std::unique_ptr<Assignment> assignment_; ///< module for assignment task
     
     /// \brief Internal state
     bool formation_received_ = false; ///< should a new gain matrix be used?
