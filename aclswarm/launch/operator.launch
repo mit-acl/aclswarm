@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Used by the swarm operator to dispatch formation shapes -->
 <launch>
-    <arg name="dev" default="js0"/>
+    <arg name="formations" />
     <arg name="room" default="vicon"/>
     <arg name="leader" default=""/>
+    <arg name="dev" default="js0"/>
 
     <!-- Load vehicles and room bounds -->
     <rosparam file="$(find aclswarm)/param/vehicles.yaml" command="load"/>
@@ -11,6 +12,7 @@
 
     <!-- Start operator script -->
     <node name="operator" pkg="aclswarm" type="operator.py" output="screen">
+        <param name="formation_group" value="$(arg formations)" />
         <rosparam file="$(find aclswarm)/param/formations.yaml" command="load"/>
     </node>
 

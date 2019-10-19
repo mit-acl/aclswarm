@@ -13,6 +13,10 @@
 
 #include <ros/ros.h>
 
+#include <std_msgs/UInt8MultiArray.h>
+#include <acl_msgs/State.h>
+#include <aclswarm_msgs/Formation.h>
+
 namespace acl {
 namespace aclswarm {
 
@@ -24,9 +28,19 @@ namespace aclswarm {
 
   private:
     ros::NodeHandle nh_, nhp_;
+    ros::Timer tim_tracking_;
+    ros::Subscriber sub_formation_, sub_assignment_, sub_state_;
 
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
+
+    /// \brief Parameters
+    double tracking_dt_; ///< period of mutual localization task
+
+    /// \brief ROS callback handlers
+    void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
+    void assignmentCb(const std_msgs::Uint8MultiArray& msg);
+    void stateCb(const acl_msgs::StateConstPtr& msg);
 
   };
 

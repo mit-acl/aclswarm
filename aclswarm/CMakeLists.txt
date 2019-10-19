@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     tf2
     tf2_geometry_msgs
+    eigen_conversions
     std_msgs
     geometry_msgs
     acl_msgs

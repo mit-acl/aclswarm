@@ -17,6 +17,7 @@
   <depend>message_runtime</depend>
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
+  <depend>eigen_conversions</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>acl_msgs</depend>
