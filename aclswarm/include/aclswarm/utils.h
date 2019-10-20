@@ -7,13 +7,20 @@
 
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
 #include <ros/ros.h>
 
+#include <std_msgs/UInt8MultiArray.h>
+
 namespace acl {
 namespace aclswarm {
+
+using AdjMat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>;
+using Assignment = std::vector<uint8_t>;
+
 namespace utils {
 
 /**
@@ -46,6 +53,80 @@ static bool loadVehicleInfo(std::string& name, std::vector<std::string>& vehicle
   }
 
   return true;
+}
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Converts adjmat msg to Eigen
+ *
+ * @param[in]  msg   The adjmat multiarray
+ *
+ * @return     The eigen matrix
+ */
+static AdjMat decodeAdjMat(const std_msgs::UInt8MultiArrayConstPtr& msg)
+{
+  const int rows = msg->layout.dim[0].size;
+  const int cols = msg->layout.dim[1].size;
+
+  Eigen::Map<AdjMat> A(msg->data.data(), rows, cols);
+
+  // Eigen::MatrixXi A = Eigen::MatrixXi::Zero(rows, cols);
+
+  // for (size_t i=0; i<rows; ++i) {
+  //   for (size_t j=0; j<cols; ++j) {
+  //     A(i, j) = msg->data[msg->layout.data_offset + msg->layout.dim[1].stride * i + j];
+  //   }
+  // }
+
+  return A;
+}
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Given an arbitrary numeric vector, return the indices
+ *             that would sort the original vector---the sort indices.
+ *             In other words, the sort indices describe where each
+ *             element of sort(v) originally was in v.
+ *
+ *                        (idx  0   1  2  3)
+ *             v            = [36, 12, 3, 9]
+ *             sort(v)      = [3, 9, 12, 36]
+ *             ---
+ *             sort indices = [2, 3, 1, 0]
+ *
+ * @param[in]  v
+ *
+ * @return     The sort indices that would sort the original vector
+ */
+template<typename T>
+static std::vector<T> sortIndices(const std::vector<T>& v)
+{
+  // initialize original index locations
+  std::vector<size_t> idx(v.size());
+  std::iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  std::sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Invert the given assignment mapping
+ *
+ * @param[in]  a  The current assignment
+ *
+ * @return     The inverse assignment
+ */
+static Assignment invertAssignment(const Assignment& a)
+{
+  // The sort indices of the assignment describe the inverse assignment.
+  return sortIndices(a);
 }
 
 // ----------------------------------------------------------------------------

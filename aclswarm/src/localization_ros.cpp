@@ -45,6 +45,9 @@ LocalizationROS::LocalizationROS(const ros::NodeHandle nh,
                                         &LocalizationROS::assignmentCb, this);
   sub_state_ = nh_.subscribe("state", 1, &LocalizationROS::stateCb, this);
 
+  pub_tracker_ = nh_.advertise<aclswarm_msgs::VehicleEstimates>(
+                                                      "vehicle_estimates", 1);
+
 }
 
 // ----------------------------------------------------------------------------
@@ -53,15 +56,30 @@ LocalizationROS::LocalizationROS(const ros::NodeHandle nh,
 
 void LocalizationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
-  // recv adjacency matrix encoding formation
-  formation_received_ = true;
+  // keep track of the current formation graph
+  adjmat_ = utils::decodeAdjMat(msg->adjmat);
+  n_ = adjmat_.rows();
+
+  // set the default assignment map to identity. Spoof via assignment msg
+  std_msgs::Uint8MultiArray sigma;
+  sigma.data.resize(n_); std::iota(sigma.data.begin(), sigma.data.end(), 0);
+  sigma.layout.dim.push_back(std_msgs::MultiArrayDimension());
+  sigma.layout.dim[0].label = "assignment";
+  sigma.layout.dim[0].size = sigma.data.size();
+  sigma.layout.dim[0].stride = 1;
+  assignmentCb(&sigma);
 }
 
 // ----------------------------------------------------------------------------
 
-void LocalizationROS::assignmentCb(const std_msgs::Uint8MultiArray& msg)
+void LocalizationROS::assignmentCb(const std_msgs::Uint8MultiArrayConstPtr& msg)
 {
-  // set assignment to something other than identity
+  // update our bijective assignment map
+  assignment_ = msg->data;
+  invassignment_ = utils::invertAssignment(assignment_);
+
+  // update subscribers so that we are connected to our neighboring vehicles  
+  connectToNeighbors();
 }
 
 // ----------------------------------------------------------------------------
@@ -73,23 +91,76 @@ void LocalizationROS::stateCb(const acl_msgs::StateConstPtr& msg)
   Eigen::Vector3d position;
   tf::vectorMsgToEigen(msg->pos, position);
 
-  // add this vehicle's state to the list of vehicle estimates
-  tracker_->updateVehicle(vehid_, stamp_ns, position);
+  // update this vehicle's position information
+  tracker_->updateVehicle(vehid_, vehid_, stamp_ns, position);
+}
+
+// ----------------------------------------------------------------------------
+
+void LocalizationROS::vehicleTrackerCb(
+                          const aclswarm_msgs::VehicleEstimatesConstPtr& msg,
+                          const std::string& vehname, int vehid)
+{
+  for (size_t i=0; i<msg->positions.size(); ++i) {
+    // copy data to usable form
+    uint64_t stamp_ns = pos.header.stamp.toNSec();
+    Eigen::Vector3d position;
+    tf::pointMsgToEigen(pose.point, position);
+
+    // update this vehicle's position information based on what vehid knows 
+    tracker_->updateVehicle(vehid, i, stamp_ns, position);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+void LocalizationROS::trackingCb(const ros::TimerEvent& event)
+{
+  aclswarm_msgs::VehicleEstimates msg;
+  msg.header.stamp = ros::Time::now();
+  msg.positions.reserve(n_);
+
+  for (size_t i=0; i<n_; ++i) {
+    Eigen::Vector3d p = tracker_->getVehiclePosition(i);
+    msg.positions.push_back(geometry_mgs::Point());
+    tf::eigenToPointMsg(p, msg.positions.back());
+  }
+
+  pub_tracker_.publish(msg);
 }
 
 // ----------------------------------------------------------------------------
 
 void LocalizationROS::connectToNeighbors()
 {
+  // which formation point and I currently assigned to? Lookup my row in adjmat
+  const auto& myrow = adjmat_.row(assignment_[vehid_]);
 
-  // I can find out which vehicles I need to talk to, given:
-  //  1) who am I (I am UAV i <-- vehicle id)
-  //  2) what is the current formation (encoded in the adjacency matrix)
-  //  3) what is the current assignment (the sigma / permutation mapping)
+  // loop through the other formation points in graph
+  for (size_t j=0; j<n_; ++j) {
+    // is there an edge between my formation point and this other one?
+    auto e = myrow(j);
 
+    // which vehicle is at this formation point?
+    auto nbhrid = invassignment_[j];
+
+    // if there is an edge btwn me and this other formation point, connect.
+    if (e) {
+      std::string ns = vehs_[nbhrid];
+
+      // create a closure to pass additional arguments to callback
+      boost::function<void(const geometry_mgs::PoseArrayConstPtr&)> cb =
+        [=](const sensor_msgs::PointCloud2ConstPtr& msg) {
+          vehicleTrackerCb(msg, ns, nbhrid);
+        };
+
+      vehsubs_[nbhrid] = nh_.subscribe("/" + ns + "/vehicle_estimates", 1, cb);
+    } else {
+      // if a subscriber exists, break communication
+      if (vehsubs_.find(nbhrid) != vehsubs_.end()) vehsubs_[nbhrid].shutdown();
+    }
+  }
 }
-
-// ----------------------------------------------------------------------------
 
 } // ms aclswarm
 } // ns acl

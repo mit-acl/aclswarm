@@ -27,6 +27,7 @@ class Operator:
         rospy.loginfo('Using vehicles: {}'.format(self.vehs))
 
         # Load desired formations
+        self.send_gains = rospy.get_param('~send_gains', False)
         formation_group = rospy.get_param('~formation_group')
         self.formations = rospy.get_param('~{}'.format(formation_group))
         if 'adjmat' not in self.formations: # make fc if not specified
@@ -127,18 +128,18 @@ class Operator:
         msg.adjmat.layout.dim[1].stride = adjmat.shape[1]
 
         # pre-calculated gains may have been provided, but not required
-        if 'gains' in formation:
+        if 'gains' in formation and self.send_gains:
             gains = np.array(formation['gains'], dtype=np.float32)
             msg.gains = UInt8MultiArray()
             msg.gains.data = gains.flatten().tolist()
             msg.gains.layout.dim.append(MultiArrayDimension())
             msg.gains.layout.dim.append(MultiArrayDimension())
             msg.gains.layout.dim[0].label = "rows"
-            msg.gains.layout.dim[0].size = self.n
-            msg.gains.layout.dim[0].stride = self.n*self.n
+            msg.gains.layout.dim[0].size = gains.shape[0]
+            msg.gains.layout.dim[0].stride = gains.size
             msg.gains.layout.dim[1].label = "cols"
-            msg.gains.layout.dim[1].size = self.n
-            msg.gains.layout.dim[1].stride = self.n
+            msg.gains.layout.dim[1].size = gains.shape[1]
+            msg.gains.layout.dim[1].stride = gains.shape[1]
 
         return msg
 

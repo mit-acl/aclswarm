@@ -3,7 +3,7 @@
 # groups together formations for a specific number of agents. Each formation
 # in a group is specified with a formation name and the associated 3D points.
 # The 3D points are in an nx3 matrix, where n is number of agents.
-# Optionally, the pre-computed 'gains' can be specified (for debugging).
+# Optionally, the pre-computed 3nx3n 'gains' can be specified (for debugging).
 # If the 'adjmat' key is omitted, the formation is assumed fully connected.
 
 swarm4:
