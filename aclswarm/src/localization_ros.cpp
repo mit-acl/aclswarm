@@ -33,7 +33,7 @@ LocalizationROS::LocalizationROS(const ros::NodeHandle nh,
   //
 
   tim_tracking_ = nh_.createTimer(ros::Duration(tracking_dt_),
-                                        &LocalizationROS::trackingCb, this);l
+                                        &LocalizationROS::trackingCb, this);
 
   //
   // ROS pub/sub communication
@@ -61,18 +61,18 @@ void LocalizationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
   n_ = adjmat_.rows();
 
   // set the default assignment map to identity. Spoof via assignment msg
-  std_msgs::Uint8MultiArray sigma;
-  sigma.data.resize(n_); std::iota(sigma.data.begin(), sigma.data.end(), 0);
-  sigma.layout.dim.push_back(std_msgs::MultiArrayDimension());
-  sigma.layout.dim[0].label = "assignment";
-  sigma.layout.dim[0].size = sigma.data.size();
-  sigma.layout.dim[0].stride = 1;
-  assignmentCb(&sigma);
+  std_msgs::UInt8MultiArrayPtr sigma(new std_msgs::UInt8MultiArray());
+  sigma->data.resize(n_); std::iota(sigma->data.begin(), sigma->data.end(), 0);
+  sigma->layout.dim.push_back(std_msgs::MultiArrayDimension());
+  sigma->layout.dim[0].label = "assignment";
+  sigma->layout.dim[0].size = sigma->data.size();
+  sigma->layout.dim[0].stride = 1;
+  assignmentCb(sigma);
 }
 
 // ----------------------------------------------------------------------------
 
-void LocalizationROS::assignmentCb(const std_msgs::Uint8MultiArrayConstPtr& msg)
+void LocalizationROS::assignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg)
 {
   // update our bijective assignment map
   assignment_ = msg->data;
@@ -102,10 +102,12 @@ void LocalizationROS::vehicleTrackerCb(
                           const std::string& vehname, int vehid)
 {
   for (size_t i=0; i<msg->positions.size(); ++i) {
+    const auto& pos = msg->positions[i];
+
     // copy data to usable form
     uint64_t stamp_ns = pos.header.stamp.toNSec();
     Eigen::Vector3d position;
-    tf::pointMsgToEigen(pose.point, position);
+    tf::pointMsgToEigen(pos.point, position);
 
     // update this vehicle's position information based on what vehid knows 
     tracker_->updateVehicle(vehid, i, stamp_ns, position);

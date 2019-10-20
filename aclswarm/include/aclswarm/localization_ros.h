@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include <Eigen/Dense>
+
 #include <ros/ros.h>
 
 #include <std_msgs/UInt8MultiArray.h>
@@ -19,6 +21,8 @@
 #include <acl_msgs/State.h>
 #include <aclswarm_msgs/Formation.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
+
+#include "aclswarm/utils.h"
 
 namespace acl {
 namespace aclswarm {
@@ -35,6 +39,7 @@ namespace aclswarm {
     ros::Subscriber sub_formation_, sub_assignment_, sub_state_;
     ros::Publisher pub_tracker_;
 
+    uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 
@@ -42,16 +47,21 @@ namespace aclswarm {
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
     unsigned int n_; ///< number of vehicles in swarm
     AdjMat adjmat_; ///< current adjacency matrix for formation
-    Assignment assignment_; ///< assignment map (sigma: vehid --> formpt)
-    Assignment invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
+    AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
+    AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
 
     /// \brief Parameters
     double tracking_dt_; ///< period of mutual localization task
 
+    void connectToNeighbors();
+
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
-    void assignmentCb(const std_msgs::Uint8MultiArray& msg);
+    void assignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg);
     void stateCb(const acl_msgs::StateConstPtr& msg);
+    void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg,
+                          const std::string& vehname, int vehid);
+    void trackingCb(const ros::TimerEvent& event);
 
   };
 

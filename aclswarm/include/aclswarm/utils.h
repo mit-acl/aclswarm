@@ -8,8 +8,11 @@
 #pragma once
 
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <vector>
+
+#include <Eigen/Dense>
 
 #include <ros/ros.h>
 
@@ -19,7 +22,7 @@ namespace acl {
 namespace aclswarm {
 
 using AdjMat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>;
-using Assignment = std::vector<uint8_t>;
+using AssignmentMap = std::vector<uint8_t>;
 
 namespace utils {
 
@@ -123,7 +126,7 @@ static std::vector<T> sortIndices(const std::vector<T>& v)
  *
  * @return     The inverse assignment
  */
-static Assignment invertAssignment(const Assignment& a)
+static AssignmentMap invertAssignment(const AssignmentMap& a)
 {
   // The sort indices of the assignment describe the inverse assignment.
   return sortIndices(a);
