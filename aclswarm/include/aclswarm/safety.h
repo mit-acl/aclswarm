@@ -36,6 +36,7 @@ namespace aclswarm {
     ros::NodeHandle nh_, nhp_;
     ros::Subscriber sub_fmode_, sub_cmdin_, sub_state_;
     ros::Publisher pub_cmdout_;
+    ros::Timer tim_control_;
 
     uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
@@ -51,6 +52,7 @@ namespace aclswarm {
     double bounds_x_min_, bounds_x_max_; ///< safety bounds to
     double bounds_y_min_, bounds_y_max_; ///< keep the vehicle
     double bounds_z_min_, bounds_z_max_; ///< in the room.
+    double control_dt_; ///< period at which outer loop commands are sent
     double spinup_time_; ///< how long to wait for motors to spin up
     double takeoff_inc_; ///< altitude increment used for smooth takeoff
     double takeoff_alt_; ///< desired takeoff altitude (maybe relative)
@@ -63,6 +65,7 @@ namespace aclswarm {
     void flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg);
     void cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg);
     void stateCb(const acl_msgs::StateConstPtr& msg);
+    void controlCb(const ros::TimerEvent& event);
 
   };
 

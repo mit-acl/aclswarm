@@ -20,14 +20,6 @@ Safety::Safety(const ros::NodeHandle nh,
     return;
   }
 
-  // // init vehicle/idx maps
-  // for (size_t i=0; i<vehs.size(); ++i) {
-  //   idx2veh_.insert({i, vehs[i]});
-  //   veh2idx_.insert({vehs[i], i});
-  // }
-
-  // ROS_WARN_STREAM("Loading '" << vehname_ << "' as index " << veh2idx_[vehname_]);
-
   //
   // Load parameters
   //
@@ -41,6 +33,7 @@ Safety::Safety(const ros::NodeHandle nh,
   nh_.param<double>("/room_bounds/z_max", bounds_z_max_, 1.0);
 
   nh_.param<double>("cntrl/spinup_time", spinup_time_, 2.0);
+  nhp_.param<double>("control_dt", control_dt_, 0.01);
   nhp_.param<double>("takeoff_inc", takeoff_inc_, 0.0035);
   nhp_.param<double>("takeoff_alt", takeoff_alt_, 1.0);
   nhp_.param<bool>("takeoff_rel", takeoff_rel_, false);
@@ -49,11 +42,18 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("landing_slow_dec", landing_slow_dec_, 0.001);
 
   //
+  // Timers
+  //
+
+  tim_control_ = nh_.createTimer(ros::Duration(control_dt_),
+                                                &Safety::controlCb, this);
+
+  //
   // ROS pub/sub communication
   //
 
   sub_fmode_ = nh_.subscribe("/globalflightmode", 1, &Safety::flightmodeCb, this);
-  sub_cmdin_ = nh_.subscribe("dist_form_cmd", 1, &Safety::cmdinCb, this);
+  sub_cmdin_ = nh_.subscribe("distcmd", 1, &Safety::cmdinCb, this);
   sub_state_ = nh_.subscribe("state", 1, &Safety::stateCb, this);
 
   pub_cmdout_ = nh_.advertise<acl_msgs::QuadGoal>("goal", 1);
@@ -102,6 +102,13 @@ void Safety::stateCb(const acl_msgs::StateConstPtr& msg)
 // ----------------------------------------------------------------------------
 
 void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
+{
+
+}
+
+// ----------------------------------------------------------------------------
+
+void Safety::controlCb(const ros::TimerEvent& event)
 {
   static acl_msgs::QuadGoal goal;
   static bool flight_initialized = false;
