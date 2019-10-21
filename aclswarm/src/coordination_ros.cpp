@@ -5,6 +5,8 @@
  * @date 15 Oct 2019
  */
 
+#include <eigen_conversions/eigen_msg.h>
+
 #include "aclswarm/coordination_ros.h"
 #include "aclswarm/utils.h"
 
@@ -19,6 +21,13 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
     ros::shutdown();
     return;
   }
+
+  // number of vehicles in swarm
+  n_ = vehs_.size();
+
+  // initialize vehicle positions and desired positions
+  q_.resize(n_, Eigen::Vector3d::Zero());
+  qdes_.resize(n_, Eigen::Vector3d::Zero());
 
   //
   // Load parameters
@@ -39,11 +48,6 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   tim_control_ = nhQ.createTimer(ros::Duration(control_dt_),
                                             &CoordinationROS::controlCb, this);
 
-  // Prevent timer tasks from blocking each other
-  constexpr int NUM_TASKS = 2; // there are only two timers
-  spinner_ = std::unique_ptr<ros::AsyncSpinner>(
-                            new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
-
   //
   // Instantiate module objects for tasks
   //
@@ -55,12 +59,20 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // ROS pub/sub communication
   //
 
+  // subscriber using the default global callback queue
   sub_formation_ = nh_.subscribe("formation", 1,
                                     &CoordinationROS::formationCb, this);
-  sub_tracker_ = nh_.subscribe("vehicle_estimates", 1,
+
+  sub_tracker_ = nhQ.subscribe("vehicle_estimates", 1,
                                     &CoordinationROS::vehicleTrackerCb, this);
 
-  pub_distcmd_ = nh_.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
+  pub_distcmd_ = nhQ.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
+
+  // Create a pool of threads to handle the task queue.
+  // This prevent timer tasks (and others) from blocking each other
+  constexpr int NUM_TASKS = 3; // there are only two timers + normal pub/sub
+  spinner_ = std::unique_ptr<ros::AsyncSpinner>(
+                            new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
 
 }
 
@@ -74,21 +86,24 @@ void CoordinationROS::spin()
 
     if (formation_received_) {
       // stop tasks
-      spinner_->stop();
+      tim_control_.stop();
+      tim_assignment_.stop();
 
-      // operator sent a new formation (pts and adj mat). we should:
-      // 1. Reset CBAA / stop assignment module (thread?)
-      // 2. Zero commands / stop control module (thread?)
-      // 3. Load new formation into memory (from msg)
-      // 4. Solve for gains (or load from msg)
-      // 5. Start assignment module (thread?)
-      // 6. Start control module (thread?)
+      // We only need to solve gains if they were not already provided
+      if (gains_.size() == 0) {
+        // solve for gains
+      }
+
+      // set controller gains
+      controller_->setGains(gains_);
 
       // allow downstream tasks to continue
-      spinner_->start();
+      tim_control_.start();
+      tim_assignment_.start();
       formation_received_ = false;
     }
 
+    ros::spinOnce();
     r.sleep();
   }
 }
@@ -99,6 +114,19 @@ void CoordinationROS::spin()
 
 void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
+  // keep track of the current formation graph
+  adjmat_ = utils::decodeAdjMat(msg->adjmat);
+  assert(n_ == adjmat_.rows());
+
+  // store the desired formation points
+  for (size_t i=0; i<n_; ++i) {
+    tf::pointMsgToEigen(msg->points[i], qdes_[i]);
+  }
+
+  // if no gains are sent, this will be empty---causing the solver to run
+  gains_ = utils::decodeGainMat(msg->gains);
+
+  formation_name_ = msg->name;
   formation_received_ = true;
 }
 
@@ -107,14 +135,30 @@ void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 void CoordinationROS::vehicleTrackerCb(
                   const aclswarm_msgs::VehicleEstimatesConstPtr& msg)
 {
+  assert(n_ == msg->positions.size());
 
+  for (size_t i=0; i<n_; ++i) {
+    tf::pointMsgToEigen(msg->positions[i].point, q_[i]);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+void CoordinationROS::stateCb(const acl_msgs::StateConstPtr& msg)
+{
+  // we just need our velocity for damping in the controller
+  tf::vectorMsgToEigen(msg->vel, vel_);
 }
 
 // ----------------------------------------------------------------------------
 
 void CoordinationROS::assignCb(const ros::TimerEvent& event)
 {
-  
+  // assignment_->tick();
+
+  // if (assignment_->hasNewAssignment()) {
+  //   // publish
+  // }
 }
 
 // ----------------------------------------------------------------------------

@@ -40,6 +40,7 @@ namespace aclswarm {
     ros::Subscriber sub_formation_, sub_assignment_, sub_state_;
     ros::Publisher pub_tracker_;
 
+    uint8_t n_; ///< number of vehicles in swarm
     uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
@@ -49,7 +50,6 @@ namespace aclswarm {
 
     /// \brief Internal States
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
-    unsigned int n_; ///< number of vehicles in swarm
     AdjMat adjmat_; ///< current adjacency matrix for formation
     AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
     AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)

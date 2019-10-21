@@ -15,12 +15,16 @@
 #include <ros/callback_queue.h>
 #include <ros/spinner.h>
 
+#include <Eigen/Dense>
+
+#include <acl_msgs/State.h>
 #include <aclswarm_msgs/Formation.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
 #include <geometry_msgs/Vector3Stamped.h>
 
 #include "aclswarm/distcntrl.h"
 #include "aclswarm/assignment.h"
+#include "aclswarm/utils.h"
 
 namespace acl {
 namespace aclswarm {
@@ -41,6 +45,7 @@ namespace aclswarm {
     ros::Subscriber sub_formation_, sub_tracker_;
     ros::Publisher pub_distcmd_;
 
+    uint8_t n_; ///< number of vehicles in swarm
     uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
@@ -49,8 +54,18 @@ namespace aclswarm {
     std::unique_ptr<DistCntrl> controller_; ///< module for control task
     std::unique_ptr<Assignment> assignment_; ///< module for assignment task
     
-    /// \brief Internal state
+    /// \brief Current formation state
     bool formation_received_ = false; ///< should a new gain matrix be used?
+    std::string formation_name_; ///< name of current formation
+    AdjMat adjmat_; ///< current adjacency matrix for formation
+    GainMat gains_; ///< gains for the current formation
+    std::vector<Eigen::Vector3d> qdes_; ///< desired 3D positions of swarm
+
+    /// \brief Internal state
+    // AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
+    // AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
+    std::vector<Eigen::Vector3d> q_; ///< 3D positions of swarm vehicles
+    Eigen::Vector3d vel_; ///< my current velocity
 
     /// \brief Parameters
     double assignment_dt_; ///< period of assignment task
@@ -59,6 +74,7 @@ namespace aclswarm {
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
+    void stateCb(const acl_msgs::StateConstPtr& msg);
     void assignCb(const ros::TimerEvent& event);
     void controlCb(const ros::TimerEvent& event);
   };

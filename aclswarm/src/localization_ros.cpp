@@ -147,7 +147,7 @@ void LocalizationROS::trackingCb(const ros::TimerEvent& event)
 
 void LocalizationROS::connectToNeighbors()
 {
-  // which formation point and I currently assigned to? Lookup my row in adjmat
+  // which formation point am I currently assigned to? Lookup my row in adjmat
   const auto& myrow = adjmat_.row(assignment_[vehid_]);
 
   // loop through the other formation points in graph

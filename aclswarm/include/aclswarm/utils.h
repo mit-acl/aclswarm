@@ -17,10 +17,12 @@
 #include <ros/ros.h>
 
 #include <std_msgs/UInt8MultiArray.h>
+#include <std_msgs/Float32MultiArray.h>
 
 namespace acl {
 namespace aclswarm {
 
+using GainMat = Eigen::MatrixXd;
 using AdjMat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>;
 using AssignmentMap = std::vector<uint8_t>;
 
@@ -81,6 +83,31 @@ static AdjMat decodeAdjMat(const std_msgs::UInt8MultiArray& msg)
   const int cols = msg.layout.dim[1].size;
 
   AdjMat A = AdjMat::Zero(rows, cols);
+
+  for (size_t i=0; i<rows; ++i) {
+    for (size_t j=0; j<cols; ++j) {
+      A(i,j) = msg.data[msg.layout.data_offset + msg.layout.dim[1].stride * i + j];
+    }
+  }
+
+  return A;
+}
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Converts gain msg to Eigen
+ *
+ * @param[in]  msg   The gains multiarray
+ *
+ * @return     The eigen matrix
+ */
+static GainMat decodeGainMat(const std_msgs::Float32MultiArray& msg)
+{
+  const int rows = msg.layout.dim[0].size;
+  const int cols = msg.layout.dim[1].size;
+
+  GainMat A = GainMat::Zero(rows, cols);
 
   for (size_t i=0; i<rows; ++i) {
     for (size_t j=0; j<cols; ++j) {
