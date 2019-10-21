@@ -52,6 +52,13 @@ Eigen::Vector3d VehicleTracker::getVehiclePosition(uint8_t vehid)
 }
 
 // ----------------------------------------------------------------------------
+
+uint64_t VehicleTracker::getVehicleStamp(uint8_t vehid)
+{
+  return stamps_[vehid];
+}
+
+// ----------------------------------------------------------------------------
 // Private Methods
 // ----------------------------------------------------------------------------
 

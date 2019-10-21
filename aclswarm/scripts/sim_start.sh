@@ -105,7 +105,7 @@ for _sim in $(eval echo {01..$num}); do
 	echo "Starting aclswarm $_sim"
 	_veh="SQ$_sim"
 	_veh+="s"
-	tmux send-keys -t ${_pane} "roslaunch aclswarm dist_form_ctrl.launch room:=vicon veh:=$_veh leader:=0" C-m
+	tmux send-keys -t ${_pane} "roslaunch aclswarm start.launch veh:=$_veh leader:=0" C-m
 	sleep 1.0
 done
 

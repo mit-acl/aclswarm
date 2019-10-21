@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="veh" />
+
+  <!-- Coordination components -->
+  <include file="$(find aclswarm)/launch/coordination.launch">
+    <arg name="veh" value="$(arg veh)" />
+  </include>
+
+  <!-- Localization components -->
+  <include file="$(find aclswarm)/launch/localization.launch">
+    <arg name="veh" value="$(arg veh)" />
+  </include>
+
+</launch>

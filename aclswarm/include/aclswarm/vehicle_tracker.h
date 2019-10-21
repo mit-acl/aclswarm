@@ -28,6 +28,7 @@ namespace aclswarm {
                       uint64_t time_ns, const Eigen::Vector3d& pos);
 
     Eigen::Vector3d getVehiclePosition(uint8_t vehid);
+    uint64_t getVehicleStamp(uint8_t vehid);
 
   private:
     const uint8_t n_; ///< number of vehicles in the swarm

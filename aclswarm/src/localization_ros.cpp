@@ -135,6 +135,9 @@ void LocalizationROS::trackingCb(const ros::TimerEvent& event)
     Eigen::Vector3d p = tracker_->getVehiclePosition(i);
     msg.positions.push_back(geometry_msgs::PointStamped());
     tf::pointEigenToMsg(p, msg.positions.back().point);
+
+    uint64_t stamp_ns = tracker_->getVehicleStamp(i);
+    msg.positions.back().header.stamp.fromNSec(stamp_ns);
   }
 
   pub_tracker_.publish(msg);
