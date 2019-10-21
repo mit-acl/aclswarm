@@ -37,6 +37,7 @@ namespace aclswarm {
     std::unique_ptr<ros::AsyncSpinner> spinner_;
     ros::Timer tim_assignment_, tim_control_;
     ros::Subscriber sub_formation_;
+    ros::Publisher pub_distcmd_;
 
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm

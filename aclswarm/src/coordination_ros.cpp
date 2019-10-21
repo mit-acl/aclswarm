@@ -60,6 +60,8 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   sub_tracker_ = nh_.subscribe("vehicle_estimates", 1,
                                     &CoordinationROS::vehicleTrackerCb, this);
 
+  pub_distcmd_ = nh_.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
+
 }
 
 // ----------------------------------------------------------------------------
@@ -120,6 +122,10 @@ void CoordinationROS::assignCb(const ros::TimerEvent& event)
 void CoordinationROS::controlCb(const ros::TimerEvent& event)
 {
   controller_->compute();
+
+  geometry_msgs::Vector3Stamped msg;
+  msg.header.stamp = ros::Time::now();
+  pub_distcmd_.publish(msg);
 }
 
 } // ms aclswarm
