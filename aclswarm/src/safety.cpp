@@ -15,7 +15,7 @@ Safety::Safety(const ros::NodeHandle nh,
                 const ros::NodeHandle nhp)
 : nh_(nh), nhp_(nhp)
 {
-  if (!utils::loadVehicleInfo(vehname_, vehs_)) {
+  if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
     return;
   }

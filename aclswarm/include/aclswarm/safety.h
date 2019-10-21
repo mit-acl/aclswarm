@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,7 @@ namespace aclswarm {
     ros::Subscriber sub_fmode_, sub_cmdin_, sub_state_;
     ros::Publisher pub_cmdout_;
 
+    uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 

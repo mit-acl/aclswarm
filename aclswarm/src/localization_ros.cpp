@@ -133,8 +133,8 @@ void LocalizationROS::trackingCb(const ros::TimerEvent& event)
 
   for (size_t i=0; i<n_; ++i) {
     Eigen::Vector3d p = tracker_->getVehiclePosition(i);
-    msg.positions.push_back(geometry_mgs::Point());
-    tf::eigenToPointMsg(p, msg.positions.back());
+    msg.positions.push_back(geometry_msgs::PointStamped());
+    tf::pointEigenToMsg(p, msg.positions.back().point);
   }
 
   pub_tracker_.publish(msg);
@@ -161,7 +161,7 @@ void LocalizationROS::connectToNeighbors()
 
       // create a closure to pass additional arguments to callback
       boost::function<void(const aclswarm_msgs::VehicleEstimatesConstPtr&)> cb =
-        [=](const sensor_msgs::PointCloud2ConstPtr& msg) {
+        [=](const aclswarm_msgs::VehicleEstimatesConstPtr& msg) {
           vehicleTrackerCb(msg, ns, nbhrid);
         };
 

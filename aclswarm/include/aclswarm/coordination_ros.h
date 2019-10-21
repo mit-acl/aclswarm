@@ -16,6 +16,8 @@
 #include <ros/spinner.h>
 
 #include <aclswarm_msgs/Formation.h>
+#include <aclswarm_msgs/VehicleEstimates.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include "aclswarm/distcntrl.h"
 #include "aclswarm/assignment.h"
@@ -36,9 +38,10 @@ namespace aclswarm {
     ros::CallbackQueue task_queue_;
     std::unique_ptr<ros::AsyncSpinner> spinner_;
     ros::Timer tim_assignment_, tim_control_;
-    ros::Subscriber sub_formation_;
+    ros::Subscriber sub_formation_, sub_tracker_;
     ros::Publisher pub_distcmd_;
 
+    uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 

@@ -35,7 +35,7 @@ namespace utils {
  *
  * @return     True if successful.
  */
-static bool loadVehicleInfo(std::string& name, int& vehid,
+static bool loadVehicleInfo(std::string& name, uint8_t& vehid,
                             std::vector<std::string>& vehicles)
 {
   //
@@ -73,20 +73,18 @@ static bool loadVehicleInfo(std::string& name, int& vehid,
  *
  * @return     The eigen matrix
  */
-static AdjMat decodeAdjMat(const std_msgs::UInt8MultiArrayConstPtr& msg)
+static AdjMat decodeAdjMat(const std_msgs::UInt8MultiArray& msg)
 {
-  const int rows = msg->layout.dim[0].size;
-  const int cols = msg->layout.dim[1].size;
+  const int rows = msg.layout.dim[0].size;
+  const int cols = msg.layout.dim[1].size;
 
-  Eigen::Map<AdjMat> A(msg->data.data(), rows, cols);
+  AdjMat A = AdjMat::Zero(rows, cols);
 
-  // Eigen::MatrixXi A = Eigen::MatrixXi::Zero(rows, cols);
-
-  // for (size_t i=0; i<rows; ++i) {
-  //   for (size_t j=0; j<cols; ++j) {
-  //     A(i, j) = msg->data[msg->layout.data_offset + msg->layout.dim[1].stride * i + j];
-  //   }
-  // }
+  for (size_t i=0; i<rows; ++i) {
+    for (size_t j=0; j<cols; ++j) {
+      A(i,j) = msg.data[msg.layout.data_offset + msg.layout.dim[1].stride * i + j];
+    }
+  }
 
   return A;
 }
@@ -113,12 +111,12 @@ template<typename T>
 static std::vector<T> sortIndices(const std::vector<T>& v)
 {
   // initialize original index locations
-  std::vector<size_t> idx(v.size());
+  std::vector<T> idx(v.size());
   std::iota(idx.begin(), idx.end(), 0);
 
   // sort indexes based on comparing values in v
   std::sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+       [&v](T i1, T i2) {return v[i1] < v[i2];});
 
   return idx;
 }
