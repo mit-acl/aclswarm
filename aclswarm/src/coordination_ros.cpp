@@ -48,15 +48,17 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // Instantiate module objects for tasks
   //
 
-  controller_ = std::unique_ptr<DistCntrl>(new DistCntrl());
-  assignment_ = std::unique_ptr<Assignment>(new Assignment());
+  controller_.reset(new DistCntrl());
+  assignment_.reset(new Assignment());
 
   //
   // ROS pub/sub communication
   //
 
   sub_formation_ = nh_.subscribe("formation", 1,
-                                        &CoordinationROS::formationCb, this);
+                                    &CoordinationROS::formationCb, this);
+  sub_tracker_ = nh_.subscribe("vehicle_estimates", 1,
+                                    &CoordinationROS::vehicleTrackerCb, this);
 
 }
 
@@ -96,6 +98,14 @@ void CoordinationROS::spin()
 void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
   formation_received_ = true;
+}
+
+// ----------------------------------------------------------------------------
+
+void CoordinationROS::vehicleTrackerCb(
+                  const aclswarm_msgs::VehicleEstimatesConstPtr& msg)
+{
+
 }
 
 // ----------------------------------------------------------------------------

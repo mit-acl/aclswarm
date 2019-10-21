@@ -26,13 +26,14 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Eigen3 REQUIRED)
+message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} (${EIGEN3_DIR})")
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -127,7 +128,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(aclswarm
@@ -145,7 +146,8 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_executable(safety_node src/safety_node.cpp src/safety.cpp)
 add_executable(coordination_node src/coordination_node.cpp src/coordination_ros.cpp
                                   src/distcntrl.cpp src/assignment.cpp)
-add_executable(localization_node src/localization_node.cpp src/localization_ros.cpp)
+add_executable(localization_node src/localization_node.cpp src/localization_ros.cpp
+                                  src/vehicle_tracker.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

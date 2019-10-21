@@ -30,11 +30,13 @@ namespace utils {
  * @brief      Loads information about vehicles from rosparam server.
  *
  * @param      name      The name of this vehicle
+ * @param      id        The id of this vehicle (idx in vehicles list)
  * @param      vehicles  A list of all vehicles in swarm
  *
  * @return     True if successful.
  */
-static bool loadVehicleInfo(std::string& name, std::vector<std::string>& vehicles)
+static bool loadVehicleInfo(std::string& name, int& vehid,
+                            std::vector<std::string>& vehicles)
 {
   //
   // Resolve this vehicle's index using this node's ROS ns as the name
@@ -50,10 +52,14 @@ static bool loadVehicleInfo(std::string& name, std::vector<std::string>& vehicle
 
   // get list of vehicle names, ordered by vehicle index.
   ros::param::get("/vehs", vehicles);
-  if (std::find(vehicles.begin(), vehicles.end(), name) == vehicles.end()) {
+  const auto& it = std::find(vehicles.begin(), vehicles.end(), name);
+  if (it == vehicles.end()) {
     ROS_ERROR_STREAM("Could not find myself ('" << name << "') in vehlist");
     return false;
   }
+
+  // deduce vehicle id
+  vehid = std::distance(vehicles.begin(), it);
 
   return true;
 }

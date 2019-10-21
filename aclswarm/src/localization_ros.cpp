@@ -17,16 +17,25 @@ LocalizationROS::LocalizationROS(const ros::NodeHandle nh,
                                   const ros::NodeHandle nhp)
 : nh_(nh), nhp_(nhp)
 {
-  if (!utils::loadVehicleInfo(vehname_, vehs_)) {
+  if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
     return;
   }
+
+  // number of vehicles in swarm
+  n_ = vehs_.size();
 
   //
   // Load parameters
   //
 
   nhp_.param<double>("tracking_dt", tracking_dt_, 0.02);
+
+  //
+  // Instantiate modules
+  //
+
+  tracker_.reset(new VehicleTracker(n_));
 
   //
   // Timers
@@ -58,7 +67,7 @@ void LocalizationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
   // keep track of the current formation graph
   adjmat_ = utils::decodeAdjMat(msg->adjmat);
-  n_ = adjmat_.rows();
+  assert(n_ == adjmat_.rows());
 
   // set the default assignment map to identity. Spoof via assignment msg
   std_msgs::UInt8MultiArrayPtr sigma(new std_msgs::UInt8MultiArray());
@@ -151,7 +160,7 @@ void LocalizationROS::connectToNeighbors()
       std::string ns = vehs_[nbhrid];
 
       // create a closure to pass additional arguments to callback
-      boost::function<void(const geometry_mgs::PoseArrayConstPtr&)> cb =
+      boost::function<void(const aclswarm_msgs::VehicleEstimatesConstPtr&)> cb =
         [=](const sensor_msgs::PointCloud2ConstPtr& msg) {
           vehicleTrackerCb(msg, ns, nbhrid);
         };

@@ -22,6 +22,7 @@
 #include <aclswarm_msgs/Formation.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
 
+#include "aclswarm/vehicle_tracker.h"
 #include "aclswarm/utils.h"
 
 namespace acl {
@@ -42,6 +43,9 @@ namespace aclswarm {
     uint8_t vehid_; ///< ID of vehicle (index in veh named list)
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
+
+    /// \brief Modules
+    std::unique_ptr<VehicleTracker> tracker_;
 
     /// \brief Internal States
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid

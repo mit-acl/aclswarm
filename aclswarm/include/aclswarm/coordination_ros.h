@@ -54,6 +54,7 @@ namespace aclswarm {
 
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
+    void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
     void assignCb(const ros::TimerEvent& event);
     void controlCb(const ros::TimerEvent& event);
   };
