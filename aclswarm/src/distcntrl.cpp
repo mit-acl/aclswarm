@@ -22,7 +22,7 @@ void DistCntrl::compute()
   // 1.
 
   // which formation point am I currently assigned to?
-  uint8_t i = assignment_[vehid_];
+  const uint8_t i = assignment_[vehid_];
 
   // Lookup my row in the adjacency matrix to know
   // who my neighboring formation points are
@@ -35,7 +35,7 @@ void DistCntrl::compute()
 
     if (e) {
       // locate the relevant block in the gain matrix.
-      auto Aij = gains_.block<3, 3>(3*i, 3*j);
+      auto Aij = formation_->gains.block<3, 3>(3*i, 3*j);
 
       // resolve which vehicle is assigned to this formation point
       uint8_t sigmainv_j = invassignment_[j];
@@ -57,9 +57,9 @@ void DistCntrl::compute()
 
 // ----------------------------------------------------------------------------
 
-void DistCntrl::set_formation()
+void DistCntrl::set_formation(const std::shared_ptr<Formation>& f)
 {
-
+  formation_ = f;
 }
 
 // ----------------------------------------------------------------------------

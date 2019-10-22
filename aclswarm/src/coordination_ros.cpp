@@ -15,7 +15,7 @@ namespace aclswarm {
 
 CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                   const ros::NodeHandle nhp)
-: nh_(nh), nhp_(nhp)
+: nh_(nh), nhp_(nhp), formation_(new DistCntrl::Formation)
 {
   if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
@@ -25,9 +25,9 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // number of vehicles in swarm
   n_ = vehs_.size();
 
-  // initialize vehicle positions and desired positions
+  // initialize vehicle positions and my velocity
   q_.resize(n_, Eigen::Vector3d::Zero());
-  qdes_.resize(n_, Eigen::Vector3d::Zero());
+  vel_ = Eigen::Vector3d::Zero();
 
   //
   // Load parameters
@@ -90,12 +90,12 @@ void CoordinationROS::spin()
       tim_assignment_.stop();
 
       // We only need to solve gains if they were not already provided
-      if (gains_.size() == 0) {
+      if (formation_->gains.size() == 0) {
         // solve for gains
       }
 
-      // set controller gains
-      controller_->setGains(gains_);
+      // let the controller know about the new formation
+      controller_->set_formation(formation_);
 
       // allow downstream tasks to continue
       tim_control_.start();
@@ -115,18 +115,19 @@ void CoordinationROS::spin()
 void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
   // keep track of the current formation graph
-  adjmat_ = utils::decodeAdjMat(msg->adjmat);
-  assert(n_ == adjmat_.rows());
+  formation_->adjmat = utils::decodeAdjMat(msg->adjmat);
+  assert(n_ == formation_->adjmat.rows());
 
   // store the desired formation points
+  qdes_.resize(n_, Eigen::Vector3d::Zero());
   for (size_t i=0; i<n_; ++i) {
-    tf::pointMsgToEigen(msg->points[i], qdes_[i]);
+    tf::pointMsgToEigen(msg->points[i], formation_->qdes[i]);
   }
 
   // if no gains are sent, this will be empty---causing the solver to run
-  gains_ = utils::decodeGainMat(msg->gains);
+  formation_->gains = utils::decodeGainMat(msg->gains);
 
-  formation_name_ = msg->name;
+  formation_->name = msg->name;
   formation_received_ = true;
 }
 

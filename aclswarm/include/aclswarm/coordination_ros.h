@@ -53,15 +53,10 @@ namespace aclswarm {
     /// \brief Modules
     std::unique_ptr<DistCntrl> controller_; ///< module for control task
     std::unique_ptr<Assignment> assignment_; ///< module for assignment task
-    
-    /// \brief Current formation state
-    bool formation_received_ = false; ///< should a new gain matrix be used?
-    std::string formation_name_; ///< name of current formation
-    AdjMat adjmat_; ///< current adjacency matrix for formation
-    GainMat gains_; ///< gains for the current formation
-    std::vector<Eigen::Vector3d> qdes_; ///< desired 3D positions of swarm
 
     /// \brief Internal state
+    bool formation_received_ = false; ///< should a new gain matrix be used?
+    std::shared_ptr<DistCntrl::Formation> formation_; ///< current formation
     // AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
     // AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
     std::vector<Eigen::Vector3d> q_; ///< 3D positions of swarm vehicles
