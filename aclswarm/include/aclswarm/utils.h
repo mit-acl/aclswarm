@@ -82,6 +82,8 @@ static bool loadVehicleInfo(std::string& name, vehidx_t& vehid,
  */
 static AdjMat decodeAdjMat(const std_msgs::UInt8MultiArray& msg)
 {
+  assert(msg.layout.dim.size() == 2);
+
   const int rows = msg.layout.dim[0].size;
   const int cols = msg.layout.dim[1].size;
 
@@ -107,6 +109,8 @@ static AdjMat decodeAdjMat(const std_msgs::UInt8MultiArray& msg)
  */
 static GainMat decodeGainMat(const std_msgs::Float32MultiArray& msg)
 {
+  assert(msg.layout.dim.size() == 2);
+
   const int rows = msg.layout.dim[0].size;
   const int cols = msg.layout.dim[1].size;
 

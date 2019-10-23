@@ -48,15 +48,17 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   tim_assignment_ = nhQ.createTimer(ros::Duration(assignment_dt_),
                                             &CoordinationROS::assignCb, this);
+  tim_assignment_.stop();
   tim_control_ = nhQ.createTimer(ros::Duration(control_dt_),
                                             &CoordinationROS::controlCb, this);
+  tim_control_.stop();
 
   //
   // ROS pub/sub communication
   //
 
   // subscriber using the default global callback queue
-  sub_formation_ = nh_.subscribe("formation", 1,
+  sub_formation_ = nh_.subscribe("/formation", 1,
                                     &CoordinationROS::formationCb, this);
 
   sub_tracker_ = nhQ.subscribe("vehicle_estimates", 1,
@@ -70,6 +72,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   constexpr int NUM_TASKS = 3; // there are only two timers + normal pub/sub
   spinner_ = std::unique_ptr<ros::AsyncSpinner>(
                             new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
+  spinner_->start();
 
 }
 
@@ -92,6 +95,8 @@ void CoordinationROS::spin()
       }
 
       // let the controller know about the new formation
+      ROS_INFO_STREAM("Changing formation to: \033[34;1m"
+                        << formation_->name << "\033[0m");
       controller_->set_formation(formation_);
 
       // allow downstream tasks to continue
@@ -146,7 +151,11 @@ void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
   }
 
   // if no gains are sent, this will be empty---causing the solver to run
-  formation_->gains = utils::decodeGainMat(msg->gains);
+  if (msg->gains.layout.dim.size() == 2) {
+    formation_->gains = utils::decodeGainMat(msg->gains);
+  } else {
+    formation_->gains = Eigen::MatrixXd();
+  }
 
   formation_->name = msg->name;
   formation_received_ = true;

@@ -12,7 +12,9 @@ namespace aclswarm {
 
 DistCntrl::DistCntrl(vehidx_t vehid, uint8_t n)
 : n_(n), vehid_(vehid)
-{}
+{
+  P_.setIdentity(n_);
+}
 
 // ----------------------------------------------------------------------------
 
