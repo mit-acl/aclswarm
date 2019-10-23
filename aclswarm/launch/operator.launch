@@ -18,6 +18,12 @@
         <rosparam file="$(find aclswarm)/param/formations.yaml" command="load"/>
     </node>
 
+    <!-- Start visualization script -->
+    <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
+        <param name="distcmds" value="true" />
+        <param name="safecmds" value="true" />
+    </node>
+
     <!-- Start GUI -->
     <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui" args="--perspective-file $(find aclswarm)/cfg/controls.perspective"/>
 
