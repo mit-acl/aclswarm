@@ -7,7 +7,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
+#include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -42,11 +45,22 @@ namespace aclswarm {
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 
+    struct Goal {
+        acl_msgs::QuadGoal msg; ///< actual goal signal
+        bool active = false; ///< should this goal even be considered?
+        int priority = 0; ///< highest priority wins
+
+        // to enable sorting of goals
+        bool operator<(const Goal& other) const { return priority < other.priority; }
+        bool operator>(const Goal& other) const { return priority > other.priority; }
+    };
+
     /// \brief Internal state
     enum class Mode { NOT_FLYING, TAKEOFF, FLYING, LANDING };
     Mode mode_ = Mode::NOT_FLYING; ///< current mode derived from global flight mode
-    
     geometry_msgs::PoseStamped pose_; ///< current pose of the vehicle
+    enum class GoalType { DIST, JOY };
+    std::map<GoalType, Goal> goals_; ///< goals to consider (by priority)
 
     /// \brief Parameters
     double bounds_x_min_, bounds_x_max_; ///< safety bounds to
@@ -60,6 +74,9 @@ namespace aclswarm {
     double landing_fast_threshold_; ///< above this alt, land "fast"
     double landing_fast_dec_; ///< use bigger decrements for "fast" landing
     double landing_slow_dec_; ///< use smaller decrements for "slow" landing
+
+    void init();
+    void setHoverGoalMsg(acl_msgs::QuadGoal& goal);
 
     /// \brief ROS callback handlers
     void flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg);

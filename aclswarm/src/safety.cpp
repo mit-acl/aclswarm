@@ -20,6 +20,8 @@ Safety::Safety(const ros::NodeHandle nh,
     return;
   }
 
+  init();
+
   //
   // Load parameters
   //
@@ -63,6 +65,19 @@ Safety::Safety(const ros::NodeHandle nh,
 // Private Methods
 // ----------------------------------------------------------------------------
 
+void Safety::init()
+{
+  // initialize goal signals to mux
+  goals_.insert(std::make_pair(GoalType::DIST, Goal()));
+  goals_.insert(std::make_pair(GoalType::JOY, Goal()));
+
+  // setup priorities
+  goals_[GoalType::DIST].priority = 0;
+  goals_[GoalType::JOY].priority = 1;
+}
+
+// ----------------------------------------------------------------------------
+
 void Safety::flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg)
 {
   // handle safety state machine transitions based on
@@ -103,18 +118,27 @@ void Safety::stateCb(const acl_msgs::StateConstPtr& msg)
 
 void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
 {
+  // for convenience
+  auto& goal = goals_[GoalType::DIST];
 
+  setHoverGoalMsg(goal.msg);
+  goal.msg.vel = msg->vector;
+
+  goal.active = true;
 }
 
 // ----------------------------------------------------------------------------
 
 void Safety::controlCb(const ros::TimerEvent& event)
 {
-  static acl_msgs::QuadGoal goal;
+  static acl_msgs::QuadGoal goalmsg;
   static bool flight_initialized = false;
   static ros::Time takeoff_time;
   static double takeoff_alt;
   static double initial_alt;
+
+  // set the goal to hover at our current position + yaw
+  setHoverGoalMsg(goalmsg);
 
   if (mode_ == Mode::TAKEOFF) {
 
@@ -122,28 +146,14 @@ void Safety::controlCb(const ros::TimerEvent& event)
       // capture the initial time
       takeoff_time = ros::Time::now();
 
-      // set the goal to our current position + yaw
-      goal.pos.x = pose_.pose.position.x;
-      goal.pos.y = pose_.pose.position.y;
-      goal.pos.z = pose_.pose.position.z;
-      goal.vel.x = 0;
-      goal.vel.y = 0;
-      goal.vel.z = 0;
-      goal.yaw = tf2::getYaw(pose_.pose.orientation);
-      goal.dyaw = 0;
-
       // allow the outer loop to send low-level autopilot commands
-      goal.cut_power = false;
+      goalmsg.cut_power = false;
 
       // what is our initial altitude before takeoff?
       initial_alt = pose_.pose.position.z;
 
       // what should our desired takeoff altitude be?
       takeoff_alt = takeoff_alt_ + ((takeoff_rel_) ? initial_alt : 0.0);
-
-      // What setpoints should the outer loop work with?
-      goal.xy_mode = acl_msgs::QuadGoal::MODE_POS;
-      goal.z_mode = acl_msgs::QuadGoal::MODE_POS;
 
       flight_initialized = true;
     }
@@ -152,21 +162,34 @@ void Safety::controlCb(const ros::TimerEvent& event)
     if (ros::Time::now() - takeoff_time >= ros::Duration(spinup_time_)) {
 
       constexpr double TAKEOFF_THRESHOLD = 0.100;
-      if ((std::abs(goal.pos.z - pose_.pose.position.z) < TAKEOFF_THRESHOLD) &&
-            std::abs(goal.pos.z - takeoff_alt) < TAKEOFF_THRESHOLD) {
+      if ((std::abs(goalmsg.pos.z - pose_.pose.position.z) < TAKEOFF_THRESHOLD) &&
+            std::abs(goalmsg.pos.z - takeoff_alt) < TAKEOFF_THRESHOLD) {
         mode_ = Mode::FLYING;
         ROS_INFO("Takeoff complete!");
       } else {
         // Increment the z cmd each timestep for a smooth takeoff.
         // This is essentially saturating tracking error so actuation is low.
-        goal.pos.z = utils::clamp(goal.pos.z + takeoff_inc_, 0.0, takeoff_alt);
+        goalmsg.pos.z = utils::clamp(goalmsg.pos.z + takeoff_inc_, 0.0, takeoff_alt);
       }
     }
 
   } else if (mode_ == Mode::FLYING) {
 
-    // 1. collision avoidance
-    // 2. Respect room bounds and saturate velocities (safe goal)
+    // unpack any goal signals
+    std::vector<Goal> goals;
+    utils::mapToVec(goals_, goals);
+    std::sort(goals.begin(), goals.end(), std::greater<Goal>());
+
+    // retrieve the highest priority goal signal
+    for (auto&& g : goals) {
+      if (g.active) {
+        goalmsg = g.msg;
+
+        // mark this goal as used
+        g.active = false;
+        break;
+      }
+    }
 
   } else if (mode_ == Mode::LANDING) {
 
@@ -179,17 +202,35 @@ void Safety::controlCb(const ros::TimerEvent& event)
       const double dec = (pose_.pose.position.z > landing_fast_threshold_) ?
                                       landing_fast_dec_ : landing_slow_dec_;
 
-      goal.pos.z = utils::clamp(goal.pos.z - dec, 0.0, bounds_z_max_);
+      goalmsg.pos.z = utils::clamp(goalmsg.pos.z - dec, 0.0, bounds_z_max_);
     }
 
   } else if (mode_ == Mode::NOT_FLYING) {
+    goalmsg.cut_power = true;
     flight_initialized = false;
-    goal.cut_power = true;
   }
 
-  goal.header.stamp = ros::Time::now();
-  goal.header.frame_id = "body";
-  pub_cmdout_.publish(goal);
+  goalmsg.header.stamp = ros::Time::now();
+  goalmsg.header.frame_id = "body";
+  pub_cmdout_.publish(goalmsg);
+}
+
+// ----------------------------------------------------------------------------
+
+void Safety::setHoverGoalMsg(acl_msgs::QuadGoal& goal)
+{
+  goal.pos.x = pose_.pose.position.x;
+  goal.pos.y = pose_.pose.position.y;
+  goal.pos.z = pose_.pose.position.z;
+  goal.vel.x = 0;
+  goal.vel.y = 0;
+  goal.vel.z = 0;
+  goal.yaw = tf2::getYaw(pose_.pose.orientation);
+  goal.dyaw = 0;
+
+  // Use position control to hover in place
+  goal.xy_mode = acl_msgs::QuadGoal::MODE_POS;
+  goal.z_mode = acl_msgs::QuadGoal::MODE_POS;
 }
 
 } // ns aclswarm

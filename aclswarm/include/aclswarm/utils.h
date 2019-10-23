@@ -181,6 +181,24 @@ static std::vector<T> sortIndices(const std::vector<T>& v)
 // ----------------------------------------------------------------------------
 
 /**
+ * @brief      Copy std::map second value to a vector
+ *
+ * @param[in]  m     The map to extract from
+ * @param      v     The vector to place into
+ */
+template<typename M, typename V>
+static void mapToVec(const M& m, V& v)
+{
+  v.reserve(m.size());
+
+  for (typename M::const_iterator it = m.begin(); it != m.end(); ++it) {
+    v.push_back(it->second);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+/**
  * @brief      Clamp function to saturate between a low and high value
  *
  * @param[in]  val      The value to clamp
