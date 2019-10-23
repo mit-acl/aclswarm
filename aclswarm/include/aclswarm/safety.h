@@ -49,6 +49,7 @@ namespace aclswarm {
         acl_msgs::QuadGoal msg; ///< actual goal signal
         bool active = false; ///< should this goal even be considered?
         int priority = 0; ///< highest priority wins
+        double dt; ///< what is the period associated with this signal?
 
         // to enable sorting of goals
         bool operator<(const Goal& other) const { return priority < other.priority; }
@@ -74,9 +75,13 @@ namespace aclswarm {
     double landing_fast_threshold_; ///< above this alt, land "fast"
     double landing_fast_dec_; ///< use bigger decrements for "fast" landing
     double landing_slow_dec_; ///< use smaller decrements for "slow" landing
+    double max_accel_xy_, max_accel_z_; ///< maximum translational accels
+    double max_vel_xy_; ///< maximum planar translational velocity
 
     void init();
     void setHoverGoalMsg(acl_msgs::QuadGoal& goal);
+    void makeSafe(double dt, const acl_msgs::QuadGoal& goal0,
+                                    acl_msgs::QuadGoal& goal);
 
     /// \brief ROS callback handlers
     void flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg);

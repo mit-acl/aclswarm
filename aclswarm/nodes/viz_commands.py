@@ -7,7 +7,7 @@ import rospy
 import numpy as np
 
 from acl_msgs.msg import QuadGoal
-from geometry_msgs.msg import Point, Vector3, Vector3Stamped
+from geometry_msgs.msg import Point, Pose, Vector3, Vector3Stamped
 from visualization_msgs.msg import Marker, MarkerArray
 
 
@@ -68,6 +68,10 @@ class VizCommands:
                 m.type = Marker.ARROW
                 m.color.a = 1.0
                 m.color.r, m.color.g, m.color.b = c[t]
+                m.pose.orientation.w = 1.0
+                m.pose.orientation.x = 0.0
+                m.pose.orientation.y = 0.0
+                m.pose.orientation.z = 0.0
                 m.scale = Vector3(0.075, 0.075, 0.075) # magic numbers!
                 m.lifetime = rospy.Duration(0.1) # this marker will be removed if not updated every period
 

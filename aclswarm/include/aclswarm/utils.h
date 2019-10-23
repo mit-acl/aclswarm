@@ -237,6 +237,32 @@ static T clamp(const T& val, const T& lower, const T& upper) {
   return clamp(val, lower, upper, clamped);
 }
 
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Saturate the current value of a signal by limit its
+ *             rate of change, given its current (desired) value, 
+ *             last value, and the timestep.
+ *
+ * @param[in]  dt        Timestep between current and last value
+ * @param[in]  lRateLim  Lower rate limit
+ * @param[in]  uRateLim  Upper rate limit
+ * @param[in]  v0        The last value
+ * @param      v1        The current (des) value, to be rate limited (output)
+ */
+template<typename T>
+static void rateLimit(double dt, const T lRateLim, const T uRateLim,
+                      const T v0, T& v1)
+{
+  // calculate the highest / lowest the components are allowed to attain
+  const T upper = v0 + uRateLim * dt;
+  const T lower = v0 + lRateLim * dt;
+
+  // make sure current value does not exceed rate of change constraints
+  if (v1 > upper) v1 = upper;
+  if (v1 < lower) v1 = lower;
+}
+
 } // ns utils
 } // ns aclswarm
 } // ns acl

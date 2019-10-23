@@ -42,6 +42,9 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("landing_fast_threshold", landing_fast_threshold_, 0.400);
   nhp_.param<double>("landing_fast_dec", landing_fast_dec_, 0.0035);
   nhp_.param<double>("landing_slow_dec", landing_slow_dec_, 0.001);
+  nhp_.param<double>("max_vel_xy", max_vel_xy_, 0.5);
+  nhp_.param<double>("max_accel_xy", max_accel_xy_, 0.5);
+  nhp_.param<double>("max_accel_z", max_accel_z_, 0.8);
 
   //
   // Timers
@@ -118,11 +121,15 @@ void Safety::stateCb(const acl_msgs::StateConstPtr& msg)
 
 void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
 {
+  static double last_timestamp = msg->header.stamp.toSec();
+
   // for convenience
   auto& goal = goals_[GoalType::DIST];
 
   setHoverGoalMsg(goal.msg);
   goal.msg.vel = msg->vector;
+  
+  goal.dt = msg->header.stamp.toSec() - last_timestamp;
 
   goal.active = true;
 }
@@ -137,14 +144,14 @@ void Safety::controlCb(const ros::TimerEvent& event)
   static double takeoff_alt;
   static double initial_alt;
 
-  // set the goal to hover at our current position + yaw
-  setHoverGoalMsg(goalmsg);
-
   if (mode_ == Mode::TAKEOFF) {
 
     if (!flight_initialized) {
       // capture the initial time
       takeoff_time = ros::Time::now();
+
+      // set the goal to our current position + yaw
+      setHoverGoalMsg(goalmsg);
 
       // allow the outer loop to send low-level autopilot commands
       goalmsg.cut_power = false;
@@ -175,14 +182,18 @@ void Safety::controlCb(const ros::TimerEvent& event)
 
   } else if (mode_ == Mode::FLYING) {
 
+    // set the goal to hover at our current position + yaw
+    // setHoverGoalMsg(goalmsg);
+
     // unpack any goal signals
     std::vector<Goal> goals;
     utils::mapToVec(goals_, goals);
     std::sort(goals.begin(), goals.end(), std::greater<Goal>());
 
-    // retrieve the highest priority goal signal
+    // retrieve the highest priority goal signal and make it safe
     for (auto&& g : goals) {
       if (g.active) {
+        makeSafe(g.dt, goalmsg, g.msg);
         goalmsg = g.msg;
 
         // mark this goal as used
@@ -193,8 +204,10 @@ void Safety::controlCb(const ros::TimerEvent& event)
 
   } else if (mode_ == Mode::LANDING) {
 
+    goalmsg.vel.x = goalmsg.vel.y = goalmsg.vel.z = 0;
+
     constexpr double LANDING_THRESHOLD = 0.050;
-    if (std::abs(pose_.pose.position.z - initial_alt) < LANDING_THRESHOLD) {
+    if (std::abs(initial_alt - pose_.pose.position.z) < LANDING_THRESHOLD) {
       mode_ = Mode::NOT_FLYING;
       ROS_INFO("Landing complete!");
     } else {
@@ -231,6 +244,25 @@ void Safety::setHoverGoalMsg(acl_msgs::QuadGoal& goal)
   // Use position control to hover in place
   goal.xy_mode = acl_msgs::QuadGoal::MODE_POS;
   goal.z_mode = acl_msgs::QuadGoal::MODE_POS;
+}
+
+// ----------------------------------------------------------------------------
+
+void Safety::makeSafe(double dt, const acl_msgs::QuadGoal& goal0,
+                                       acl_msgs::QuadGoal& goal)
+{
+  // rate limit the velocities (to indirectly limit accels)
+  utils::rateLimit(dt, -max_accel_xy_, max_accel_xy_, goal0.vel.x, goal.vel.x);
+  utils::rateLimit(dt, -max_accel_xy_, max_accel_xy_, goal0.vel.y, goal.vel.y);
+  utils::rateLimit(dt, -max_accel_z_ , max_accel_z_ , goal0.vel.z, goal.vel.z);
+
+  // saturate planar velocities (keeping the same direction)
+  double velxy = std::sqrt(goal.vel.x*goal.vel.x + goal.vel.y*goal.vel.y);
+  if (velxy > max_vel_xy_) {
+    goal.vel.x  = goal.vel.x/velxy * max_vel_xy_;
+    goal.vel.y  = goal.vel.y/velxy * max_vel_xy_;
+  }
+
 }
 
 } // ns aclswarm
