@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,28 +23,37 @@ namespace aclswarm {
   class DistCntrl
   {
   public:
-    DistCntrl();
-    ~DistCntrl() = default;
-    
-    void set_formation(const std::shared_ptr<Formation>& f);
-
-    void compute(/*my pos, nbhr pos, my vel*/);
-
     struct Formation {
       std::string name; ///< name of current formation
-      AdjMat adjmat; ///< current adjacency matrix for formation
-      GainMat gains; ///< gains for the current formation
-      std::vector<Eigen::Vector3d> qdes; ///< desired 3D positions of swarm
+      AdjMat adjmat; ///< current adjacency matrix for formation (nxn)
+      GainMat gains; ///< gains for the current formation (3xn3x)
+      PtsMat qdes; ///< desired 3D positions of swarm (nx3)
 
-      std::vector<double> dstar; ///< desired scale (derived from qdes)
+      Eigen::MatrixXd dstar; ///< desired scale (derived from qdes)
     };
+
+  public:
+    DistCntrl(vehidx_t vehid, uint8_t n);
+    ~DistCntrl() = default;
+    
+    void set_gains(double K, double kp, double kd);
+    void set_formation(const std::shared_ptr<Formation>& f);
+    void set_assignment(const AssignmentVec& a);
+
+    Eigen::Vector3d compute(const PtsMat& q_veh, const Eigen::Vector3d vel);
 
   private:
 
     /// \brief Internal state
+    uint8_t n_; ///< number of vehicles in swarm
+    vehidx_t vehid_; ///< ID of vehicle (index in veh named list)
     std::shared_ptr<Formation> formation_; ///< the current formation to achieve
-    AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
-    AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
+    AssignmentPerm P_; ///< nxn assignment permutation (P: vehid --> formpt)
+
+    /// \brief Control parameters
+    double K_ = 1; ///< the gain on the slow scale dynamics (higher ==> slower)
+    double kp_ = 0; ///< proportional gain on distance error
+    double kd_ = 0; ///< derivative gain on velocity error
 
   };
 

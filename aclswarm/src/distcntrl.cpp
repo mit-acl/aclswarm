@@ -10,49 +10,17 @@
 namespace acl {
 namespace aclswarm {
 
-DistCntrl::DistCntrl()
-{
-
-}
+DistCntrl::DistCntrl(vehidx_t vehid, uint8_t n)
+: n_(n), vehid_(vehid)
+{}
 
 // ----------------------------------------------------------------------------
 
-void DistCntrl::compute()
+void DistCntrl::set_gains(double K, double kp, double kd)
 {
-  // 1.
-
-  // which formation point am I currently assigned to?
-  const uint8_t i = assignment_[vehid_];
-
-  // Lookup my row in the adjacency matrix to know
-  // who my neighboring formation points are
-  const auto& myrow = adjmat_.row(i);
-
-  // loop through the other formation points in graph
-  for (size_t j=0; j<n_; ++j) {
-    // is there an edge between my formation point and this other one?
-    auto e = myrow(j);
-
-    if (e) {
-      // locate the relevant block in the gain matrix.
-      auto Aij = formation_->gains.block<3, 3>(3*i, 3*j);
-
-      // resolve which vehicle is assigned to this formation point
-      uint8_t sigmainv_j = invassignment_[j];
-
-      // calculate the relative translation to this vehicle
-      auto qij = q_[sigmainv_j] - q_[vehid_];
-
-      //
-      // Compute the control
-      //
-
-      // This term controls the scale
-      auto F = std::atan(qij.norm() - Dd)
-
-    }
-
-  }
+  K = K_;
+  kp_ = kp;
+  kd_ = kd;
 }
 
 // ----------------------------------------------------------------------------
@@ -60,6 +28,66 @@ void DistCntrl::compute()
 void DistCntrl::set_formation(const std::shared_ptr<Formation>& f)
 {
   formation_ = f;
+
+  // calculate the distance matrix for desired swarm scale
+  formation_->dstar = utils::pdistmat(formation_->qdes);
+}
+
+// ----------------------------------------------------------------------------
+
+void DistCntrl::set_assignment(const AssignmentVec& a)
+{
+  // represent the assignment as a permutation matrix
+  //  that maps vehicle id to formation point.
+  P_ = AssignmentPerm(Eigen::Map<AssignmentVec>(a));
+}
+
+// ----------------------------------------------------------------------------
+
+Eigen::Vector3d DistCntrl::compute(const PtsMat& q_veh, const Eigen::Vector3d vel)
+{
+  // initialize control output to [0 0 0]
+  Eigen::Vector3d u = Eigen::Vector3d::Zero();
+
+  // q_veh stores positions of vehicles in "vehicle space".
+  // Permute to "formation space". Everything below is in "formation space".
+  const auto q = P_ * q_veh;
+
+  // which formation point am I currently assigned to?
+  const auto i = P_.indices()(vehid_);
+
+  // loop through the other formation points in graph
+  for (size_t j=0; j<n_; ++j) {
+    // neighbor check:
+    // is there an edge between my formation point and this other one?
+    if (formation_->adjmat(i, j)) {
+      // locate the relevant block in the gain matrix ("formation space").
+      auto Aij = formation_->gains.block<3, 3>(3*i, 3*j);
+
+      // calculate the relative translation btwn my and this formation point
+      const Eigen::Vector3d qij = q.row(j) - q.row(i);
+
+      //
+      // Compute the control
+      //
+
+      // This term controls the scale
+      const double eps = 1. / (K_ * qij.norm());
+      const auto Fij = eps * std::atan(qij.norm() - formation_->dstar(i,j));
+
+      // proportional control
+      const auto up = Aij * qij + Fij * qij;
+
+      // derivative control
+      const auto ud = -vel;
+
+      // combined control
+      u += kp_ * up + kd_ * ud;
+
+    }
+  }
+
+  return u;
 }
 
 // ----------------------------------------------------------------------------

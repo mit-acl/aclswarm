@@ -59,12 +59,17 @@ namespace aclswarm {
     std::shared_ptr<DistCntrl::Formation> formation_; ///< current formation
     // AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
     // AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
-    std::vector<Eigen::Vector3d> q_; ///< 3D positions of swarm vehicles
+    PtsMat q_; ///< 3D positions of swarm vehicles
     Eigen::Vector3d vel_; ///< my current velocity
 
     /// \brief Parameters
     double assignment_dt_; ///< period of assignment task
     double control_dt_; ///< period of high-level distributed control task
+
+    /**
+     * @brief      Initialize control and assignment modules with rosparams
+     */
+    void initializeModules();
 
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);

@@ -14,6 +14,13 @@
       <param name="landing_slow_dec" value="0.001" />
     </node>
 
+    <!-- coordinated control and assignment -->
+    <node name="coordination" pkg="aclswarm" type="coordination" output="screen">
+      <param name="cntrl/K" value="4.0" />
+      <param name="cntrl/kp" value="1.0" />
+      <param name="cntrl/kd" value="0.0" />
+    </node>
+
   </group>
 
 </launch>

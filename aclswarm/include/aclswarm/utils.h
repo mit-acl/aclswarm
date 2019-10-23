@@ -22,9 +22,12 @@
 namespace acl {
 namespace aclswarm {
 
+using vehidx_t = uint8_t;
 using GainMat = Eigen::MatrixXd;
-using AdjMat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>;
-using AssignmentMap = std::vector<uint8_t>;
+using AdjMat = Eigen::Matrix<vehidx_t, Eigen::Dynamic, Eigen::Dynamic>;
+using PtsMat = Eigen::Matrix<double, Eigen::Dynamic, 3>;
+using AssignmentVec = Eigen::Matrix<vehidx_t, Eigen::Dynamic, 1>;
+using AssignmentPerm = Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic, vehidx_t>;
 
 namespace utils {
 
@@ -37,7 +40,7 @@ namespace utils {
  *
  * @return     True if successful.
  */
-static bool loadVehicleInfo(std::string& name, uint8_t& vehid,
+static bool loadVehicleInfo(std::string& name, vehidx_t& vehid,
                             std::vector<std::string>& vehicles)
 {
   //
@@ -121,6 +124,27 @@ static GainMat decodeGainMat(const std_msgs::Float32MultiArray& msg)
 // ----------------------------------------------------------------------------
 
 /**
+ * @brief      Compute distance matrix
+ *
+ * @param[in]  M     The nx3 matrix of (rowwise) data
+ *
+ * @return     A symmetric nxn matrix of pairwise distances
+ */
+static Eigen::MatrixXd pdistmat(const Eigen::MatrixXd& M)
+{
+  int n = M.rows();
+
+  // compute a matrix of pair-wise distances---squareform(pdist(M))
+  // Uses the fact that |x-y|²=|x|²+|y|²-2x'y
+  Eigen::VectorXd N = M.rowwise().squaredNorm();
+  Eigen::MatrixXd D = N.replicate(1, n) + N.transpose().replicate(n, 1);
+  D.noalias() -= 2. * M * M.transpose();
+  return D.array().sqrt();
+}
+
+// ----------------------------------------------------------------------------
+
+/**
  * @brief      Given an arbitrary numeric vector, return the indices
  *             that would sort the original vector---the sort indices.
  *             In other words, the sort indices describe where each
@@ -148,21 +172,6 @@ static std::vector<T> sortIndices(const std::vector<T>& v)
        [&v](T i1, T i2) {return v[i1] < v[i2];});
 
   return idx;
-}
-
-// ----------------------------------------------------------------------------
-
-/**
- * @brief      Invert the given assignment mapping
- *
- * @param[in]  a  The current assignment
- *
- * @return     The inverse assignment
- */
-static AssignmentMap invertAssignment(const AssignmentMap& a)
-{
-  // The sort indices of the assignment describe the inverse assignment.
-  return sortIndices(a);
 }
 
 // ----------------------------------------------------------------------------

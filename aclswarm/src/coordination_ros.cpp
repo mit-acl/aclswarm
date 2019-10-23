@@ -26,8 +26,11 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   n_ = vehs_.size();
 
   // initialize vehicle positions and my velocity
-  q_.resize(n_, Eigen::Vector3d::Zero());
+  formation_->qdes = PtsMat::Zero(n_, 3);
+  q_ = PtsMat::Zero(n_, 3);
   vel_ = Eigen::Vector3d::Zero();
+
+  initializeModules();
 
   //
   // Load parameters
@@ -47,13 +50,6 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                             &CoordinationROS::assignCb, this);
   tim_control_ = nhQ.createTimer(ros::Duration(control_dt_),
                                             &CoordinationROS::controlCb, this);
-
-  //
-  // Instantiate module objects for tasks
-  //
-
-  controller_.reset(new DistCntrl());
-  assignment_.reset(new Assignment());
 
   //
   // ROS pub/sub communication
@@ -112,6 +108,29 @@ void CoordinationROS::spin()
 // Private Methods
 // ----------------------------------------------------------------------------
 
+void CoordinationROS::initializeModules()
+{
+  //
+  // Instantiate module objects for tasks
+  //
+
+  controller_.reset(new DistCntrl(vehid_, n_));
+  assignment_.reset(new Assignment());
+
+  //
+  // Distributed Control
+  //
+
+  double K, kp, kd;
+  nhp_.param<double>("cntrl/K", K, 4.0);
+  nhp_.param<double>("cntrl/kp", kp, 1.0);
+  nhp_.param<double>("cntrl/kd", kd, 0.0);
+
+  controller_->set_gains(K, kp, kd);
+}
+
+// ----------------------------------------------------------------------------
+
 void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
   // keep track of the current formation graph
@@ -119,9 +138,10 @@ void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
   assert(n_ == formation_->adjmat.rows());
 
   // store the desired formation points
-  qdes_.resize(n_, Eigen::Vector3d::Zero());
   for (size_t i=0; i<n_; ++i) {
-    tf::pointMsgToEigen(msg->points[i], formation_->qdes[i]);
+    Eigen::Vector3d qrow;
+    tf::pointMsgToEigen(msg->points[i], qrow);
+    formation_->qdes.row(i) = qrow;
   }
 
   // if no gains are sent, this will be empty---causing the solver to run
@@ -139,7 +159,9 @@ void CoordinationROS::vehicleTrackerCb(
   assert(n_ == msg->positions.size());
 
   for (size_t i=0; i<n_; ++i) {
-    tf::pointMsgToEigen(msg->positions[i].point, q_[i]);
+    Eigen::Vector3d qrow;
+    tf::pointMsgToEigen(msg->positions[i].point, qrow);
+    q_.row(i) = qrow;
   }
 }
 
@@ -166,10 +188,11 @@ void CoordinationROS::assignCb(const ros::TimerEvent& event)
 
 void CoordinationROS::controlCb(const ros::TimerEvent& event)
 {
-  controller_->compute();
+  const Eigen::Vector3d u = controller_->compute(q_, vel_);
 
   geometry_msgs::Vector3Stamped msg;
   msg.header.stamp = ros::Time::now();
+  tf::vectorEigenToMsg(u, msg.vector);
   pub_distcmd_.publish(msg);
 }
 

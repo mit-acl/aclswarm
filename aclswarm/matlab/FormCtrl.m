@@ -29,8 +29,8 @@ qAng = linspace(0,360,n+1);      % Desired locations of agents on the unit circl
 qAng(end) = [];
 qs = [cosd(qAng); sind(qAng)] * 3; % Desired locations in x-y coordinates
 
-% % Line formation
-% qs = [(1:n); zeros(1,n)];
+% Line formation
+qs = [(1:n); zeros(1,n)];
 
 n = size(qs,2);       % Number of agents
 
