@@ -25,6 +25,8 @@ LocalizationROS::LocalizationROS(const ros::NodeHandle nh,
   // number of vehicles in swarm
   n_ = vehs_.size();
 
+  init();
+
   //
   // Load parameters
   //
@@ -63,29 +65,32 @@ LocalizationROS::LocalizationROS(const ros::NodeHandle nh,
 // Private Methods
 // ----------------------------------------------------------------------------
 
+void LocalizationROS::init()
+{
+  // initialize an identity assignment permutation
+  P_.setIdentity(n_);
+  Pt_.setIdentity(n_);
+}
+
+// ----------------------------------------------------------------------------
+
 void LocalizationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
   // keep track of the current formation graph
   adjmat_ = utils::decodeAdjMat(msg->adjmat);
   assert(n_ == adjmat_.rows());
 
-  // set the default assignment map to identity. Spoof via assignment msg
-  std_msgs::UInt8MultiArrayPtr sigma(new std_msgs::UInt8MultiArray());
-  sigma->data.resize(n_); std::iota(sigma->data.begin(), sigma->data.end(), 0);
-  sigma->layout.dim.push_back(std_msgs::MultiArrayDimension());
-  sigma->layout.dim[0].label = "assignment";
-  sigma->layout.dim[0].size = sigma->data.size();
-  sigma->layout.dim[0].stride = 1;
-  assignmentCb(sigma);
+  // update subscribers so that we are connected to our neighboring vehicles  
+  connectToNeighbors();
 }
 
 // ----------------------------------------------------------------------------
 
 void LocalizationROS::assignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg)
 {
-  // update our bijective assignment map
-  assignment_ = msg->data;
-  invassignment_ = utils::invertAssignment(assignment_);
+  // update our permutation matrix
+  P_ = AssignmentPerm(Eigen::Map<const AssignmentVec>(msg->data.data(), msg->data.size()));
+  Pt_ = P_.transpose();
 
   // update subscribers so that we are connected to our neighboring vehicles  
   connectToNeighbors();
@@ -147,31 +152,29 @@ void LocalizationROS::trackingCb(const ros::TimerEvent& event)
 
 void LocalizationROS::connectToNeighbors()
 {
-  // which formation point am I currently assigned to? Lookup my row in adjmat
-  const auto& myrow = adjmat_.row(assignment_[vehid_]);
+  // which formation point am I currently assigned to?
+  const auto i = P_.indices()(vehid_);
 
   // loop through the other formation points in graph
   for (size_t j=0; j<n_; ++j) {
-    // is there an edge between my formation point and this other one?
-    auto e = myrow(j);
-
     // which vehicle is at this formation point?
-    auto nbhrid = invassignment_[j];
+    const auto j_vehid = Pt_.indices()(j);
 
-    // if there is an edge btwn me and this other formation point, connect.
-    if (e) {
-      std::string ns = vehs_[nbhrid];
+    // neighbor check:
+    // is there an edge between my formation point and this other one?
+    if (adjmat_(i, j)) {
+      std::string ns = vehs_[j_vehid];
 
       // create a closure to pass additional arguments to callback
       boost::function<void(const aclswarm_msgs::VehicleEstimatesConstPtr&)> cb =
         [=](const aclswarm_msgs::VehicleEstimatesConstPtr& msg) {
-          vehicleTrackerCb(msg, ns, nbhrid);
+          vehicleTrackerCb(msg, ns, j_vehid);
         };
 
-      vehsubs_[nbhrid] = nh_.subscribe("/" + ns + "/vehicle_estimates", 1, cb);
+      vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/vehicle_estimates", 1, cb);
     } else {
       // if a subscriber exists, break communication
-      if (vehsubs_.find(nbhrid) != vehsubs_.end()) vehsubs_[nbhrid].shutdown();
+      if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();
     }
   }
 }

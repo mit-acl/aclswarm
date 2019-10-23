@@ -51,12 +51,13 @@ namespace aclswarm {
     /// \brief Internal States
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
     AdjMat adjmat_; ///< current adjacency matrix for formation
-    AssignmentMap assignment_; ///< assignment map (sigma: vehid --> formpt)
-    AssignmentMap invassignment_; ///< inv map (sigma^-1: formpt --> vehid)
+    AssignmentPerm P_; ///< nxn assignment permutation (P: vehid --> formpt)
+    AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
 
     /// \brief Parameters
     double tracking_dt_; ///< period of mutual localization task
 
+    void init();
     void connectToNeighbors();
 
     /// \brief ROS callback handlers

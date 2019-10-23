@@ -39,7 +39,7 @@ void DistCntrl::set_assignment(const AssignmentVec& a)
 {
   // represent the assignment as a permutation matrix
   //  that maps vehicle id to formation point.
-  P_ = AssignmentPerm(Eigen::Map<AssignmentVec>(a));
+  P_ = AssignmentPerm(a);
 }
 
 // ----------------------------------------------------------------------------

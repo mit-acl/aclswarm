@@ -63,6 +63,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                     &CoordinationROS::vehicleTrackerCb, this);
 
   pub_distcmd_ = nhQ.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
+  pub_assignment_ = nhQ.advertise<std_msgs::UInt8MultiArray>("assignment", 1);
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other

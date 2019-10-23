@@ -21,6 +21,7 @@
 #include <aclswarm_msgs/Formation.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <std_msgs/UInt8MultiArray.h>
 
 #include "aclswarm/distcntrl.h"
 #include "aclswarm/assignment.h"
@@ -43,7 +44,7 @@ namespace aclswarm {
     std::unique_ptr<ros::AsyncSpinner> spinner_;
     ros::Timer tim_assignment_, tim_control_;
     ros::Subscriber sub_formation_, sub_tracker_;
-    ros::Publisher pub_distcmd_;
+    ros::Publisher pub_distcmd_, pub_assignment_;
 
     uint8_t n_; ///< number of vehicles in swarm
     uint8_t vehid_; ///< ID of vehicle (index in veh named list)
