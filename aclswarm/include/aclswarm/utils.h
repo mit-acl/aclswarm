@@ -263,6 +263,38 @@ static void rateLimit(double dt, const T lRateLim, const T uRateLim,
   if (v1 < lower) v1 = lower;
 }
 
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Wrap angle so that it is in [-pi, pi]
+ *
+ * @param[in]  angle  The angle to wrap
+ *
+ * @return     The wrapped angle
+ */
+static double wrapToPi(double angle)
+{
+  if (angle >  M_PI) return angle - 2*M_PI;
+  if (angle < -M_PI) return angle + 2*M_PI;
+  return angle;
+}
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Wrap angle so that it is in [0, 2*pi]
+ *
+ * @param[in]  angle  The angle to wrap
+ *
+ * @return     The wrapped angle
+ */
+static double wrapTo2Pi(double angle)
+{
+  if (angle > 2*M_PI) return angle - 2*M_PI;
+  if (angle < 0)      return angle + 2*M_PI;
+  return angle;
+}
+
 } // ns utils
 } // ns aclswarm
 } // ns acl

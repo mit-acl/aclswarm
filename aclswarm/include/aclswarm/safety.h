@@ -45,23 +45,24 @@ namespace aclswarm {
     std::string vehname_; ///< name of the vehicle this node is running on
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 
-    struct Goal {
-        acl_msgs::QuadGoal msg; ///< actual goal signal
+    struct VelocityGoal {
+        double stamp_s = 0; ///< timestamp in seconds
+        double vx = 0, vy = 0, vz = 0; ///< linear velocity goal signal
+        double r = 0; ///< yawrate goal signal
         bool active = false; ///< should this goal even be considered?
         int priority = 0; ///< highest priority wins
-        double dt; ///< what is the period associated with this signal?
 
-        // to enable sorting of goals
-        bool operator<(const Goal& other) const { return priority < other.priority; }
-        bool operator>(const Goal& other) const { return priority > other.priority; }
+        // to enable sorting of velocity goals
+        bool operator<(const VelocityGoal& other) const { return priority < other.priority; }
+        bool operator>(const VelocityGoal& other) const { return priority > other.priority; }
     };
 
     /// \brief Internal state
     enum class Mode { NOT_FLYING, TAKEOFF, FLYING, LANDING };
     Mode mode_ = Mode::NOT_FLYING; ///< current mode derived from global flight mode
     geometry_msgs::PoseStamped pose_; ///< current pose of the vehicle
-    enum class GoalType { DIST, JOY };
-    std::map<GoalType, Goal> goals_; ///< goals to consider (by priority)
+    enum class GoalSrc { DIST, JOY };
+    std::map<GoalSrc, VelocityGoal> goals_; ///< goals to consider
 
     /// \brief Parameters
     double bounds_x_min_, bounds_x_max_; ///< safety bounds to
@@ -79,9 +80,8 @@ namespace aclswarm {
     double max_vel_xy_; ///< maximum planar translational velocity
 
     void init();
-    void setHoverGoalMsg(acl_msgs::QuadGoal& goal);
-    void makeSafe(double dt, const acl_msgs::QuadGoal& goal0,
-                                    acl_msgs::QuadGoal& goal);
+    void makeSafeTraj(double dt, const VelocityGoal& g,
+                              acl_msgs::QuadGoal& goal);
 
     /// \brief ROS callback handlers
     void flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg);
