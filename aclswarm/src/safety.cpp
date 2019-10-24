@@ -46,7 +46,7 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("max_accel_z", max_accel_z_, 0.8);
 
   nhp_.param<double>("max_vel_xy", max_vel_xy_, 0.5);
-  
+
   //
   // Timers
   //
@@ -211,7 +211,9 @@ void Safety::controlCb(const ros::TimerEvent& event)
     // Find the highest priority active goal signal
     for (auto&& g : goals) {
       if (g.active) {
-        const double dt = g.stamp_s - last_active_goal_time;
+        // TODO: does this make sense for joy override?
+        const double dt = control_dt_;
+        // const double dt = g.stamp_s - last_active_goal_time;
 
         // Use this velocity goal to make a safe pos+vel trajectory goal
         makeSafeTraj(dt, g, goalmsg);
