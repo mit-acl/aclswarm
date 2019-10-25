@@ -157,6 +157,8 @@ void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
     goal.vx  = goal.vx/velxy * max_vel_xy_;
     goal.vy  = goal.vy/velxy * max_vel_xy_;
   }
+
+  // TODO: kill z vel? fix z alt?
 }
 
 // ----------------------------------------------------------------------------
@@ -328,9 +330,6 @@ void Safety::makeSafeTraj(double dt, const VelocityGoal& g,
   goal.pos.z = utils::clamp(nextz, std::min(bounds_z_min_, goal.pos.z),
                         std::max(bounds_z_max_, goal.pos.z), zclamped);
 
-  // TODO
-  goal.pos.z = 1;
-
   // if the predicted position is outside the room bounds, zero the velocities.
   if (xclamped) vx = 0;
   if (yclamped) vy = 0;
@@ -364,7 +363,56 @@ void Safety::makeSafeTraj(double dt, const VelocityGoal& g,
 
 void Safety::collisionAvoidance(VelocityGoal& goal)
 {
+  bool didWrap = false;
+  std::vector<std::pair<double, int>> edges;
 
+  // calculate the "no-fly zones"---sectors describing velocity obstacles
+  // Collision avoidance is done in "vehicle space"
+  for (size_t j=0; j<q_.rows(); ++j) {
+    if (vehid_ == j) continue;
+
+    // calculate the relative translation btwn me and this other vehicle
+    const Eigen::Vector3d qij = q_.row(j) - q_.row(vehid_);
+
+    // check if we are even close enough to start worrying about collision
+    if (qij.norm() > d_avoid_thresh_) continue;
+
+    //
+    // Calculate the "no-fly zones" (the 'pizza slices' in polar coordinates)
+    //
+
+    // calculate angle between my body-x and this obstacle
+    double theta = std::atan2(qij.y(), qij.x());
+
+    // half-angle of pizza slice / sector / velocity obstacle
+    double alpha = std::abs(std::asin(std::min(1.0, r_keep_out_/qij.norm())));
+
+    // beginning and ending angles of the tangent lines (on edge of sector)
+    const double beg = utils::wrapToPi(theta-alpha);
+    const double end = utils::wrapToPi(theta+alpha);
+
+    // start edges are denoted with +1, stop edges with -1
+    edges.push_back({beg, +1});
+    edges.push_back({end, -1});
+
+    if (beg > end) {
+      didWrap = true;
+      edges.push_back({-M_PI, +1});
+      edges.push_back({ M_PI, -1});
+    }
+
+
+  }
+
+  //
+  // Take the union of all half-sectors (i.e., if they are overlapping)
+  //
+
+  std::vector<std::pair<double,int>> edges;
+  bool didWrap = false;
+  for (const auto&& hs : halfsectors) {
+    if ()
+  }
 }
 
 } // ns aclswarm
