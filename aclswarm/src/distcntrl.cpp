@@ -20,7 +20,7 @@ DistCntrl::DistCntrl(vehidx_t vehid, uint8_t n)
 
 void DistCntrl::set_gains(double K, double kp, double kd)
 {
-  K = K_;
+  K_ = K;
   kp_ = kp;
   kd_ = kd;
 }
