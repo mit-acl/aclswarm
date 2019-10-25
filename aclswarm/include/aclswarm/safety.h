@@ -16,6 +16,8 @@
 
 #include <ros/ros.h>
 
+#include <Eigen/Dense>
+
 #include <tf2/transform_datatypes.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/utils.h>
@@ -25,6 +27,9 @@
 #include <acl_msgs/QuadGoal.h>
 #include <acl_msgs/QuadFlightMode.h>
 #include <acl_msgs/State.h>
+#include <aclswarm_msgs/VehicleEstimates.h>
+
+#include "aclswarm/utils.h"
 
 namespace acl {
 namespace aclswarm {
@@ -37,7 +42,7 @@ namespace aclswarm {
     
   private:
     ros::NodeHandle nh_, nhp_;
-    ros::Subscriber sub_fmode_, sub_cmdin_, sub_state_;
+    ros::Subscriber sub_fmode_, sub_cmdin_, sub_state_, sub_tracker_;
     ros::Publisher pub_cmdout_;
     ros::Timer tim_control_;
 
@@ -63,6 +68,7 @@ namespace aclswarm {
     geometry_msgs::PoseStamped pose_; ///< current pose of the vehicle
     enum class GoalSrc { DIST, JOY };
     std::map<GoalSrc, VelocityGoal> goals_; ///< goals to consider
+    PtsMat q_; ///< 3D positions of swarm vehicles
 
     /// \brief Parameters
     double bounds_x_min_, bounds_x_max_; ///< safety bounds to
@@ -82,12 +88,14 @@ namespace aclswarm {
     void init();
     void makeSafeTraj(double dt, const VelocityGoal& g,
                               acl_msgs::QuadGoal& goal);
+    void collisionAvoidance(VelocityGoal& goal);
 
     /// \brief ROS callback handlers
     void flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg);
     void cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg);
     void stateCb(const acl_msgs::StateConstPtr& msg);
     void controlCb(const ros::TimerEvent& event);
+    void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
 
   };
 

@@ -5,10 +5,9 @@
  * @date 15 Oct 2019
  */
 
-#include <eigen_conversions/eigen_msg.h>
-
 #include "aclswarm/coordination_ros.h"
-#include "aclswarm/utils.h"
+
+#include <eigen_conversions/eigen_msg.h>
 
 namespace acl {
 namespace aclswarm {

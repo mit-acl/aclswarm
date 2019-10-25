@@ -6,7 +6,8 @@
  */
 
 #include "aclswarm/safety.h"
-#include "aclswarm/utils.h"
+
+#include <eigen_conversions/eigen_msg.h>
 
 namespace acl {
 namespace aclswarm {
@@ -61,6 +62,8 @@ Safety::Safety(const ros::NodeHandle nh,
   sub_fmode_ = nh_.subscribe("/globalflightmode", 1, &Safety::flightmodeCb, this);
   sub_cmdin_ = nh_.subscribe("distcmd", 1, &Safety::cmdinCb, this);
   sub_state_ = nh_.subscribe("state", 1, &Safety::stateCb, this);
+  sub_tracker_ = nh_.subscribe("vehicle_estimates", 1,
+                                &Safety::vehicleTrackerCb, this);
 
   pub_cmdout_ = nh_.advertise<acl_msgs::QuadGoal>("goal", 1);
 }
@@ -71,6 +74,8 @@ Safety::Safety(const ros::NodeHandle nh,
 
 void Safety::init()
 {
+  q_ = PtsMat::Zero(vehs_.size(), 3);
+
   // initialize goal signals to mux
   goals_.insert(std::make_pair(GoalSrc::DIST, VelocityGoal()));
   goals_.insert(std::make_pair(GoalSrc::JOY, VelocityGoal()));
@@ -116,6 +121,19 @@ void Safety::stateCb(const acl_msgs::StateConstPtr& msg)
   pose_.pose.orientation.y = msg->quat.y;
   pose_.pose.orientation.z = msg->quat.z;
   pose_.pose.orientation.w = msg->quat.w;
+}
+
+// ----------------------------------------------------------------------------
+
+void Safety::vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg)
+{
+  assert(vehs_.size() == msg->positions.size());
+
+  for (size_t i=0; i<msg->positions.size(); ++i) {
+    Eigen::Vector3d qrow;
+    tf::pointMsgToEigen(msg->positions[i].point, qrow);
+    q_.row(i) = qrow;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -310,6 +328,9 @@ void Safety::makeSafeTraj(double dt, const VelocityGoal& g,
   goal.pos.z = utils::clamp(nextz, std::min(bounds_z_min_, goal.pos.z),
                         std::max(bounds_z_max_, goal.pos.z), zclamped);
 
+  // TODO
+  goal.pos.z = 1;
+
   // if the predicted position is outside the room bounds, zero the velocities.
   if (xclamped) vx = 0;
   if (yclamped) vy = 0;
@@ -336,6 +357,13 @@ void Safety::makeSafeTraj(double dt, const VelocityGoal& g,
 
   // set angular rate
   goal.dyaw = r;
+
+}
+
+// ----------------------------------------------------------------------------
+
+void Safety::collisionAvoidance(VelocityGoal& goal)
+{
 
 }
 
