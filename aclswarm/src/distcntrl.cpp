@@ -64,7 +64,7 @@ Eigen::Vector3d DistCntrl::compute(const PtsMat& q_veh, const Eigen::Vector3d ve
     // is there an edge between my formation point and this other one?
     if (formation_->adjmat(i, j)) {
       // locate the relevant block in the gain matrix ("formation space").
-      auto Aij = formation_->gains.block<3, 3>(3*i, 3*j);
+      const auto Aij = formation_->gains.block<3, 3>(3*i, 3*j);
 
       // calculate the relative translation btwn my and this formation point
       const Eigen::Vector3d qij = q.row(j) - q.row(i);
@@ -75,7 +75,7 @@ Eigen::Vector3d DistCntrl::compute(const PtsMat& q_veh, const Eigen::Vector3d ve
 
       // This term controls the scale
       const double eps = 1. / (K_ * qij.norm());
-      const auto Fij = eps * std::atan(qij.norm() - formation_->dstar(i,j));
+      const double Fij = eps * std::atan(qij.norm() - formation_->dstar(i,j));
 
       // proportional control
       const auto up = Aij * qij + Fij * qij;
