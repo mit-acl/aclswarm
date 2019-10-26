@@ -70,7 +70,7 @@ namespace aclswarm {
     /**
      * @brief      Initialize control and assignment modules with rosparams
      */
-    void initializeModules();
+    void init();
 
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);

@@ -29,7 +29,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   q_ = PtsMat::Zero(n_, 3);
   vel_ = Eigen::Vector3d::Zero();
 
-  initializeModules();
+  init();
 
   //
   // Load parameters
@@ -113,7 +113,7 @@ void CoordinationROS::spin()
 // Private Methods
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::initializeModules()
+void CoordinationROS::init()
 {
   //
   // Instantiate module objects for tasks
