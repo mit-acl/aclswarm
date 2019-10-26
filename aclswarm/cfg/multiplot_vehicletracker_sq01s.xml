@@ -16,7 +16,7 @@
                                 <title_visible>true</title_visible>
                             </x_axis>
                             <y_axis>
-                                <custom_title>vx</custom_title>
+                                <custom_title>SQ01s x</custom_title>
                                 <title_type>1</title_type>
                                 <title_visible>true</title_visible>
                             </y_axis>
@@ -35,11 +35,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/goal</topic>
-                                    <type>acl_msgs/QuadGoal</type>
+                                    <topic>/SQ01s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vel/x</field>
+                                    <field>positions/0/point/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -48,8 +48,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/goal</topic>
-                                    <type>acl_msgs/QuadGoal</type>
+                                    <topic>/SQ01s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -64,7 +64,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -72,7 +72,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>GoalOut vx</title>
+                            <title>x</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -86,11 +86,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/distcmd</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/SQ02s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vector/x</field>
+                                    <field>positions/0/point/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -99,8 +99,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/distcmd</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/SQ02s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -115,7 +115,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -123,7 +123,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>GoalIn vx</title>
+                            <title>xhat(2)</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -137,11 +137,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/vicon</topic>
-                                    <type>acl_msgs/ViconState</type>
+                                    <topic>/SQ03s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/x</field>
+                                    <field>positions/0/point/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -150,8 +150,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/vicon</topic>
-                                    <type>acl_msgs/ViconState</type>
+                                    <topic>/SQ03s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -166,7 +166,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -174,14 +174,65 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>State vx</title>
+                            <title>xhat(3)</title>
                         </curve_2>
+                        <curve_3>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/SQ04s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>positions/0/point/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/SQ04s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>xhat(4)</title>
+                        </curve_3>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Velocity X</title>
+                    <title>Vehicle Tracker</title>
                 </column_0>
             </row_0>
             <row_1>
@@ -194,7 +245,7 @@
                                 <title_visible>true</title_visible>
                             </x_axis>
                             <y_axis>
-                                <custom_title>vy</custom_title>
+                                <custom_title>SQ01s y</custom_title>
                                 <title_type>1</title_type>
                                 <title_visible>true</title_visible>
                             </y_axis>
@@ -213,11 +264,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/goal</topic>
-                                    <type>acl_msgs/QuadGoal</type>
+                                    <topic>/SQ01s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vel/y</field>
+                                    <field>positions/0/point/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -226,8 +277,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/goal</topic>
-                                    <type>acl_msgs/QuadGoal</type>
+                                    <topic>/SQ01s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -242,7 +293,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -250,7 +301,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>GoalOut vy</title>
+                            <title>y</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -264,11 +315,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/distcmd</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/SQ02s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vector/y</field>
+                                    <field>positions/0/point/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -277,8 +328,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/distcmd</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/SQ02s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -293,7 +344,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -301,7 +352,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>GoalIn vy</title>
+                            <title>yhat(2)</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -315,11 +366,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/vicon</topic>
-                                    <type>acl_msgs/ViconState</type>
+                                    <topic>/SQ03s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/y</field>
+                                    <field>positions/0/point/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -328,8 +379,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/vicon</topic>
-                                    <type>acl_msgs/ViconState</type>
+                                    <topic>/SQ03s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -344,7 +395,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -352,14 +403,65 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>State vy</title>
+                            <title>yhat(3)</title>
                         </curve_2>
+                        <curve_3>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/SQ04s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>positions/0/point/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/SQ04s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>yhat(4)</title>
+                        </curve_3>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Velocity Y</title>
+                    <title>Untitled Plot</title>
                 </column_0>
             </row_1>
             <row_2>
@@ -391,11 +493,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/goal</topic>
-                                    <type>acl_msgs/QuadGoal</type>
+                                    <topic>/SQ01s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vel/z</field>
+                                    <field>positions/0/point/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -404,8 +506,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/goal</topic>
-                                    <type>acl_msgs/QuadGoal</type>
+                                    <topic>/SQ01s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -420,7 +522,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -428,7 +530,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>GoalOut vz</title>
+                            <title>z</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -442,11 +544,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/distcmd</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/SQ02s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vector/z</field>
+                                    <field>positions/0/point/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -455,8 +557,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/distcmd</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/SQ02s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -471,7 +573,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -479,7 +581,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>GoalIn vz</title>
+                            <title>zhat(2)</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -493,11 +595,11 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/vicon</topic>
-                                    <type>acl_msgs/ViconState</type>
+                                    <topic>/SQ03s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/z</field>
+                                    <field>positions/0/point/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -506,8 +608,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/SQ02s/vicon</topic>
-                                    <type>acl_msgs/ViconState</type>
+                                    <topic>/SQ03s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -522,7 +624,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -530,14 +632,65 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>State vz</title>
+                            <title>zhat(3)</title>
                         </curve_2>
+                        <curve_3>
+                            <axes>
+                                <x_axis>
+                                    <field></field>
+                                    <field_type>1</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/SQ04s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>positions/0/point/z</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/SQ04s/vehicle_estimates</topic>
+                                    <type>aclswarm_msgs/VehicleEstimates</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>zhat(4)</title>
+                        </curve_3>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Velocity z</title>
+                    <title>Untitled Plot</title>
                 </column_0>
             </row_2>
         </plots>
