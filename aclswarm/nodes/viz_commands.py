@@ -72,7 +72,10 @@ class VizCommands:
                 m.pose.orientation.x = 0.0
                 m.pose.orientation.y = 0.0
                 m.pose.orientation.z = 0.0
-                m.scale = Vector3(0.075, 0.075, 0.075) # magic numbers!
+                if t == 'safecmd':
+                    m.scale = Vector3(0.1, 0.1, 0.1) # magic numbers!
+                else:
+                    m.scale = Vector3(0.075, 0.075, 0.075) # magic numbers!
                 m.lifetime = rospy.Duration(0.1) # this marker will be removed if not updated every period
 
                 self.markers.markers.append(m)
