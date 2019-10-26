@@ -47,6 +47,8 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("max_accel_z", max_accel_z_, 0.8);
 
   nhp_.param<double>("max_vel_xy", max_vel_xy_, 0.5);
+  nhp_.param<double>("d_avoid_thresh", d_avoid_thresh_, 1.5);
+  nhp_.param<double>("r_keep_out", r_keep_out_, 1.2);
 
   //
   // Timers
@@ -157,6 +159,8 @@ void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
     goal.vx  = goal.vx/velxy * max_vel_xy_;
     goal.vy  = goal.vy/velxy * max_vel_xy_;
   }
+
+  collisionAvoidance(goal);
 
   // TODO: kill z vel? fix z alt?
 }
@@ -366,12 +370,13 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
   bool didWrap = false;
   std::vector<std::pair<double, int>> edges;
 
-  // calculate the "no-fly zones"---sectors describing velocity obstacles
-  // Collision avoidance is done in "vehicle space"
+  // Identify the edges of the "no-fly zones"---sectors describing
+  // velocity obstacles.
   for (size_t j=0; j<q_.rows(); ++j) {
     if (vehid_ == j) continue;
 
     // calculate the relative translation btwn me and this other vehicle
+    // n.b., this is in "vehicle space".
     const Eigen::Vector3d qij = q_.row(j) - q_.row(vehid_);
 
     // check if we are even close enough to start worrying about collision
@@ -388,31 +393,95 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
     double alpha = std::abs(std::asin(std::min(1.0, r_keep_out_/qij.norm())));
 
     // beginning and ending angles of the tangent lines (on edge of sector)
-    const double beg = utils::wrapToPi(theta-alpha);
-    const double end = utils::wrapToPi(theta+alpha);
+    const double beg = utils::wrapTo2Pi(theta-alpha);
+    const double end = utils::wrapTo2Pi(theta+alpha);
 
-    // start edges are denoted with +1, stop edges with -1
-    edges.push_back({beg, +1});
-    edges.push_back({end, -1});
+    // start edges are denoted with -1, stop edges with +1 (since start < end)
+    edges.push_back({beg, -1});
+    edges.push_back({end, +1});
 
+    // did we cross the 0/2pi boundary? if so, break this sector into
+    // two sectors at 0---these edges will be removed later.
     if (beg > end) {
       didWrap = true;
-      edges.push_back({-M_PI, +1});
-      edges.push_back({ M_PI, -1});
+      edges.push_back({0.0, +1}); // sector: [beg, 0]
+      edges.push_back({0.0, -1}); // sector: [0, end]
     }
-
-
   }
+
+  // if there is no risk of collision, any command is safe.
+  if (edges.size() == 0) return;
 
   //
   // Take the union of all half-sectors (i.e., if they are overlapping)
   //
 
-  std::vector<std::pair<double,int>> edges;
-  bool didWrap = false;
-  for (const auto&& hs : halfsectors) {
-    if ()
+  // sort the edges in ascending order by angle
+  std::sort(edges.begin(), edges.end());
+
+  // the final no-fly zones are created by counting edges from above.
+  // Similar to how a parser counts parentheses to ensure a valid expression.
+  int count = 0;
+  double start;
+  std::vector<std::pair<double, double>> nfzones;
+  for (const auto& e : edges) {
+    // if starting a new zone
+    if (count == 0) start = e.first;
+
+    count += e.second;
+
+    // if zone has ended
+    if (count == 0) nfzones.push_back({start, e.first});
   }
+
+  //
+  // Check if the desired velocity goal is safe
+  //
+
+  double psi = utils::wrapTo2Pi(std::atan2(goal.vy, goal.vx));
+  bool safe = true;
+  for (const auto& z : nfzones) {
+    if (psi > z.first && psi < z.second || (didWrap && psi == 0.0)) {
+      safe = false;
+      break;
+    }
+  }
+
+  // if the desired velocity goal is outside of all no-fly zones, we are done
+  if (safe) return;
+
+  //
+  // Find the closest safe direction
+  //
+
+  // if there was a wrap, we know that the first nfz is our artificially
+  // inserted zone ({0.0}). Remove it since it does not have safe edges.
+  if (didWrap) nfzones.erase(nfzones.begin());
+
+  // The nearest safe direction is an edge. Flatten zones into edges only.
+  // For subsequent nearest value search, wrap btwn [-pi,pi].
+  psi = utils::wrapTo2Pi(psi);
+  std::vector<double> nfzedge;
+  for (const auto& z : nfzones) {
+    nfzedge.push_back(utils::wrapToPi(z.first));
+    nfzedge.push_back(utils::wrapToPi(z.second));
+  }
+
+  // find the closest edge angle to the desired direction
+  const size_t closestIdx = utils::closest(nfzedge, psi);
+  const double closestEdge = nfzedge[closestIdx];
+
+  // for formation control, we can guarantee convergence if the actual velocity
+  // is in the half-plane of the commanded velocity. We leverage this here.
+  if (std::abs(utils::wrapToPi(closestEdge - psi)) <= M_PI/2) {
+    const double umag = std::sqrt(goal.vx*goal.vx + goal.vy*goal.vy);
+    goal.vx = umag*std::cos(closestEdge);
+    goal.vy = umag*std::sin(closestEdge);
+    return;
+  }
+
+  // otherwise, nothing we do is safe. Just stop.
+  goal.vx = goal.vy = 0;
 }
 
 } // ns aclswarm

@@ -295,6 +295,34 @@ static double wrapTo2Pi(double angle)
   return angle;
 }
 
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Find the index of the element closest to the input
+ *
+ * @param[in]  x     The vector to search
+ * @param[in]  v     The input value
+ *
+ * @return     The index of the closest value
+ */
+template<typename T>
+static size_t closest(const std::vector<T>& x, T v)
+{
+  // find the first element of x that is >= v
+  auto it = std::lower_bound(x.begin(), x.end(), v);
+  
+  // there can be no lower, this is the closest.
+  if (it == x.begin())
+    return std::distance(x.begin(), it);
+  
+  // make sure to look at the previous value, which might be closer
+  auto prev = it-1;
+  if (std::abs(*prev-v) < std::abs(*it-v))
+    return std::distance(x.begin(), prev);
+  
+  return std::distance(x.begin(), it);
+}
+
 } // ns utils
 } // ns aclswarm
 } // ns acl
