@@ -57,7 +57,10 @@ namespace aclswarm {
     AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
     biditer_; ///< current bidding iteration of the CBAA process
     Bid bid_; ///< my current bid, to be sent to others
-    std::map<vehidx_t, Bid> bids_; ///< current bids of my neighborhood
+    std::map<uint32_t, std::map<vehidx_t, Bid>> bids_; ///< all bids this round
+    FormPts p_; ///< the desired formation points
+    AdjMat adjmat_; ///< the required formation graph adjacency matrix
+    uint32_t cbaa_max_iter_; ///< number of iterations until convergence
 
     void reset();
     void AlignFormation();

@@ -40,15 +40,15 @@ rng(2)
 q0 = rand(2,n) * 5;
 
 
-% % Graph adjacency matrix
-% adj = [ 0     1     1     0     0     0
-%         1     0     1     1     1     0
-%         1     1     0     0     1     1
-%         0     1     0     0     1     0
-%         0     1     1     1     0     1
-%         0     0     1     0     1     0];
+% Graph adjacency matrix
+adj = [ 0     1     1     0     0     0
+        1     0     1     1     1     0
+        1     1     0     0     1     1
+        0     1     0     0     1     0
+        0     1     1     1     0     1
+        0     0     1     0     1     0];
 
-adj = ones(n) - diag(ones(n,1));  % Complete graph
+% adj = ones(n) - diag(ones(n,1));  % Complete graph
 
      
 %% Parameters

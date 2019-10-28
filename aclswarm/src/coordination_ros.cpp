@@ -210,7 +210,7 @@ void CoordinationROS::auctioneertickCb(const ros::TimerEvent& event)
   // determine if a new assignment should be sought for.
   // if (time_to_perform_assignment) auctioneer_->start(q_);
 
-  auctioneer_->tick();
+  // auctioneer_->tick();
 
   if (auctioneer->wantsToSendBid()) {
     const auto& bid = auctioneer_->getBid();
