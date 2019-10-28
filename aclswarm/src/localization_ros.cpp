@@ -112,8 +112,7 @@ void LocalizationROS::stateCb(const acl_msgs::StateConstPtr& msg)
 // ----------------------------------------------------------------------------
 
 void LocalizationROS::vehicleTrackerCb(
-                          const aclswarm_msgs::VehicleEstimatesConstPtr& msg,
-                          const std::string& vehname, int vehid)
+                const aclswarm_msgs::VehicleEstimatesConstPtr& msg, int vehid)
 {
   for (size_t i=0; i<msg->positions.size(); ++i) {
     const auto& pos = msg->positions[i];
@@ -168,7 +167,7 @@ void LocalizationROS::connectToNeighbors()
       // create a closure to pass additional arguments to callback
       boost::function<void(const aclswarm_msgs::VehicleEstimatesConstPtr&)> cb =
         [=](const aclswarm_msgs::VehicleEstimatesConstPtr& msg) {
-          vehicleTrackerCb(msg, ns, j_vehid);
+          vehicleTrackerCb(msg, j_vehid);
         };
 
       vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/vehicle_estimates", 1, cb);

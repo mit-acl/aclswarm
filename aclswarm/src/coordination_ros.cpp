@@ -36,6 +36,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   //
 
   nhp_.param<double>("assignment_dt", assignment_dt_, 0.5);
+  nhp_.param<double>("auctioneer_tick_dt", auctioneer_tick_dt_, 0.02);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
 
   //
@@ -45,9 +46,9 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   ros::NodeHandle nhQ(nh_);
   nhQ.setCallbackQueue(&task_queue_);
 
-  tim_assignment_ = nhQ.createTimer(ros::Duration(assignment_dt_),
-                                            &CoordinationROS::assignCb, this);
-  tim_assignment_.stop();
+  tim_auctioneertick_ = nhQ.createTimer(ros::Duration(auctioneer_tick_dt_),
+                                    &CoordinationROS::auctioneertickCb, this);
+  tim_auctioneertick_.stop();
   tim_control_ = nhQ.createTimer(ros::Duration(control_dt_),
                                             &CoordinationROS::controlCb, this);
   tim_control_.stop();
@@ -65,6 +66,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   pub_distcmd_ = nhQ.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
   pub_assignment_ = nhQ.advertise<std_msgs::UInt8MultiArray>("assignment", 1);
+  pub_cbaabid_ = nhQ.advertise<aclswarm_msgs::CBAA>("cbaabid", 1);
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
@@ -86,11 +88,12 @@ void CoordinationROS::spin()
     if (formation_received_) {
       // stop tasks
       tim_control_.stop();
-      tim_assignment_.stop();
+      tim_auctioneertick_.stop();
 
       // We only need to solve gains if they were not already provided
       if (formation_->gains.size() == 0) {
         // solve for gains
+        ROS_ERROR("Online gain design not yet implemented.");
       }
 
       // let the controller know about the new formation
@@ -98,9 +101,16 @@ void CoordinationROS::spin()
                         << formation_->name << "\033[0m");
       controller_->set_formation(formation_);
 
+      // find a reassignment for the new formation
+      auctioneer_->setFormation(formation_);
+      auctioneer_->start(q_);
+
+      // make sure to connect to neighbors in communication graph
+      connectToNeighbors();
+
       // allow downstream tasks to continue
       tim_control_.start();
-      tim_assignment_.start();
+      tim_auctioneertick_.start();
       formation_received_ = false;
     }
 
@@ -120,7 +130,7 @@ void CoordinationROS::init()
   //
 
   controller_.reset(new DistCntrl(vehid_, n_));
-  assignment_.reset(new Assignment());
+  auctioneer_.reset(new Auctioneer(vehid_, n_));
 
   //
   // Distributed Control
@@ -184,13 +194,44 @@ void CoordinationROS::stateCb(const acl_msgs::StateConstPtr& msg)
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::assignCb(const ros::TimerEvent& event)
+void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehid)
 {
-  // assignment_->tick();
+  Auctioneer::Bid bid;
+  bid.price = msg->price;
+  bid.who = msg->who;
+  bid.iter = msg->cbaa_iter;
+  auctioneer_->receiveBid(bid, vehid);
+}
 
-  // if (assignment_->hasNewAssignment()) {
-  //   // publish
-  // }
+// ----------------------------------------------------------------------------
+
+void CoordinationROS::auctioneertickCb(const ros::TimerEvent& event)
+{
+  // determine if a new assignment should be sought for.
+  // if (time_to_perform_assignment) auctioneer_->start(q_);
+
+  auctioneer_->tick();
+
+  if (auctioneer->wantsToSendBid()) {
+    const auto& bid = auctioneer_->getBid();
+    aclswarm_msgs::CBAA msg;
+    msg.header.stamp = ros::Time::now();
+    msg.price = bid.price;
+    msg.who = bid.who;
+    msg.cbaa_iter = bid.iter;
+    pub_cbaabid_.publish(msg);
+  }
+
+  if (auctioneer_->hasNewAssignment()) {
+    // let distributed controller know
+    controller_->set_assignment(auctioneer_->getAssignment());
+
+    // change the communication graph accordingly
+    connectToNeighbors();
+
+    // publish
+    // pub_assignment_.publish();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -203,6 +244,37 @@ void CoordinationROS::controlCb(const ros::TimerEvent& event)
   msg.header.stamp = ros::Time::now();
   tf::vectorEigenToMsg(u, msg.vector);
   pub_distcmd_.publish(msg);
+}
+
+// ----------------------------------------------------------------------------
+
+void CoordinationROS::connectToNeighbors()
+{
+  // which formation point am I currently assigned to?
+  const auto i = auctioneer_->getAssignment().indices()(vehid_);
+
+  // loop through the other formation points in graph
+  for (size_t j=0; j<n_; ++j) {
+    // which vehicle is at this formation point?
+    const auto j_vehid = auctioneer_->getInvAssignment().indices()(j);
+
+    // neighbor check:
+    // is there an edge between my formation point and this other one?
+    if (formation_->adjmat(i, j)) {
+      std::string ns = vehs_[j_vehid];
+
+      // create a closure to pass additional arguments to callback
+      boost::function<void(const aclswarm_msgs::CBAAConstPtr&)> cb =
+        [=](const aclswarm_msgs::CBAAConstPtr& msg) {
+          cbaabidCb(msg, j_vehid);
+        };
+
+      vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/cbaabid", 1, cb);
+    } else {
+      // if a subscriber exists, break communication
+      if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();
+    }
+  }
 }
 
 } // ms aclswarm
