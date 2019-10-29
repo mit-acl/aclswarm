@@ -133,6 +133,16 @@ void CoordinationROS::init()
   auctioneer_.reset(new Auctioneer(vehid_, n_));
 
   //
+  // Auctioneer Callbacks
+  //
+
+  using namespace std::placeholders;
+  auctioneer_->setNewAssignmentHandler(std::bind(
+                            &CoordinationROS::newAssignmentCb, this, _1));
+  auctioneer_->setSendBidHandler(std::bind(
+                            &CoordinationROS::sendBidCb, this, _1));
+
+  //
   // Distributed Control
   //
 
@@ -205,33 +215,39 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
 
 // ----------------------------------------------------------------------------
 
+void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
+{
+  P_ = P;
+  Pt_ = P.transpose();
+
+  // let distributed controller know
+  controller_->set_assignment(P);
+
+  // change the communication graph accordingly
+  connectToNeighbors();
+
+  // publish
+  // pub_assignment_.publish();
+}
+
+// ----------------------------------------------------------------------------
+
+void CoordinationROS::sendBidCb(const Auctioneer::BidConstPtr& bid)
+{
+  aclswarm_msgs::CBAA msg;
+  msg.header.stamp = ros::Time::now();
+  msg.price = bid->price;
+  msg.who = bid->who;
+  msg.cbaa_iter = bid->iter;
+  pub_cbaabid_.publish(msg);
+}
+
+// ----------------------------------------------------------------------------
+
 void CoordinationROS::auctioneertickCb(const ros::TimerEvent& event)
 {
   // determine if a new assignment should be sought for.
   // if (time_to_perform_assignment) auctioneer_->start(q_);
-
-  // auctioneer_->tick();
-
-  if (auctioneer->wantsToSendBid()) {
-    const auto& bid = auctioneer_->getBid();
-    aclswarm_msgs::CBAA msg;
-    msg.header.stamp = ros::Time::now();
-    msg.price = bid.price;
-    msg.who = bid.who;
-    msg.cbaa_iter = bid.iter;
-    pub_cbaabid_.publish(msg);
-  }
-
-  if (auctioneer_->hasNewAssignment()) {
-    // let distributed controller know
-    controller_->set_assignment(auctioneer_->getAssignment());
-
-    // change the communication graph accordingly
-    connectToNeighbors();
-
-    // publish
-    // pub_assignment_.publish();
-  }
 }
 
 // ----------------------------------------------------------------------------
@@ -269,7 +285,8 @@ void CoordinationROS::connectToNeighbors()
           cbaabidCb(msg, j_vehid);
         };
 
-      vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/cbaabid", 1, cb);
+      consexpr int Qsize = 20; // we don't want to loose any of these
+      vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
     } else {
       // if a subscriber exists, break communication
       if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();

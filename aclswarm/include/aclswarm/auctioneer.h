@@ -27,6 +27,7 @@ namespace aclswarm {
       std::vector<int> who;
       int iter;
     };
+    using BidConstPtr = std::shared_ptr<const Bid>;
 
   public:
     Auctioneer(vehidx_t vehid, uint8_t n);
@@ -48,6 +49,7 @@ namespace aclswarm {
 
   private:
     enum class State { IDLE, AUCTION };
+    using BidMap = std::map<vehidx_t, Bid>;
 
     /// \brief Internal state
     uint8_t n_; ///< number of vehicles in swarm
@@ -57,7 +59,7 @@ namespace aclswarm {
     AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
     biditer_; ///< current bidding iteration of the CBAA process
     Bid bid_; ///< my current bid, to be sent to others
-    std::map<uint32_t, std::map<vehidx_t, Bid>> bids_; ///< all bids this round
+    std::map<uint32_t, BidMap> bids_; ///< all bids this round
     FormPts p_; ///< the desired formation points
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence

@@ -37,22 +37,27 @@ void Auctioneer::setFormation(const FormPts& p, const AdjMat& adjmat)
 
 // ----------------------------------------------------------------------------
 
-bool Auctioneer::hasNewAssignment()
+void Auctioneer::setNewAssignmentHandler(
+                                std::function<void(const AssignmentPerm&)> f)
 {
-  return false;
+  fn_assignment_ = f;
 }
 
 // ----------------------------------------------------------------------------
 
-bool Auctioneer::wantsToSendBid()
+void Auctioneer::setSendBidHandler(
+                        std::function<void(const Auctioneer::BidConstPtr&)> f)
 {
-  return (state_ == State::AUCTION);
+  fn_sendbid_ = f;
 }
 
 // ----------------------------------------------------------------------------
 
 void Auctioneer::start(const FormPts& q)
 {
+  // reset any internal state associated with auction bidding
+  reset();
+
   //
   // Alignment
   //
@@ -60,39 +65,16 @@ void Auctioneer::start(const FormPts& q)
   // align current swarm positions to desired formation (using neighbors only)
   paligned_ = alignFormation(adjmat_, p_, q);
 
-
   //
-  // Initial bid
+  // Assignment (kick off with an initial bid)
   //
 
   // Using only knowledgde of my current state and what I think the aligned
   // formation is, make an initial bid for the formation point I am closest to.
   selectTaskAssignment();
-  
-  // update the initial bid
-  reset();
-  bid_.price[argmax] = max;
-  bid_.who[argmax] = vehid_;
-  bid_.iter = 0;
 
-  // state_ = State::AUCTION;
-}
-
-// ----------------------------------------------------------------------------
-
-void Auctioneer::tick()
-{
-  // State nextstate = state_;
-
-  // if (state_ == State::AUCTION) {
-
-  //   // do I have everyone's bid for this bidding iteration?
-  //   // if (bidIterComplete())
-
-  // }
-
-  // // transition to next state
-  // state_ = nextstate;
+  // send my bid to my neighbors
+  notifySendBid();
 }
 
 // ----------------------------------------------------------------------------
@@ -105,24 +87,58 @@ void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
 
+    //
+    // Update CBAA
+    //
+
     // update my local understanding of who deserves which task based on the
     // highest bidder of each task, within my neighborhood.
-    updateTaskAssignment();
+    bool was_outbid = updateTaskAssignment();
 
     // If I was outbid, I will need to select a new task.
-    if (was_outbid) {
-      selectTaskAssignment();
-    }
+    if (was_outbid) selectTaskAssignment();
 
     // start the next iteration
     ++biditer_;
-  }
 
-  if (auctionComplete()) ;
+    //
+    // Determine convergence or continue bidding
+    //
+
+    if (auctionComplete()) {
+      // TODO:
+      notifyNewAssignment();
+    } else {
+      // send latest bid to my neighbors
+      notifySendBid();
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------
 // Private Methods
+// ----------------------------------------------------------------------------
+
+void Auctioneer::notifySendBid()
+{
+  // let the caller know
+  fn_sendbid_(bid_);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::notifyNewAssignment()
+{
+  //
+  // Extract new assignment
+  //
+
+
+
+  // let the caller know
+  fn_assignment_(P_);
+}
+
 // ----------------------------------------------------------------------------
 
 void Auctioneer::reset()
@@ -139,8 +155,6 @@ void Auctioneer::reset()
   // Create a table to hold my neighbor's bids for each CBAA iteration.
   bids_.clear();
   bids_.resize(cbaa_max_iter_);
-
-  state_ = State::IDLE;
 }
 
 // ----------------------------------------------------------------------------
@@ -152,9 +166,111 @@ void Auctioneer::alignFormation()
 
 // ----------------------------------------------------------------------------
 
+bool Auctioneer::auctionComplete()
+{
+  return biditer_ >= cbaa_max_iter_;
+}
+
+// ----------------------------------------------------------------------------
+
 bool Auctioneer::bidIterComplete()
 {
-  return false;
+  bool complete = true;
+
+  // for convenience: my neighbors' bids from this bid iteration
+  const auto& bids = bids_[biditer_];
+
+  // work in "formation space" since we are using the adjmat to check nbhrs
+  const vehidx_t i = P_.indices()(vehid_);
+
+  for (size_t j=0; j<n_; ++j) {
+    if (adjmat_(i, j)) {
+      // map back to "vehicle space" since that's how our bids are keyed
+      vehidx_t nbhr = Pt_.indices()(j);
+
+      // CBAA iteration is not complete if I am missing any of my nbhrs' bids
+      if (bids.find(nbhr) == bids.end()) complete = false;
+    }
+  }
+
+  return complete;
+}
+
+// ----------------------------------------------------------------------------
+
+bool Auctioneer::updateTaskAssignment()
+{
+  // Given all of the bids from my neighbors (and me), which agent is most
+  // deserving of each of the formation points (tasks)? In other words,
+  // At this point in the current auction, who currently has the highest bids?
+
+  // for convenience: my neighbors' bids from this bid iteration
+  auto& bids = bids_[biditer_];
+  bool was_outbid = false;
+
+  // add myself so that my local information is considered
+  bids.insert({vehid_, bid_});
+
+  // loop through each task and decide on the winner
+  for (size_t j=0; j<n_; ++j) {
+
+    //
+    // Which of my nbhrs (or me) bid the most for task / formpt j?
+    //
+
+    // arbitrarily assume that the first nhbr in the list has the highest bid
+    auto maxit = bids.cbegin();
+
+    // but then loop through each nbhr (and me) and decide who bid the most
+    for (auto it = bids.cbegin(); it!=bids.cend(); it++) {
+      if (it->second.price[j] > maxit->second.price[j]) maxit = it;
+    }
+
+    //
+    // Update my local understanding of who has bid the most for each task
+    //
+
+    // check if I was outbid by someone else
+    if (bid_[j] == vehid_ && maxit->first != vehid_) was_outbid = true;
+
+    // who should be assigned which task?
+    bid_.who[j] = maxit->first;
+
+    // how much is this winning agent willing to bid on this task?
+    bid_.prices[j] = maxit->second.price[j];
+  }
+
+  // did someone outbid me for my desired formation point / task?
+  return was_outbid;
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::selectTaskAssignment()
+{
+  // Determine the highest price this agent is willing to pay to be assigned
+  // a specific task / formpt.
+  double max = 0;
+  size_t task = 0;
+  bool was_assigned = false;
+  for (size_t j=0; j<n_; ++j) {
+    // n.b., within the same auction, this list of prices will be the same
+    const double price = getPrice(q.row(vehid_), paligned_.row(j));
+
+    // In addition to finding the task that I am most interested in,
+    // only bid on a task if I think I will win (highest bidder of my nbhrs)
+    if (price > max && price > bid_.price[j]) {
+      max = price;
+      task = j;
+      was_assigned = true;
+    }
+  }
+
+  // update my local information to reflect my bid
+  if (was_assigned) { // TODO: will this always be true?
+    bid_.price[task] = max;
+    bid_.who[task] = vehid_;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -163,43 +279,6 @@ double Auctioneer::getPrice(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2
 {
   return 1.0 / ((p1 - p2).norm() + 1e-8);
 }
-
-// ----------------------------------------------------------------------------
-
-void Auctioneer::updateTaskAssignment()
-{
-  //
-  // Update task assignment
-  //
-
-  // Given all of the bids from my neighbors (and me), who had the highest bids
-  // this iteration and what where those bid amounts (prices)?
-
-  // Update my local understanding with this information.
-
-  // If I was outbid, then I need to select a new task assignment
-}
-
-// ----------------------------------------------------------------------------
-
-void Auctioneer::selectTaskAssignment()
-{
-  // Determine the highest price this agent is willing to pay to be assigned
-  // at a specific formation point. Note: real prices are non-negative.
-  // Only bid on a task if I think I will win (highest bidder of my neighbors)
-  double max = -1;
-  size_t argmax = 0;
-  for (size_t j=0; j<n_; ++j) {
-    // n.b., for a given auction, this list of prices will be constant
-    const double price = getPrice(q.row(vehid_), paligned_.row(j));
-    if (price > max) {
-      max = price;
-      argmax = j;
-    }
-  }
-}
-
-// ----------------------------------------------------------------------------
 
 } // ns aclswarm
 } // ns acl
