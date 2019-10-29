@@ -203,6 +203,8 @@ bool Auctioneer::updateTaskAssignment()
   // Given all of the bids from my neighbors (and me), which agent is most
   // deserving of each of the formation points (tasks)? In other words,
   // At this point in the current auction, who currently has the highest bids?
+  // n.b., a nbhr might have *info* about who has the highest bid for a given
+  // formpt, but it may not be that nbhr---it's just in their local info
 
   // for convenience: my neighbors' bids from this bid iteration
   auto& bids = bids_[biditer_];
@@ -231,10 +233,10 @@ bool Auctioneer::updateTaskAssignment()
     //
 
     // check if I was outbid by someone else
-    if (bid_[j] == vehid_ && maxit->first != vehid_) was_outbid = true;
+    if (bid_[j] == vehid_ && maxit->second.who[j] != vehid_) was_outbid = true;
 
-    // who should be assigned which task?
-    bid_.who[j] = maxit->first;
+    // who should be assigned task j?
+    bid_.who[j] = maxit->second.who[j];
 
     // how much is this winning agent willing to bid on this task?
     bid_.prices[j] = maxit->second.price[j];
