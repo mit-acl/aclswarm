@@ -102,11 +102,17 @@ void CoordinationROS::spin()
       controller_->set_formation(formation_);
 
       // find a reassignment for the new formation
-      auctioneer_->setFormation(formation_);
+      auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
       auctioneer_->start(q_);
+
+      // TODO: wait for CBAA to converge so that we get a good assignment
+      // waitForNewAssignment();
 
       // make sure to connect to neighbors in communication graph
       connectToNeighbors();
+
+      // TODO: ensure that we have connected to nbrs, i.e., safeguard against
+      // messages being lost during communication graph updates.
 
       // allow downstream tasks to continue
       tim_control_.start();
@@ -248,6 +254,8 @@ void CoordinationROS::auctioneertickCb(const ros::TimerEvent& event)
 {
   // determine if a new assignment should be sought for.
   // if (time_to_perform_assignment) auctioneer_->start(q_);
+
+  // Assumption: the period of each auction start event is
 }
 
 // ----------------------------------------------------------------------------

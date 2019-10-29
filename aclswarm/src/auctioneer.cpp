@@ -84,6 +84,8 @@ void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
   // keep track of all bids across bid iterations
   bids_[bid.iter].insert({vehid, bid});
 
+  // TODO: what if i am slow and my nbrs send the zeroth msg for the next auction?
+
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
 
