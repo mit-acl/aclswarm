@@ -105,11 +105,8 @@ void CoordinationROS::spin()
       auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
       auctioneer_->start(q_);
 
-      // TODO: wait for CBAA to converge so that we get a good assignment
-      // waitForNewAssignment();
-
-      // make sure to connect to neighbors in communication graph
-      connectToNeighbors();
+      // wait for CBAA to converge so that we get a good assignment
+      waitForNewAssignment();
 
       // TODO: ensure that we have connected to nbrs, i.e., safeguard against
       // messages being lost during communication graph updates.
@@ -142,11 +139,11 @@ void CoordinationROS::init()
   // Auctioneer Callbacks
   //
 
-  using namespace std::placeholders;
+  namespace ph = std::placeholders;
   auctioneer_->setNewAssignmentHandler(std::bind(
-                            &CoordinationROS::newAssignmentCb, this, _1));
+                            &CoordinationROS::newAssignmentCb, this, ph::_1));
   auctioneer_->setSendBidHandler(std::bind(
-                            &CoordinationROS::sendBidCb, this, _1));
+                            &CoordinationROS::sendBidCb, this, ph::_1));
 
   //
   // Distributed Control
@@ -215,7 +212,7 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
   Auctioneer::Bid bid;
   bid.price = msg->price;
   bid.who = msg->who;
-  bid.iter = msg->cbaa_iter;
+  bid.iter = msg->iter;
   auctioneer_->receiveBid(bid, vehid);
 }
 
@@ -223,9 +220,6 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
 
 void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
 {
-  P_ = P;
-  Pt_ = P.transpose();
-
   // let distributed controller know
   controller_->set_assignment(P);
 
@@ -244,7 +238,7 @@ void CoordinationROS::sendBidCb(const Auctioneer::BidConstPtr& bid)
   msg.header.stamp = ros::Time::now();
   msg.price = bid->price;
   msg.who = bid->who;
-  msg.cbaa_iter = bid->iter;
+  msg.iter = bid->iter;
   pub_cbaabid_.publish(msg);
 }
 
@@ -293,12 +287,22 @@ void CoordinationROS::connectToNeighbors()
           cbaabidCb(msg, j_vehid);
         };
 
-      consexpr int Qsize = 20; // we don't want to loose any of these
+      constexpr int Qsize = 20; // we don't want to loose any of these
       vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
     } else {
       // if a subscriber exists, break communication
       if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();
     }
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+void CoordinationROS::waitForNewAssignment()
+{
+  constexpr double POLL_PERIOD = 0.1;
+  while (!auctioneer_->auctionComplete()) {
+    ros::Duration(POLL_PERIOD).sleep();
   }
 }
 

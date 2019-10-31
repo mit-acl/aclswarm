@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -73,6 +74,8 @@ namespace aclswarm {
      */
     void init();
 
+    void waitForNewAssignment();
+
     /**
      * @brief      Update communication graph to neighbors using current adjmat
      */
@@ -85,6 +88,10 @@ namespace aclswarm {
     void cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehid);
     void auctioneertickCb(const ros::TimerEvent& event);
     void controlCb(const ros::TimerEvent& event);
+
+    /// \brief Auctioneer callback handlers
+    void newAssignmentCb(const AssignmentPerm& P);
+    void sendBidCb(const Auctioneer::BidConstPtr& bid);
   };
 
 } // ns aclswarm

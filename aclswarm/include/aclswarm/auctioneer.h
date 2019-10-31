@@ -23,29 +23,63 @@ namespace aclswarm {
   {
   public:
     struct Bid {
-      std::vector<double> price;
+      std::vector<float> price;
       std::vector<int> who;
       int iter;
     };
+    using BidPtr = std::shared_ptr<Bid>;
     using BidConstPtr = std::shared_ptr<const Bid>;
 
   public:
     Auctioneer(vehidx_t vehid, uint8_t n);
     ~Auctioneer() = default;
 
-    void start(const FormPts& q);
+    /**
+     * @brief      Registers an event handler for when an auction is complete
+     *             and the auctioneer wants to notify the caller.
+     *
+     * @param[in]  f     The function to call
+     */
+    void setNewAssignmentHandler(std::function<void(const AssignmentPerm&)> f);
 
-    void tick();
+    /**
+     * @brief      Registers an event handler for when this agent is ready to
+     *             send a bid.
+     *
+     * @param[in]  f     The function to call
+     */
+    void setSendBidHandler(std::function<void(const Auctioneer::BidConstPtr&)> f);
 
-    void setFormation(const std::shared_ptr<DistCntrl::Formation>& f);
-    
-    bool hasNewAssignment();
+    /**
+     * @brief      Sets the desired formation points and the current adjacency
+     *             matrix describing the formation.
+     *             
+     *             Note: the default behavior is to use the assignment from the
+     *             last auction to understand who the vehicle's neighbors are.
+     *             By setting 'reset' to true, the auction will assume an
+     *             identity assignment (i.e., use the adjmat as given) for the
+     *             next auction iteration.
+     *
+     * @param[in]  p       The new desired formation points
+     * @param[in]  adjmat  The underlying adjacency matrix to use
+     * @param[in]  reset   Whether or not to reset the assignment to zero
+     */
+    void setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset=false);
 
-    bool wantsToSendBid();
+    /**
+     * @brief      Kicks off the auction. A snapshot of the current states of
+     *             vehicles in the swarm is given. Note that only information
+     *             about neighbors is used (via adjmat and current assignment).
+     *
+     * @param[in]  q     A snapshot of the current states.
+     */
+    void start(const PtsMat& q);
+
+    void receiveBid(const Bid& bid, vehidx_t vehid);
+    bool auctionComplete();
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
-    const Bid& getBid() const { return bid_; }
 
   private:
     enum class State { IDLE, AUCTION };
@@ -57,15 +91,30 @@ namespace aclswarm {
     State state_; ///< current state of auctioneer (state machine)
     AssignmentPerm P_; ///< nxn assignment permutation (P: vehid --> formpt)
     AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
-    biditer_; ///< current bidding iteration of the CBAA process
-    Bid bid_; ///< my current bid, to be sent to others
-    std::map<uint32_t, BidMap> bids_; ///< all bids this round
-    FormPts p_; ///< the desired formation points
+    int biditer_; ///< current bidding iteration of the CBAA process
+    BidPtr bid_; ///< my current bid, to be sent to others
+    std::vector<BidMap> bids_; ///< all of the bids from the current auction
+    PtsMat q_; ///< the current formation points
+    PtsMat p_; ///< the desired formation points
+    PtsMat paligned_; ///< the desired formation points, aligned
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
 
+    /// \brief Function handles for callbacks
+    std::function<void(const AssignmentPerm&)> fn_assignment_;
+    std::function<void(const Auctioneer::BidConstPtr&)> fn_sendbid_;
+
     void reset();
-    void AlignFormation();
+    void alignFormation();
+
+    bool bidIterComplete();
+
+    void notifySendBid();
+    void notifyNewAssignment();
+
+    void selectTaskAssignment();
+    bool updateTaskAssignment();
+    float getPrice(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2);
   };
 
 } // ns aclswarm

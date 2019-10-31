@@ -4,7 +4,7 @@ Header header
 float32[] price
 
 # An index list about who set the highest price for each task. -1 if not set.
-int16[] who
+int32[] who
 
 # The current bid iteration of the current CBAA auction
-uint16 iter
+uint32 iter

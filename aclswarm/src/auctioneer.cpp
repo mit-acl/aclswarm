@@ -19,24 +19,6 @@ Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::setFormation(const FormPts& p, const AdjMat& adjmat)
-{
-  assert(n_ == p.rows());
-  assert(n_ == adjmat.rows());
-
-  p_ = p;
-  adjmat_ = adjmat;
-
-  constexpr uint32_t diameter = 2; // hardcoded for now...
-  cbaa_max_iter_ = n_ * diameter;
-
-  // initialize neighbor bid list
-
-  // formation space or vehicle space?
-}
-
-// ----------------------------------------------------------------------------
-
 void Auctioneer::setNewAssignmentHandler(
                                 std::function<void(const AssignmentPerm&)> f)
 {
@@ -53,7 +35,21 @@ void Auctioneer::setSendBidHandler(
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::start(const FormPts& q)
+void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset)
+{
+  assert(n_ == p.rows());
+  assert(n_ == adjmat.rows());
+
+  p_ = p;
+  adjmat_ = adjmat;
+
+  constexpr uint32_t diameter = 2; // hardcoded for now...
+  cbaa_max_iter_ = n_ * diameter;
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::start(const PtsMat& q)
 {
   // reset any internal state associated with auction bidding
   reset();
@@ -63,7 +59,7 @@ void Auctioneer::start(const FormPts& q)
   //
 
   // align current swarm positions to desired formation (using neighbors only)
-  paligned_ = alignFormation(adjmat_, p_, q);
+  // paligned_ = alignFormation(adjmat_, p_, q);
 
   //
   // Assignment (kick off with an initial bid)
@@ -118,6 +114,13 @@ void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
 }
 
 // ----------------------------------------------------------------------------
+
+bool Auctioneer::auctionComplete()
+{
+  return biditer_ >= cbaa_max_iter_;
+}
+
+// ----------------------------------------------------------------------------
 // Private Methods
 // ----------------------------------------------------------------------------
 
@@ -148,11 +151,11 @@ void Auctioneer::reset()
   biditer_ = 0;
 
   // initialize my bid
-  bid_.price.clear();
-  std::fill_n(std::back_inserter(bid_.price), n_, 0.0);
-  bid_.who.clear();
-  std::fill_n(std::back_inserter(bid_.who), n_, -1);
-  bid_.iter = 0;
+  bid_->price.clear();
+  std::fill_n(std::back_inserter(bid_->price), n_, 0.0);
+  bid_->who.clear();
+  std::fill_n(std::back_inserter(bid_->who), n_, -1);
+  bid_->iter = 0;
 
   // Create a table to hold my neighbor's bids for each CBAA iteration.
   bids_.clear();
@@ -164,13 +167,6 @@ void Auctioneer::reset()
 void Auctioneer::alignFormation()
 {
 
-}
-
-// ----------------------------------------------------------------------------
-
-bool Auctioneer::auctionComplete()
-{
-  return biditer_ >= cbaa_max_iter_;
 }
 
 // ----------------------------------------------------------------------------
@@ -213,7 +209,7 @@ bool Auctioneer::updateTaskAssignment()
   bool was_outbid = false;
 
   // add myself so that my local information is considered
-  bids.insert({vehid_, bid_});
+  bids.insert({vehid_, *bid_});
 
   // loop through each task and decide on the winner
   for (size_t j=0; j<n_; ++j) {
@@ -235,13 +231,13 @@ bool Auctioneer::updateTaskAssignment()
     //
 
     // check if I was outbid by someone else
-    if (bid_[j] == vehid_ && maxit->second.who[j] != vehid_) was_outbid = true;
+    if (bid_->who[j] == vehid_ && maxit->second.who[j] != vehid_) was_outbid = true;
 
     // who should be assigned task j?
-    bid_.who[j] = maxit->second.who[j];
+    bid_->who[j] = maxit->second.who[j];
 
     // how much is this winning agent willing to bid on this task?
-    bid_.prices[j] = maxit->second.price[j];
+    bid_->price[j] = maxit->second.price[j];
   }
 
   // did someone outbid me for my desired formation point / task?
@@ -254,16 +250,16 @@ void Auctioneer::selectTaskAssignment()
 {
   // Determine the highest price this agent is willing to pay to be assigned
   // a specific task / formpt.
-  double max = 0;
+  float max = 0;
   size_t task = 0;
   bool was_assigned = false;
   for (size_t j=0; j<n_; ++j) {
     // n.b., within the same auction, this list of prices will be the same
-    const double price = getPrice(q.row(vehid_), paligned_.row(j));
+    const float price = getPrice(q_.row(vehid_), paligned_.row(j));
 
     // In addition to finding the task that I am most interested in,
     // only bid on a task if I think I will win (highest bidder of my nbhrs)
-    if (price > max && price > bid_.price[j]) {
+    if (price > max && price > bid_->price[j]) {
       max = price;
       task = j;
       was_assigned = true;
@@ -272,14 +268,14 @@ void Auctioneer::selectTaskAssignment()
 
   // update my local information to reflect my bid
   if (was_assigned) { // TODO: will this always be true?
-    bid_.price[task] = max;
-    bid_.who[task] = vehid_;
+    bid_->price[task] = max;
+    bid_->who[task] = vehid_;
   }
 }
 
 // ----------------------------------------------------------------------------
 
-double Auctioneer::getPrice(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2)
+float Auctioneer::getPrice(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2)
 {
   return 1.0 / ((p1 - p2).norm() + 1e-8);
 }
