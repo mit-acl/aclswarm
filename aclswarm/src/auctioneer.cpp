@@ -105,7 +105,17 @@ void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
     //
 
     if (auctionComplete()) {
-      // TODO:
+      // Extract the best assignment from my local understanding,
+      // which has reached consensus since the auction is complete.
+
+      // note: we are making implicit type casts here
+      std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
+
+      // n.b., 'who' maps task --> vehid, which is P^T
+      Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
+      P_ = Pt_.transpose();
+
+      // let the caller know a new assignment is ready
       notifyNewAssignment();
     } else {
       // send latest bid to my neighbors
@@ -154,12 +164,6 @@ void Auctioneer::notifySendBid()
 
 void Auctioneer::notifyNewAssignment()
 {
-  //
-  // Extract new assignment
-  //
-
-
-
   // let the caller know
   fn_assignment_(P_);
 }
@@ -175,8 +179,6 @@ void Auctioneer::alignFormation()
 
 bool Auctioneer::bidIterComplete()
 {
-  bool complete = true;
-
   // for convenience: my neighbors' bids from this bid iteration
   const auto& bids = bids_[biditer_];
 
@@ -189,11 +191,11 @@ bool Auctioneer::bidIterComplete()
       vehidx_t nbhr = Pt_.indices()(j);
 
       // CBAA iteration is not complete if I am missing any of my nbhrs' bids
-      if (bids.find(nbhr) == bids.end()) complete = false;
+      if (bids.find(nbhr) == bids.end()) return false;
     }
   }
 
-  return complete;
+  return true;
 }
 
 // ----------------------------------------------------------------------------
