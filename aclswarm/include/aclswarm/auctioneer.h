@@ -75,6 +75,8 @@ namespace aclswarm {
      */
     void start(const PtsMat& q);
 
+    void reset();
+
     void receiveBid(const Bid& bid, vehidx_t vehid);
     bool auctionComplete();
     
@@ -104,7 +106,6 @@ namespace aclswarm {
     std::function<void(const AssignmentPerm&)> fn_assignment_;
     std::function<void(const Auctioneer::BidConstPtr&)> fn_sendbid_;
 
-    void reset();
     void alignFormation();
 
     bool bidIterComplete();

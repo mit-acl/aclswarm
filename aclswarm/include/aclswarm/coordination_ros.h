@@ -74,6 +74,8 @@ namespace aclswarm {
      */
     void init();
 
+    void startAuction();
+
     void waitForNewAssignment();
 
     /**

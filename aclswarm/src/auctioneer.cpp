@@ -51,15 +51,18 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset)
 
 void Auctioneer::start(const PtsMat& q)
 {
-  // reset any internal state associated with auction bidding
-  reset();
+  // Assumption: my internal state has already been restarted
+
+  // store the current state of vehicles in the swarm to be used throughout
+  q_ = q;
 
   //
   // Alignment
   //
 
   // align current swarm positions to desired formation (using neighbors only)
-  // paligned_ = alignFormation(adjmat_, p_, q);
+  // paligned_ = alignFormation(adjmat_, p_, q_);
+  paligned_ = p_;
 
   //
   // Assignment (kick off with an initial bid)
@@ -79,8 +82,6 @@ void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
 {
   // keep track of all bids across bid iterations
   bids_[bid.iter].insert({vehid, bid});
-
-  // TODO: what if i am slow and my nbrs send the zeroth msg for the next auction?
 
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
@@ -121,6 +122,25 @@ bool Auctioneer::auctionComplete()
 }
 
 // ----------------------------------------------------------------------------
+
+void Auctioneer::reset()
+{
+  biditer_ = 0;
+
+  // initialize my bid
+  bid_->price.clear();
+  std::fill_n(std::back_inserter(bid_->price), n_, 0.0);
+  bid_->who.clear();
+  std::fill_n(std::back_inserter(bid_->who), n_, -1);
+  bid_->iter = 0;
+
+  // Create a table to hold my neighbor's bids for each CBAA iteration.
+  bids_.clear();
+  bids_.resize(cbaa_max_iter_);
+}
+
+
+// ----------------------------------------------------------------------------
 // Private Methods
 // ----------------------------------------------------------------------------
 
@@ -142,24 +162,6 @@ void Auctioneer::notifyNewAssignment()
 
   // let the caller know
   fn_assignment_(P_);
-}
-
-// ----------------------------------------------------------------------------
-
-void Auctioneer::reset()
-{
-  biditer_ = 0;
-
-  // initialize my bid
-  bid_->price.clear();
-  std::fill_n(std::back_inserter(bid_->price), n_, 0.0);
-  bid_->who.clear();
-  std::fill_n(std::back_inserter(bid_->who), n_, -1);
-  bid_->iter = 0;
-
-  // Create a table to hold my neighbor's bids for each CBAA iteration.
-  bids_.clear();
-  bids_.resize(cbaa_max_iter_);
 }
 
 // ----------------------------------------------------------------------------
