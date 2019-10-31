@@ -43,13 +43,13 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // Timers for assignment and distributed control tasks
   //
 
-  ros::NodeHandle nhQ(nh_);
-  nhQ.setCallbackQueue(&task_queue_);
+  nhQ_ = ros::NodeHandle(nh_);
+  nhQ_.setCallbackQueue(&task_queue_);
 
-  tim_auctioneertick_ = nhQ.createTimer(ros::Duration(auctioneer_tick_dt_),
+  tim_auctioneertick_ = nhQ_.createTimer(ros::Duration(auctioneer_tick_dt_),
                                     &CoordinationROS::auctioneertickCb, this);
   tim_auctioneertick_.stop();
-  tim_control_ = nhQ.createTimer(ros::Duration(control_dt_),
+  tim_control_ = nhQ_.createTimer(ros::Duration(control_dt_),
                                             &CoordinationROS::controlCb, this);
   tim_control_.stop();
 
@@ -61,12 +61,12 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   sub_formation_ = nh_.subscribe("/formation", 10, // don't miss a msg
                                     &CoordinationROS::formationCb, this);
 
-  sub_tracker_ = nhQ.subscribe("vehicle_estimates", 1,
+  sub_tracker_ = nhQ_.subscribe("vehicle_estimates", 1,
                                     &CoordinationROS::vehicleTrackerCb, this);
 
-  pub_distcmd_ = nhQ.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
-  pub_assignment_ = nhQ.advertise<std_msgs::UInt8MultiArray>("assignment", 1);
-  pub_cbaabid_ = nhQ.advertise<aclswarm_msgs::CBAA>("cbaabid", 1);
+  pub_distcmd_ = nhQ_.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
+  pub_assignment_ = nhQ_.advertise<std_msgs::UInt8MultiArray>("assignment", 1);
+  pub_cbaabid_ = nhQ_.advertise<aclswarm_msgs::CBAA>("cbaabid", 1);
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
@@ -102,6 +102,14 @@ void CoordinationROS::spin()
 
       // find a reassignment for the new formation
       auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
+
+      // FYI: We assume that our communication graph is identical to the
+      // formation graph. Make sure that we can talk to our neighbors as
+      // defined by the adjmat of the formation.
+      connectToNeighbors();
+      // ros::Duration(0.5).sleep();
+
+      // Now that we have neighbors to talk to, let the bidding begin.
       startAuction();
 
       // wait for CBAA to converge so that we get a good assignment
@@ -210,6 +218,7 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
   bid.who = msg->who;
   bid.iter = msg->iter;
   auctioneer_->receiveBid(bid, vehid);
+  ROS_INFO_STREAM("Received " << msg->iter << " bid from " << vehid);
 }
 
 // ----------------------------------------------------------------------------
@@ -292,7 +301,7 @@ void CoordinationROS::connectToNeighbors()
         };
 
       constexpr int Qsize = 20; // we don't want to loose any of these
-      vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
+      vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
     } else {
       // if a subscriber exists, break communication
       if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();
@@ -330,7 +339,7 @@ void CoordinationROS::startAuction()
 void CoordinationROS::waitForNewAssignment()
 {
   constexpr double POLL_PERIOD = 0.1;
-  while (!auctioneer_->auctionComplete()) {
+  while (ros::ok() && !auctioneer_->auctionComplete()) {
     ros::Duration(POLL_PERIOD).sleep();
   }
 }

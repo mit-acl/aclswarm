@@ -11,7 +11,7 @@ namespace acl {
 namespace aclswarm {
 
 Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
-: n_(n), vehid_(vehid)
+: n_(n), vehid_(vehid), bid_(new Bid)
 {
   P_.setIdentity(n_);
   Pt_.setIdentity(n_);
@@ -156,6 +156,8 @@ void Auctioneer::reset()
 
 void Auctioneer::notifySendBid()
 {
+  bid_->iter = biditer_;
+
   // let the caller know
   fn_sendbid_(bid_);
 }

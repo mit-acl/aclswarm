@@ -41,7 +41,7 @@ namespace aclswarm {
     void spin();
 
   private:
-    ros::NodeHandle nh_, nhp_;
+    ros::NodeHandle nh_, nhQ_, nhp_;
     ros::CallbackQueue task_queue_;
     std::unique_ptr<ros::AsyncSpinner> spinner_;
     ros::Timer tim_auctioneertick_, tim_control_;
