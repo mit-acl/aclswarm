@@ -93,7 +93,7 @@ namespace aclswarm {
 
     /// \brief Auctioneer callback handlers
     void newAssignmentCb(const AssignmentPerm& P);
-    void sendBidCb(const Auctioneer::BidConstPtr& bid);
+    void sendBidCb(uint32_t iter, const Auctioneer::BidConstPtr& bid);
   };
 
 } // ns aclswarm

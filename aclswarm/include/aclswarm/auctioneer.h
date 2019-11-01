@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -25,7 +26,6 @@ namespace aclswarm {
     struct Bid {
       std::vector<float> price;
       std::vector<int> who;
-      int iter;
     };
     using BidPtr = std::shared_ptr<Bid>;
     using BidConstPtr = std::shared_ptr<const Bid>;
@@ -48,7 +48,7 @@ namespace aclswarm {
      *
      * @param[in]  f     The function to call
      */
-    void setSendBidHandler(std::function<void(const Auctioneer::BidConstPtr&)> f);
+    void setSendBidHandler(std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f);
 
     /**
      * @brief      Sets the desired formation points and the current adjacency
@@ -77,7 +77,7 @@ namespace aclswarm {
 
     void reset();
 
-    void receiveBid(const Bid& bid, vehidx_t vehid);
+    void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
     bool auctionComplete();
     
     AssignmentPerm getAssignment() const { return P_; }
@@ -101,10 +101,11 @@ namespace aclswarm {
     PtsMat paligned_; ///< the desired formation points, aligned
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
+    std::mutex mtx_; ///< for synchronizing start before bids are received
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;
-    std::function<void(const Auctioneer::BidConstPtr&)> fn_sendbid_;
+    std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> fn_sendbid_;
 
     void alignFormation();
 

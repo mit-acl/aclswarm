@@ -18,7 +18,7 @@ DistCntrl::DistCntrl(vehidx_t vehid, uint8_t n)
 
 // ----------------------------------------------------------------------------
 
-void DistCntrl::set_gains(double K, double kp, double kd)
+void DistCntrl::setGains(double K, double kp, double kd)
 {
   K_ = K;
   kp_ = kp;
@@ -27,7 +27,7 @@ void DistCntrl::set_gains(double K, double kp, double kd)
 
 // ----------------------------------------------------------------------------
 
-void DistCntrl::set_formation(const std::shared_ptr<Formation>& f)
+void DistCntrl::setFormation(const std::shared_ptr<Formation>& f)
 {
   formation_ = f;
 
@@ -37,11 +37,9 @@ void DistCntrl::set_formation(const std::shared_ptr<Formation>& f)
 
 // ----------------------------------------------------------------------------
 
-void DistCntrl::set_assignment(const AssignmentVec& a)
+void DistCntrl::setAssignment(const AssignmentPerm& P)
 {
-  // represent the assignment as a permutation matrix
-  //  that maps vehicle id to formation point.
-  P_ = AssignmentPerm(a);
+  P_ = P;
 }
 
 // ----------------------------------------------------------------------------

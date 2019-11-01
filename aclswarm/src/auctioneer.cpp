@@ -28,7 +28,7 @@ void Auctioneer::setNewAssignmentHandler(
 // ----------------------------------------------------------------------------
 
 void Auctioneer::setSendBidHandler(
-                        std::function<void(const Auctioneer::BidConstPtr&)> f)
+          std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f)
 {
   fn_sendbid_ = f;
 }
@@ -51,7 +51,9 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset)
 
 void Auctioneer::start(const PtsMat& q)
 {
-  // Assumption: my internal state has already been restarted
+  std::lock_guard<std::mutex> lock(mtx_);
+
+  // Assumption: my internal state has already been (re)initialized
 
   // store the current state of vehicles in the swarm to be used throughout
   q_ = q;
@@ -73,15 +75,18 @@ void Auctioneer::start(const PtsMat& q)
   selectTaskAssignment();
 
   // send my bid to my neighbors
+  biditer_ = 0;
   notifySendBid();
 }
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
+void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
 {
+  std::lock_guard<std::mutex> lock(mtx_);
+
   // keep track of all bids across bid iterations
-  bids_[bid.iter].insert({vehid, bid});
+  bids_[iter].insert({vehid, bid});
 
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
@@ -112,8 +117,8 @@ void Auctioneer::receiveBid(const Bid& bid, vehidx_t vehid)
       std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
 
       // n.b., 'who' maps task --> vehid, which is P^T
-      Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
-      P_ = Pt_.transpose();
+      // Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
+      // P_ = Pt_.transpose();
 
       // let the caller know a new assignment is ready
       notifyNewAssignment();
@@ -142,7 +147,6 @@ void Auctioneer::reset()
   std::fill_n(std::back_inserter(bid_->price), n_, 0.0);
   bid_->who.clear();
   std::fill_n(std::back_inserter(bid_->who), n_, -1);
-  bid_->iter = 0;
 
   // Create a table to hold my neighbor's bids for each CBAA iteration.
   bids_.clear();
@@ -156,10 +160,8 @@ void Auctioneer::reset()
 
 void Auctioneer::notifySendBid()
 {
-  bid_->iter = biditer_;
-
   // let the caller know
-  fn_sendbid_(bid_);
+  fn_sendbid_(biditer_, bid_);
 }
 
 // ----------------------------------------------------------------------------

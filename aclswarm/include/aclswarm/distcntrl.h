@@ -36,9 +36,9 @@ namespace aclswarm {
     DistCntrl(vehidx_t vehid, uint8_t n);
     ~DistCntrl() = default;
     
-    void set_gains(double K, double kp, double kd);
-    void set_formation(const std::shared_ptr<Formation>& f);
-    void set_assignment(const AssignmentVec& a);
+    void setGains(double K, double kp, double kd);
+    void setFormation(const std::shared_ptr<Formation>& f);
+    void setAssignment(const AssignmentPerm& P);
 
     Eigen::Vector3d compute(const PtsMat& q_veh, const Eigen::Vector3d vel);
 

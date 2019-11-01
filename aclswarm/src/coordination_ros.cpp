@@ -66,7 +66,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   pub_distcmd_ = nhQ_.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
   pub_assignment_ = nhQ_.advertise<std_msgs::UInt8MultiArray>("assignment", 1);
-  pub_cbaabid_ = nhQ_.advertise<aclswarm_msgs::CBAA>("cbaabid", 1);
+  pub_cbaabid_ = nhQ_.advertise<aclswarm_msgs::CBAA>("cbaabid", 1, true);
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
@@ -98,7 +98,7 @@ void CoordinationROS::spin()
       // let the controller know about the new formation
       ROS_INFO_STREAM("Changing formation to: \033[34;1m"
                         << formation_->name << "\033[0m");
-      controller_->set_formation(formation_);
+      controller_->setFormation(formation_);
 
       // find a reassignment for the new formation
       auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
@@ -107,7 +107,6 @@ void CoordinationROS::spin()
       // formation graph. Make sure that we can talk to our neighbors as
       // defined by the adjmat of the formation.
       connectToNeighbors();
-      // ros::Duration(0.5).sleep();
 
       // Now that we have neighbors to talk to, let the bidding begin.
       startAuction();
@@ -147,7 +146,7 @@ void CoordinationROS::init()
   auctioneer_->setNewAssignmentHandler(std::bind(
                             &CoordinationROS::newAssignmentCb, this, ph::_1));
   auctioneer_->setSendBidHandler(std::bind(
-                            &CoordinationROS::sendBidCb, this, ph::_1));
+                          &CoordinationROS::sendBidCb, this, ph::_1, ph::_2));
 
   //
   // Distributed Control
@@ -158,7 +157,7 @@ void CoordinationROS::init()
   nhp_.param<double>("cntrl/kp", kp, 1.0);
   nhp_.param<double>("cntrl/kd", kd, 0.0);
 
-  controller_->set_gains(K, kp, kd);
+  controller_->setGains(K, kp, kd);
 }
 
 // ----------------------------------------------------------------------------
@@ -216,9 +215,7 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
   Auctioneer::Bid bid;
   bid.price = msg->price;
   bid.who = msg->who;
-  bid.iter = msg->iter;
-  auctioneer_->receiveBid(bid, vehid);
-  ROS_INFO_STREAM("Received " << msg->iter << " bid from " << vehid);
+  auctioneer_->receiveBid(msg->iter, bid, vehid);
 }
 
 // ----------------------------------------------------------------------------
@@ -226,24 +223,27 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
 void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
 {
   // let distributed controller know
-  controller_->set_assignment(P);
+  // controller_->setAssignment(P);
 
   // change the communication graph accordingly
-  connectToNeighbors();
+  // connectToNeighbors();
 
   // publish
-  // pub_assignment_.publish();
+  std_msgs::UInt8MultiArray msg;
+  msg.data = std::vector<uint8_t>(P.indices().data(),
+                                  P.indices().data() + P.indices().size());
+  // pub_assignment_.publish(msg);
 }
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::sendBidCb(const Auctioneer::BidConstPtr& bid)
+void CoordinationROS::sendBidCb(uint32_t iter, const Auctioneer::BidConstPtr& bid)
 {
   aclswarm_msgs::CBAA msg;
   msg.header.stamp = ros::Time::now();
   msg.price = bid->price;
   msg.who = bid->who;
-  msg.iter = bid->iter;
+  msg.iter = iter;
   pub_cbaabid_.publish(msg);
 }
 
@@ -300,6 +300,7 @@ void CoordinationROS::connectToNeighbors()
           cbaabidCb(msg, j_vehid);
         };
 
+      // TOOD: don't resub if already sub'd
       constexpr int Qsize = 20; // we don't want to loose any of these
       vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
     } else {
@@ -329,7 +330,7 @@ void CoordinationROS::startAuction()
   // n.b., this sleep is okay since this thread is only handling the
   // formation callback (which should have a queue to make sure no vehicle
   // drops a msg while all the other swarm vehicles move on)
-  ros::Duration(0.5).sleep();
+  ros::Duration(0.25).sleep();
 
   auctioneer_->start(q_);
 }

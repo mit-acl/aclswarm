@@ -48,12 +48,12 @@ class VizCommands:
     def distcmdCb(self, msg, t, veh):
         p = Point(msg.vector.x, msg.vector.y, msg.vector.z)
         self.update_arrow_marker(p, t, veh)
-        self.pub.publish(self.markers)
+        # self.pub.publish(self.markers)
 
     def safecmdCb(self, msg, t, veh):
         p = Point(msg.vel.x, msg.vel.y, msg.vel.z)
         self.update_arrow_marker(p, t, veh)
-        self.pub.publish(self.markers)
+        # self.pub.publish(self.markers)
 
     def create_arrow_markers(self, topics, c):
         self.markers = MarkerArray()
