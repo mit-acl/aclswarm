@@ -4,6 +4,7 @@ clear; clc;
 addpath('cvx');
 addpath('Helpers');
 cvx_startup;
+format short;
 
 %% swarm4
 n = 4;
@@ -44,7 +45,12 @@ disp(D);
 
 %% swarm5
 n = 5;
-adj = ones(n) - eye(n);  % Complete graph
+% adj = ones(n) - eye(n);  % Complete graph
+adj = [[0, 1, 0, 1, 1];
+       [1, 0, 1, 1, 0];
+       [0, 1, 0, 1, 1];
+       [1, 1, 1, 0, 1];
+       [1, 0, 1, 1, 0]];
 
 name = 'Line';
 qs = [[-2.0, 0.0, 0.0];
