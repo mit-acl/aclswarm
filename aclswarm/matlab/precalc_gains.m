@@ -43,6 +43,44 @@ disp(A)
 disp(D);
 
 %% swarm5
+n = 5;
+adj = ones(n) - eye(n);  % Complete graph
+
+name = 'Line';
+qs = [[-2.0, 0.0, 0.0];
+      [-4.0, 0.0, 0.0];
+      [+2.0, 0.0, 0.0];
+      [+4.0, 0.0, 0.0];
+      [+0.0, 0.0, 0.0]];
+A = FindGains3D(qs', adj);
+D = squareform(pdist(qs));
+disp(name)
+disp(A)
+disp(D);
+
+name = 'Pentagon';
+qs = [[2.0, 0.0, 0.0];
+      [+0.618, +1.902, 0.0];
+      [-1.618, +1.176, 0.0];
+      [-1.618, -1.176, 0.0];
+      [+0.618, -1.902, 0.0]];
+A = FindGains3D(qs', adj);
+D = squareform(pdist(qs));
+disp(name)
+disp(A)
+disp(D);
+
+name = 'Square+1';
+qs = [[-2., 0.0, 0.0];
+      [+2., 0.0, 0.0];
+      [0.0, +2., 0.0];
+      [0.0, -2., 0.0];
+      [0.0, 0.0, 0.0]];
+A = FindGains3D(qs', adj);
+D = squareform(pdist(qs));
+disp(name)
+disp(A)
+disp(D);
 
 %% swarm6
 
