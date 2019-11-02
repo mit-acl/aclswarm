@@ -35,7 +35,8 @@ void Auctioneer::setSendBidHandler(
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset)
+void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat,
+                                                        bool resetAssignment)
 {
   assert(n_ == p.rows());
   assert(n_ == adjmat.rows());
@@ -45,6 +46,8 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset)
 
   constexpr uint32_t diameter = 2; // hardcoded for now...
   cbaa_max_iter_ = n_ * diameter;
+
+  reset();
 }
 
 // ----------------------------------------------------------------------------
@@ -54,6 +57,9 @@ void Auctioneer::start(const PtsMat& q)
   std::lock_guard<std::mutex> lock(mtx_);
 
   // Assumption: my internal state has already been (re)initialized
+
+  // let the caller know that an auction is now in session
+  auctionCompleted_ = false;
 
   // store the current state of vehicles in the swarm to be used throughout
   q_ = q;
@@ -109,7 +115,10 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
     // Determine convergence or continue bidding
     //
 
-    if (auctionComplete()) {
+    if (hasReachedConsensus()) {
+      // auction is complete
+      auctionCompleted_ = true;
+
       // Extract the best assignment from my local understanding,
       // which has reached consensus since the auction is complete.
 
@@ -117,8 +126,11 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
 
       // n.b., 'who' maps task --> vehid, which is P^T
-      // Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
-      // P_ = Pt_.transpose();
+      Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
+      P_ = Pt_.transpose();
+
+      // get ready for next auction
+      reset();
 
       // let the caller know a new assignment is ready
       notifyNewAssignment();
@@ -127,13 +139,6 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       notifySendBid();
     }
   }
-}
-
-// ----------------------------------------------------------------------------
-
-bool Auctioneer::auctionComplete()
-{
-  return biditer_ >= cbaa_max_iter_;
 }
 
 // ----------------------------------------------------------------------------
@@ -181,7 +186,7 @@ void Auctioneer::alignFormation()
 
 // ----------------------------------------------------------------------------
 
-bool Auctioneer::bidIterComplete()
+bool Auctioneer::bidIterComplete() const
 {
   // for convenience: my neighbors' bids from this bid iteration
   const auto& bids = bids_[biditer_];
@@ -200,6 +205,13 @@ bool Auctioneer::bidIterComplete()
   }
 
   return true;
+}
+
+// ----------------------------------------------------------------------------
+
+bool Auctioneer::hasReachedConsensus() const
+{
+  return biditer_ >= cbaa_max_iter_;
 }
 
 // ----------------------------------------------------------------------------

@@ -170,10 +170,16 @@ void LocalizationROS::connectToNeighbors()
           vehicleTrackerCb(msg, j_vehid);
         };
 
-      vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/vehicle_estimates", 1, cb);
+      // don't subscribe if already subscribed
+      if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
+        vehsubs_[j_vehid] = nh_.subscribe("/" + ns + "/vehicle_estimates", 1, cb);
+      }
     } else {
-      // if a subscriber exists, break communication
-      if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();
+      // if a subscriber exists, break communication and remove from map
+      if (vehsubs_.find(j_vehid) != vehsubs_.end()) {
+        vehsubs_[j_vehid].shutdown();
+        vehsubs_.erase(j_vehid);
+      }
     }
   }
 }

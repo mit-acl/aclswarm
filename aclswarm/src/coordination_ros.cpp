@@ -70,7 +70,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
-  constexpr int NUM_TASKS = 3; // there are only two timers + normal pub/sub
+  constexpr int NUM_TASKS = 1; // there are only two timers + normal pub/sub
   spinner_ = std::unique_ptr<ros::AsyncSpinner>(
                             new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
   spinner_->start();
@@ -88,6 +88,9 @@ void CoordinationROS::spin()
       // stop tasks
       tim_control_.stop();
       tim_auctioneertick_.stop();
+
+      // sends zero commands
+      sendZeroControl();
 
       // We only need to solve gains if they were not already provided
       if (formation_->gains.size() == 0) {
@@ -223,7 +226,7 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
 void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
 {
   // let distributed controller know
-  // controller_->setAssignment(P);
+  controller_->setAssignment(P);
 
   // change the communication graph accordingly
   // connectToNeighbors();
@@ -232,7 +235,7 @@ void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
   std_msgs::UInt8MultiArray msg;
   msg.data = std::vector<uint8_t>(P.indices().data(),
                                   P.indices().data() + P.indices().size());
-  // pub_assignment_.publish(msg);
+  pub_assignment_.publish(msg);
 }
 
 // ----------------------------------------------------------------------------
@@ -279,6 +282,16 @@ void CoordinationROS::controlCb(const ros::TimerEvent& event)
 
 // ----------------------------------------------------------------------------
 
+void CoordinationROS::sendZeroControl()
+{
+  geometry_msgs::Vector3Stamped msg;
+  msg.header.stamp = ros::Time::now();
+  msg.vector.x = msg.vector.y = msg.vector.z = 0;
+  pub_distcmd_.publish(msg);
+}
+
+// ----------------------------------------------------------------------------
+
 void CoordinationROS::connectToNeighbors()
 {
   // which formation point am I currently assigned to?
@@ -300,12 +313,17 @@ void CoordinationROS::connectToNeighbors()
           cbaabidCb(msg, j_vehid);
         };
 
-      // TOOD: don't resub if already sub'd
-      constexpr int Qsize = 20; // we don't want to loose any of these
-      vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
+      // don't subscribe if already subscribed
+      if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
+        constexpr int Qsize = 20; // we don't want to loose any of these
+        vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
+      }
     } else {
-      // if a subscriber exists, break communication
-      if (vehsubs_.find(j_vehid) != vehsubs_.end()) vehsubs_[j_vehid].shutdown();
+      // if a subscriber exists, break communication and remove from map
+      if (vehsubs_.find(j_vehid) != vehsubs_.end()) {
+        vehsubs_[j_vehid].shutdown();
+        vehsubs_.erase(j_vehid);
+      }
     }
   }
 }
@@ -325,7 +343,7 @@ void CoordinationROS::startAuction()
 
   // TODO: Think about an async solution to this
 
-  auctioneer_->reset();
+  // auctioneer_->reset();
 
   // n.b., this sleep is okay since this thread is only handling the
   // formation callback (which should have a queue to make sure no vehicle

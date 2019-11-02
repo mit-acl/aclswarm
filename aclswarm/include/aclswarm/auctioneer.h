@@ -62,9 +62,9 @@ namespace aclswarm {
      *
      * @param[in]  p       The new desired formation points
      * @param[in]  adjmat  The underlying adjacency matrix to use
-     * @param[in]  reset   Whether or not to reset the assignment to zero
+     * @param[in]  reset   Whether or not to reset the assignment to Id
      */
-    void setFormation(const PtsMat& p, const AdjMat& adjmat, bool reset=false);
+    void setFormation(const PtsMat& p, const AdjMat& adjmat, bool resetAssignment=false);
 
     /**
      * @brief      Kicks off the auction. A snapshot of the current states of
@@ -78,7 +78,7 @@ namespace aclswarm {
     void reset();
 
     void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
-    bool auctionComplete();
+    bool auctionComplete() const { return auctionCompleted_; }
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
@@ -101,6 +101,7 @@ namespace aclswarm {
     PtsMat paligned_; ///< the desired formation points, aligned
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
+    bool auctionCompleted_; ///< auctioneer has done work and is now idle
     std::mutex mtx_; ///< for synchronizing start before bids are received
 
     /// \brief Function handles for callbacks
@@ -109,7 +110,8 @@ namespace aclswarm {
 
     void alignFormation();
 
-    bool bidIterComplete();
+    bool hasReachedConsensus() const;
+    bool bidIterComplete() const;
 
     void notifySendBid();
     void notifyNewAssignment();

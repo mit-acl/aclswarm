@@ -83,6 +83,8 @@ namespace aclswarm {
      */
     void connectToNeighbors();
 
+    void sendZeroControl();
+
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
