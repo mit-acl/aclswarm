@@ -75,8 +75,6 @@ namespace aclswarm {
      */
     void start(const PtsMat& q);
 
-    void reset();
-
     void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
     bool auctionComplete() const { return auctionCompleted_; }
     
@@ -112,6 +110,7 @@ namespace aclswarm {
 
     bool hasReachedConsensus() const;
     bool bidIterComplete() const;
+    void reset();
 
     void notifySendBid();
     void notifyNewAssignment();

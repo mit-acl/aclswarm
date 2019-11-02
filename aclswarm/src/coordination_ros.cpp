@@ -66,7 +66,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   pub_distcmd_ = nhQ_.advertise<geometry_msgs::Vector3Stamped>("distcmd", 1);
   pub_assignment_ = nhQ_.advertise<std_msgs::UInt8MultiArray>("assignment", 1);
-  pub_cbaabid_ = nhQ_.advertise<aclswarm_msgs::CBAA>("cbaabid", 1, true);
+  pub_cbaabid_ = nhQ_.advertise<aclswarm_msgs::CBAA>("cbaabid", 1);
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
@@ -111,8 +111,20 @@ void CoordinationROS::spin()
       // defined by the adjmat of the formation.
       connectToNeighbors();
 
+      // Assumption: Each vehicle is told to start an auction at the same time.
+      // Challenge: Clearly, there will be jitter across all the vehicles. This
+      //  jitter may cause some vehicles to start a new auction and send their
+      //  initial before other vehicles (i.e., their nbrs) have had a chance
+      //  to setup comms. As a result, if I am a slow vehicle, then I will miss
+      //  my fast nbr's first bids and will be stuck waiting for them forever.
+
+      // n.b., this sleep is okay since this thread is only handling the
+      // formation callback (which should have a queue to make sure no vehicle
+      // drops a msg while all the other swarm vehicles move on)
+      ros::Duration(0.5).sleep(); // this hack is so annoying
+
       // Now that we have neighbors to talk to, let the bidding begin.
-      startAuction();
+      auctioneer_->start(q_);
 
       // wait for CBAA to converge so that we get a good assignment
       waitForNewAssignment();
@@ -229,7 +241,7 @@ void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
   controller_->setAssignment(P);
 
   // change the communication graph accordingly
-  // connectToNeighbors();
+  connectToNeighbors();
 
   // publish
   std_msgs::UInt8MultiArray msg;
@@ -330,36 +342,19 @@ void CoordinationROS::connectToNeighbors()
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::startAuction()
-{
-  // Assumption: Each vehicle is told to start an auction at the same time.
-  // Challenge: Clearly, there will be jitter across all the vehicles. This
-  //  jitter may some vehicles to start a new auction and send their initial
-  //  before other vehicles (i.e., their nbrs) have had a chance to properly
-  //  reset. As a result, if I am a slow vehicle, then I will miss my fast
-  //  nbr's initial bid and will be stuck waiting for it forever.
-  // Solution: To avoid this, we tell each vehicle to wait for some time
-  //  after reseting its receive buffers and before sending its initial bid.
-
-  // TODO: Think about an async solution to this
-
-  // auctioneer_->reset();
-
-  // n.b., this sleep is okay since this thread is only handling the
-  // formation callback (which should have a queue to make sure no vehicle
-  // drops a msg while all the other swarm vehicles move on)
-  ros::Duration(0.25).sleep();
-
-  auctioneer_->start(q_);
-}
-
-// ----------------------------------------------------------------------------
-
 void CoordinationROS::waitForNewAssignment()
 {
+  constexpr double TIMEOUT_SEC = 1;
   constexpr double POLL_PERIOD = 0.1;
+  auto start = ros::Time::now();
   while (ros::ok() && !auctioneer_->auctionComplete()) {
     ros::Duration(POLL_PERIOD).sleep();
+
+    // if we couldn't come up with an assignment, just bail...
+    if ((ros::Time::now() - start).toSec() > TIMEOUT_SEC) {
+      ROS_ERROR("Assignment auction timed out.");
+      return;
+    }
   }
 }
 

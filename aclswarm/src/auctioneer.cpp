@@ -142,24 +142,6 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
 }
 
 // ----------------------------------------------------------------------------
-
-void Auctioneer::reset()
-{
-  biditer_ = 0;
-
-  // initialize my bid
-  bid_->price.clear();
-  std::fill_n(std::back_inserter(bid_->price), n_, 0.0);
-  bid_->who.clear();
-  std::fill_n(std::back_inserter(bid_->who), n_, -1);
-
-  // Create a table to hold my neighbor's bids for each CBAA iteration.
-  bids_.clear();
-  bids_.resize(cbaa_max_iter_);
-}
-
-
-// ----------------------------------------------------------------------------
 // Private Methods
 // ----------------------------------------------------------------------------
 
@@ -212,6 +194,23 @@ bool Auctioneer::bidIterComplete() const
 bool Auctioneer::hasReachedConsensus() const
 {
   return biditer_ >= cbaa_max_iter_;
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::reset()
+{
+  biditer_ = 0;
+
+  // initialize my bid
+  bid_->price.clear();
+  std::fill_n(std::back_inserter(bid_->price), n_, 0.0);
+  bid_->who.clear();
+  std::fill_n(std::back_inserter(bid_->who), n_, -1);
+
+  // Create a table to hold my neighbor's bids for each CBAA iteration.
+  bids_.clear();
+  bids_.resize(cbaa_max_iter_);
 }
 
 // ----------------------------------------------------------------------------
