@@ -106,7 +106,7 @@ namespace aclswarm {
     std::function<void(const AssignmentPerm&)> fn_assignment_;
     std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> fn_sendbid_;
 
-    void alignFormation();
+    PtsMat alignFormation(const AdjMat& adjmat, const PtsMat& p, const PtsMat& q);
 
     bool hasReachedConsensus() const;
     bool bidIterComplete() const;

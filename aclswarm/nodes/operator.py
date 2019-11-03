@@ -30,7 +30,8 @@ class Operator:
         self.send_gains = rospy.get_param('~send_gains', False)
         formation_group = rospy.get_param('~formation_group')
         self.formations = rospy.get_param('~{}'.format(formation_group))
-        if 'adjmat' not in self.formations: # make fc if not specified
+        if ('adjmat' not in self.formations # make fc if not specified
+            or type(self.formations['adjmat']) != list):
             self.formations['adjmat'] = np.ones(self.n) - np.eye(self.n)
         if self.formations['agents'] != self.n:
             rospy.logerr('Mismatch between number of vehicles ({}) '

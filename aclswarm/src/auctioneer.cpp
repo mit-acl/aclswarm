@@ -69,8 +69,7 @@ void Auctioneer::start(const PtsMat& q)
   //
 
   // align current swarm positions to desired formation (using neighbors only)
-  // paligned_ = alignFormation(adjmat_, p_, q_);
-  paligned_ = p_;
+  paligned_ = alignFormation(adjmat_, p_, q_);
 
   //
   // Assignment (kick off with an initial bid)
@@ -161,9 +160,61 @@ void Auctioneer::notifyNewAssignment()
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::alignFormation()
+PtsMat Auctioneer::alignFormation(const AdjMat& adjmat, const PtsMat& p,
+                                  const PtsMat& q)
 {
+  // Find (R,t) that minimizes ||q - (Rp + t)||^2
 
+  //
+  // Select Local Information (i.e., use only nbrs for alignment)
+  //
+
+  // work in "formation space" since we are using the adjmat to check nbhrs
+  const vehidx_t i = P_.indices()(vehid_);
+
+  // keep track this vehicle's neighbors ("formation space")
+  std::vector<vehidx_t> nbrpts = { i }; // include myself
+  for (size_t j=0; j<n_; ++j) if (adjmat(i, j)) nbrpts.push_back(j);
+
+  // extract local nbrhd information for this vehicle to use in alignment
+  PtsMat pnbrs = PtsMat::Zero(nbrpts.size(), 3);
+  PtsMat qnbrs = PtsMat::Zero(nbrpts.size(), 3);
+  for (size_t k=0; k<nbrpts.size(); ++k) {
+    pnbrs.row(k) = p.row(nbrpts[k]);
+    qnbrs.row(k) = q.row(Pt_.indices()(nbrpts[k]));
+  }
+
+  //
+  // Arun's method for point cloud alignment (maps p onto q)
+  //
+
+  // We need our point clouds to be stored in 3xN matrices
+  Eigen::Matrix<double, 3, Eigen::Dynamic> pp = pnbrs.transpose();
+  Eigen::Matrix<double, 3, Eigen::Dynamic> qq = qnbrs.transpose();
+
+  // shift points by their centroid
+  Eigen::Vector3d mu_q = qq.rowwise().mean();
+  Eigen::Vector3d mu_p = pp.rowwise().mean();
+  auto Q = qq - mu_q;
+  auto P = pp - mu_p;
+
+  // construct H matrix (3x3)
+  Eigen::Matrix3d H = Q * P.transpose();
+
+  // perform SVD of H
+  Eigen::JacobiSVD<Eigen::Matrix3d> svd(H, Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Eigen::Vector3d diag;
+  diag << 1, 1, (svd.matrixU()*svd.matrixV().transpose()).determinant();
+
+  // solve rotation-only problem
+  Eigen::Matrix3d R = svd.matrixU() * diag.asDiagonal() * svd.matrixV().transpose();
+
+  // solve translation
+  Eigen::Vector3d t = mu_q - R*mu_p;
+
+  // make sure to send back as an Nx3 PtsMat
+  PtsMat aligned = ((R * p.transpose()).colwise() + t).transpose();
+  return aligned;
 }
 
 // ----------------------------------------------------------------------------
