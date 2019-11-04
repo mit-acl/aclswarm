@@ -57,20 +57,20 @@ if t - tAssign > T % Run assignment
     
     if strcmp(method, 'cbaa')
         % CBAA algorithm
-        assign = CBAA_aclswarm(adj, qs, qm)
+        [assign, ~] = CBAA_aclswarm(adj, qs, qm)
     elseif strcmp(method, 'hungarian')
         % Hungarian assignment for comparison
         assign = Hungarian_aclswarm(qs, qm)
     end
     
-    % Assignment matrix
+    % Assignment matrix (maps formpt to vehidx)
     Pnew = zeros(n);
     for ii = 1 : length(assign)
         if (assign(ii) ~= 0)
             Pnew(ii,assign(ii)) = 1;
         end
     end
-    
+
     P = Pnew * P; % Update the assignment
     
     % Reset assignment time

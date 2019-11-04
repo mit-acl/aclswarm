@@ -84,7 +84,7 @@ end
 theta0 = atan2(W2, W1);
 
 % run CBAA
-[assign_CBAA] = CBAA_aclswarm(Adj, p_i, x_i);
+[assign_CBAA,~] = CBAA_aclswarm(Adj, p_i, x_i);
 % Evaluate assignment
 [dis_old_CBAA, dis_new_CBAA] = eval_assign(assign_CBAA,tau0,theta0,1:n,tau0,theta0, p_i,x_i, true);
 assign_CBAA

@@ -24,42 +24,49 @@
 
 %% Using logged data
 vehid = 0;
-[n,q,adjmat,P,p,aligned,newP] = read_alignment(['~/.ros/alignment_' num2str(vehid) '.bin']);
-vehid = vehid + 1; % matlab
+vehid = vehid + 1; % matlab 1-based indexing
 
-[qnbrs, pnbrs] = nbrsof(vehid, adjmat, q, p, P);
+% Load data from C++ implementation
+[n,q,adjmat,P,p,aligned,newP] = read_alignment(['~/.ros/alignment_' num2str(vehid-1) '.bin']);
+c = struct();
+c.aligned = aligned;
+c.newP = newP;
 
-% figure
-figure(vehid), clf;
-subplot(3,2,[1 2]); grid on; hold on;
-title(['Vehicle ' num2str(vehid)]);
-plotPts(q, 'name','State');
-plotPts(aligned, 'name','C++ Aligned', 'permvec',newP);
-axis([-5 5 -2 2 -3 3]);
-% axis square;
-xlabel('X'); ylabel('Y'); zlabel('Z');
-view(0,90);
+% Load data from MATLAB implementation
+[newP, aligned_ps] = CBAA_aclswarm(adjmat, p(:,1:2)', q(:,1:2)');
+pa = [aligned_ps{vehid}; zeros(1,n)]';
+m = struct();
+m.aligned = pa;
+m.newP = newP;
 
-%%%%%%%% MATLAB Arun
-pa = arun(q, p, 1);
-subplot(3,2,[1 2 3 4]); grid on; hold on;
-plotPts(q, 'name','State');
-plotPts(aligned, 'name','C++ Aligned', 'permvec',newP);
-% plotPts(pa, 'name','MATLAB aligned', 'permvec',newP);
-axis([-6 6 -6 6 -3 3]);
+% MATLAB Arun implementation of C++
+pa = arun(vehid, adjmat, q, p, P, 1);
+
+figure(1), clf;
+subplot(3,3,[1 2 3 4 5 6]); grid on; hold on;
+plotPts(q, 'name','State','labels','show');
+plotPts(c.aligned, 'name','C++ Aligned', 'labels','show', 'permvec',c.newP);
+plotPts(m.aligned, 'name','MATLAB aligned', 'labels','show', 'permvec',m.newP);
+% plotPts(pa, 'name','Arun aligned', 'labels','show', 'permvec',m.newP);
+axissq([q;c.aligned;m.aligned], 2);
 axis square;
 xlabel('X'); ylabel('Y'); zlabel('Z');
-view(0,90);
+view(-20,30);
 
 %%%%%%%% Original desired formation (no assignment)
-subplot(3,2,5); grid on; hold on; axis square
-plotPts(p, 'name','Desired Formation');
-axis([-6 6 -6 6 -3 3]);
+subplot(3,3,7); grid on; hold on; axis square; title('From Operator');
+plotPts(p);
+axissq(p, 2);
 
 %%%%%%%% Desired formation (after assignment)
-subplot(3,2,6); grid on; hold on; axis square
-plotPts(aligned, 'name','Assigned Formation', 'permvec', newP);
-axis([-6 6 -6 6 -3 3]);
+subplot(3,3,8); grid on; hold on; title('C++ Assigned');
+plotPts(c.aligned, 'permvec', c.newP);
+axissq(c.aligned, 2);
+
+%%%%%%%% Desired formation (after assignment)
+subplot(3,3,9); grid on; hold on; axis square; title('MATLAB Assigned');
+plotPts(m.aligned, 'permvec', m.newP);
+axissq(m.aligned, 2);
 %% Select neighbors
 % use only local information for alignment
 
@@ -75,6 +82,7 @@ mynbrs = adjmat(i,:);
 
 % index of each formation pt that is my nbr
 jvec = mynbrs.*(1:size(adjmat,1));
+jvec(jvec==0) = [];
 
 % create inverse perm vec: formpt to vehid
 jinv(P) = 1:length(P);
@@ -88,11 +96,13 @@ end
 
 %% Arun's Method (3d)
 % Minimizes ||q - (Rp + t)||^2
-function aligned = arun(q, p, only2d)
+function aligned = arun(vehid, adjmat, q, p, P, only2d)
+
+[qnbrs, pnbrs] = nbrsof(vehid, adjmat, q, p, P);
 
 % ASSUME: q, p are Nx3 but need to be 3xN
-qq = q';
-pp = p';
+qq = qnbrs';
+pp = pnbrs';
 
 % shift point clouds by centroids
 mu_q = mean(qq,2); % (rowwise)
@@ -104,7 +114,7 @@ P = pp - mu_p;
 H = Q * P';
 
 % perform SVD of H
-[U,~,V] = svd(H);
+[U,S,V] = svd(H);
 d = [1, 1, det(U*V')];
 
 % solve rotation-only problem
@@ -155,4 +165,22 @@ if strcmp(ip.Results.labels, 'show')
     text(p(:,1)-magic,p(:,2),p(:,3),num2str(k'),...
         'Color','black','FontWeight','bold');
 end
+end
+
+function axissq(x, m)
+axis square;
+axis([min(x(:,1))-m max(x(:,1))+m min(x(:,2))-m max(x(:,2))+m -3 3]);
+
+ax = axis;
+cx = (ax(1)+ax(2))/2;
+cy = (ax(3)+ax(4))/2;
+dx = ax(2)-ax(1);
+dy = ax(4)-ax(3);
+
+if dx > dy
+    axis([ax(1) ax(2) cy-dx/2 cy+dx/2 -3 3]);
+else
+    axis([cx-dy/2 cx+dy/2 ax(3) ax(4) -3 3]);
+end
+
 end

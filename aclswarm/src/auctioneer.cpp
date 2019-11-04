@@ -201,34 +201,57 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
   Eigen::Matrix<double, 3, Eigen::Dynamic> pp = pnbrs.transpose();
   Eigen::Matrix<double, 3, Eigen::Dynamic> qq = qnbrs.transpose();
 
+  std::cout << "pp" << std::endl << pp << std::endl << std::endl;
+  std::cout << "qq" << std::endl << qq << std::endl << std::endl;
+
   // shift points by their centroid
   Eigen::Vector3d mu_q = qq.rowwise().mean();
   Eigen::Vector3d mu_p = pp.rowwise().mean();
 
+  std::cout << "mu_q" << std::endl << mu_q << std::endl << std::endl;
+  std::cout << "mu_p" << std::endl << mu_p << std::endl << std::endl;
+
   Eigen::Matrix<double, 3, Eigen::Dynamic> Q = qq.colwise() - mu_q;
   Eigen::Matrix<double, 3, Eigen::Dynamic> P = pp.colwise() - mu_p;
 
+  std::cout << "Q" << std::endl << Q << std::endl << std::endl;
+  std::cout << "P" << std::endl << P << std::endl << std::endl;
+
   // construct H matrix (3x3)
   Eigen::Matrix3d H = Q * P.transpose();
+
+  std::cout << "H" << std::endl << H << std::endl << std::endl;
 
   // perform SVD of H
   Eigen::JacobiSVD<Eigen::Matrix3d> svd(H, Eigen::ComputeFullU | Eigen::ComputeFullV);
   Eigen::Vector3d diag;
   diag << 1, 1, (svd.matrixU()*svd.matrixV().transpose()).determinant();
 
+  std::cout << "U" << std::endl << svd.matrixU() << std::endl << std::endl;
+  std::cout << "S" << std::endl << svd.singularValues() << std::endl << std::endl;
+  std::cout << "V'" << std::endl << svd.matrixV().transpose() << std::endl << std::endl;
+
   // solve rotation-only problem
   Eigen::Matrix3d R = svd.matrixU() * diag.asDiagonal() * svd.matrixV().transpose();
 
+  std::cout << "R" << std::endl << R << std::endl << std::endl;
+
   // use only planar rotation (yaw)---extract ZYX intrinsic
   Eigen::Vector3d eul = R.eulerAngles(2, 1, 0);
+  std::cout << "eul: " << eul.transpose() << std::endl;
   Eigen::Quaterniond qyaw(Eigen::AngleAxisd(eul[0], Eigen::Vector3d::UnitZ()));
   R = qyaw.toRotationMatrix();
+
+  std::cout << "R" << std::endl << R << std::endl << std::endl;
 
   // solve translation
   Eigen::Vector3d t = mu_q - R*mu_p;
 
+  std::cout << "t " << t.transpose() << std::endl << std::endl;
+
   // make sure to send back as an Nx3 PtsMat
   PtsMat aligned = ((R * p.transpose()).colwise() + t).transpose();
+  std::cout << "palign" << std::endl << aligned << std::endl << std::endl;
   return aligned;
 }
 

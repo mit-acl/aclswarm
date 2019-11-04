@@ -1,8 +1,10 @@
-function [assign] = CBAA_hexswarm(adj, pm, qm)
+function [assign,aligned_ps] = CBAA_aclswarm(adj, pm, qm)
 %CBAA_HEXSWARM CBAA implementation for swarm assignment
 %   adj     nxn adjacency matrix
 %   pm      2xn matrix of desired formation points
 %   qm      2xn matrix of current vehicle positions
+%
+%   assign  1xn permutation vector. maps vehidx to formpt
 %
 %   Note: adj and pm should reflect the current assignment.
 
