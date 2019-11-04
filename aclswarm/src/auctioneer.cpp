@@ -246,9 +246,9 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
   Eigen::Vector3d eul = R.eulerAngles(2, 1, 0);
   std::cout << "eul: " << eul.transpose() << std::endl;
   Eigen::Quaterniond qyaw(Eigen::AngleAxisd(eul[0], Eigen::Vector3d::UnitZ()));
-  R = qyaw.toRotationMatrix();
+  // R = qyaw.toRotationMatrix();
 
-  std::cout << "R" << std::endl << R << std::endl << std::endl;
+  std::cout << "R" << std::endl << qyaw.toRotationMatrix() << std::endl << std::endl;
 
   // solve translation
   Eigen::Vector3d t = mu_q - R*mu_p;

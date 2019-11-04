@@ -40,18 +40,19 @@ m.aligned = pa;
 m.newP = newP;
 
 % MATLAB Arun implementation of C++
-pa = arun(vehid, adjmat, q, p, P, 1);
+pa = align(vehid, adjmat, q, p, P);
 
 figure(1), clf;
 subplot(3,3,[1 2 3 4 5 6]); grid on; hold on;
 plotPts(q, 'name','State','labels','show');
-plotPts(c.aligned, 'name','C++ Aligned', 'labels','show', 'permvec',c.newP);
-plotPts(m.aligned, 'name','MATLAB aligned', 'labels','show', 'permvec',m.newP);
-% plotPts(pa, 'name','Arun aligned', 'labels','show', 'permvec',m.newP);
+plotPts(c.aligned, 'name','C++ Aligned', 'labels','show');%, 'permvec',c.newP);
+plotPts(m.aligned, 'name','MATLAB aligned', 'labels','show');%, 'permvec',m.newP);
+plotPts(pa, 'name','Arun aligned', 'labels','show');%, 'permvec',m.newP);
 axissq([q;c.aligned;m.aligned], 2);
 axis square;
 xlabel('X'); ylabel('Y'); zlabel('Z');
-view(-20,30);
+view(0,90);
+% view(-20,30);
 
 %%%%%%%% Original desired formation (no assignment)
 subplot(3,3,7); grid on; hold on; axis square; title('From Operator');
@@ -94,42 +95,56 @@ pnbrs = p(jvec,:);
 qnbrs = q(nbrvec,:);
 end
 
-%% Arun's Method (3d)
-% Minimizes ||q - (Rp + t)||^2
-function aligned = arun(vehid, adjmat, q, p, P, only2d)
+%% Formation Alignment
+
+function aligned = align(vehid, adjmat, q, p, P)
 
 [qnbrs, pnbrs] = nbrsof(vehid, adjmat, q, p, P);
 
-% ASSUME: q, p are Nx3 but need to be 3xN
+% ASSUME: q, p are nxd but need to be dxn
 qq = qnbrs';
 pp = pnbrs';
 
-% shift point clouds by centroids
-mu_q = mean(qq,2); % (rowwise)
-mu_p = mean(pp,2); % (rowwise)
-Q = qq - mu_q;
-P = pp - mu_p;
+qq = qq(1:2,:);
+pp = pp(1:2,:);
 
-% construct H matrix (3x3)
+[R, t] = arun(qq, pp);
+
+if size(R,1) == 2
+    R(3,3) = 1;
+    t(3) = 0;
+end
+
+aligned = (R*p' + t)';
+% aligned = (R*p')';
+end
+
+%% Arun's Method
+% Minimizes ||q - (Rp + t)||^2
+function [R, t] = arun(q, p)
+
+% ASSUME: q, p are dxn (d: 2D or 3D)
+d = size(q,1);
+
+% shift point clouds by centroids
+mu_q = mean(q,2); % (rowwise)
+mu_p = mean(p,2); % (rowwise)
+Q = q - mu_q;
+P = p - mu_p;
+
+% construct H matrix (dxd)
 H = Q * P';
 
 % perform SVD of H
-[U,S,V] = svd(H);
-d = [1, 1, det(U*V')];
+[U,~,V] = svd(H);
+D = eye(size(H));
+D(d,d) = det(U*V');
 
 % solve rotation-only problem
-Rhat = U*diag(d)*V'
-
-if only2d
-    % extract only yaw
-    eul = rotm2eul(Rhat, 'ZYX');
-    Rhat = eul2rotm([eul(1) 0 0], 'ZYX');
-end
+R = U*D*V';
 
 % solve translation
-that = mu_q - Rhat*mu_p
-
-aligned = (Rhat*p' + that)';
+t = mu_q - R*mu_p;
 end
 
 %% Plotting helpers
