@@ -104,7 +104,7 @@ void CoordinationROS::spin()
       controller_->setFormation(formation_);
 
       // find a reassignment for the new formation
-      auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
+      auctioneer_->setFormation(formation_->qdes, formation_->adjmat, true);
 
       // FYI: We assume that our communication graph is identical to the
       // formation graph. Make sure that we can talk to our neighbors as

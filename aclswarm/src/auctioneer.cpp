@@ -48,6 +48,11 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat,
   cbaa_max_iter_ = n_ * diameter;
 
   reset();
+
+  if (resetAssignment) {
+    P_.setIdentity(n_);
+    Pt_.setIdentity(n_);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -69,7 +74,7 @@ void Auctioneer::start(const PtsMat& q)
   //
 
   // align current swarm positions to desired formation (using neighbors only)
-  paligned_ = alignFormation(adjmat_, p_, q_);
+  paligned_ = alignFormation(q_, adjmat_, p_);
 
   //
   // Assignment (kick off with an initial bid)
@@ -125,11 +130,15 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
 
       // n.b., 'who' maps task --> vehid, which is P^T
+      const auto lastP = P_;
       Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
       P_ = Pt_.transpose();
 
       // get ready for next auction
       reset();
+
+      // log the assignment for debugging
+      logAssignment(q_, adjmat_, p_, paligned_, lastP, P_);
 
       // let the caller know a new assignment is ready
       notifyNewAssignment();
@@ -160,8 +169,8 @@ void Auctioneer::notifyNewAssignment()
 
 // ----------------------------------------------------------------------------
 
-PtsMat Auctioneer::alignFormation(const AdjMat& adjmat, const PtsMat& p,
-                                  const PtsMat& q)
+PtsMat Auctioneer::alignFormation(const PtsMat& q,
+                                  const AdjMat& adjmat, const PtsMat& p)
 {
   // Find (R,t) that minimizes ||q - (Rp + t)||^2
 
@@ -172,9 +181,9 @@ PtsMat Auctioneer::alignFormation(const AdjMat& adjmat, const PtsMat& p,
   // work in "formation space" since we are using the adjmat to check nbhrs
   const vehidx_t i = P_.indices()(vehid_);
 
-  // keep track this vehicle's neighbors ("formation space")
-  std::vector<vehidx_t> nbrpts = { i }; // include myself
-  for (size_t j=0; j<n_; ++j) if (adjmat(i, j)) nbrpts.push_back(j);
+  // keep track this vehicle's neighbors ("formation space")---include myself
+  std::vector<vehidx_t> nbrpts;
+  for (size_t j=0; j<n_; ++j) if (adjmat(i, j) || i==j) nbrpts.push_back(j);
 
   // extract local nbrhd information for this vehicle to use in alignment
   PtsMat pnbrs = PtsMat::Zero(nbrpts.size(), 3);
@@ -195,8 +204,9 @@ PtsMat Auctioneer::alignFormation(const AdjMat& adjmat, const PtsMat& p,
   // shift points by their centroid
   Eigen::Vector3d mu_q = qq.rowwise().mean();
   Eigen::Vector3d mu_p = pp.rowwise().mean();
-  auto Q = qq - mu_q;
-  auto P = pp - mu_p;
+
+  Eigen::Matrix<double, 3, Eigen::Dynamic> Q = qq.colwise() - mu_q;
+  Eigen::Matrix<double, 3, Eigen::Dynamic> P = pp.colwise() - mu_p;
 
   // construct H matrix (3x3)
   Eigen::Matrix3d H = Q * P.transpose();
@@ -208,6 +218,11 @@ PtsMat Auctioneer::alignFormation(const AdjMat& adjmat, const PtsMat& p,
 
   // solve rotation-only problem
   Eigen::Matrix3d R = svd.matrixU() * diag.asDiagonal() * svd.matrixV().transpose();
+
+  // use only planar rotation (yaw)---extract ZYX intrinsic
+  Eigen::Vector3d eul = R.eulerAngles(2, 1, 0);
+  Eigen::Quaterniond qyaw(Eigen::AngleAxisd(eul[0], Eigen::Vector3d::UnitZ()));
+  R = qyaw.toRotationMatrix();
 
   // solve translation
   Eigen::Vector3d t = mu_q - R*mu_p;
@@ -348,6 +363,29 @@ void Auctioneer::selectTaskAssignment()
 float Auctioneer::getPrice(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2)
 {
   return 1.0 / ((p1 - p2).norm() + 1e-8);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::logAssignment(const PtsMat& q, const AdjMat& adjmat,
+                        const PtsMat& p, const PtsMat& aligned,
+                        const AssignmentPerm& lastP, const AssignmentPerm& P)
+{
+  // open a binary file
+  std::ofstream bin("alignment_" + std::to_string(vehid_) + ".bin",
+                    std::ios::binary);
+
+  bin.write(reinterpret_cast<const char *>(&n_), sizeof n_);
+  bin.write(reinterpret_cast<const char *>(q.data()), sizeof(q.data()[0])*q.size());
+  bin.write(reinterpret_cast<const char *>(adjmat.data()), sizeof(adjmat.data()[0])*adjmat.size());
+  bin.write(reinterpret_cast<const char *>(lastP.indices().data()), sizeof(lastP.indices().data()[0])*lastP.indices().size());
+  bin.write(reinterpret_cast<const char *>(p.data()), sizeof(p.data()[0])*p.size());
+  bin.write(reinterpret_cast<const char *>(aligned.data()), sizeof(aligned.data()[0])*aligned.size());
+  bin.write(reinterpret_cast<const char *>(P.indices().data()), sizeof(P.indices().data()[0])*P.indices().size());
+  bin.close();
+
+  std::cout << "lastP: " << lastP.indices().cast<int>().transpose() << std::endl;
+  std::cout << "P:     " <<     P.indices().cast<int>().transpose() << std::endl;
 }
 
 } // ns aclswarm

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -106,7 +107,11 @@ namespace aclswarm {
     std::function<void(const AssignmentPerm&)> fn_assignment_;
     std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> fn_sendbid_;
 
-    PtsMat alignFormation(const AdjMat& adjmat, const PtsMat& p, const PtsMat& q);
+    PtsMat alignFormation(const PtsMat& q,
+                          const AdjMat& adjmat, const PtsMat& p);
+    void logAssignment(const PtsMat& q, const AdjMat& adjmat,
+                       const PtsMat& p, const PtsMat& aligned,
+                       const AssignmentPerm& lastP, const AssignmentPerm& P);
 
     bool hasReachedConsensus() const;
     bool bidIterComplete() const;
