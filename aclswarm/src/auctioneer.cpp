@@ -11,7 +11,7 @@ namespace acl {
 namespace aclswarm {
 
 Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
-: n_(n), vehid_(vehid), bid_(new Bid)
+: n_(n), vehid_(vehid), biditer_(-1), bid_(new Bid)
 {
   P_.setIdentity(n_);
   Pt_.setIdentity(n_);
@@ -84,16 +84,22 @@ void Auctioneer::start(const PtsMat& q)
   // formation is, make an initial bid for the formation point I am closest to.
   selectTaskAssignment();
 
-  // send my bid to my neighbors
+  // indicates that the auction has started
   biditer_ = 0;
+
+  // send my bid to my neighbors
   notifySendBid();
+
+  // let any threads waiting on the start bid iteration know we are done
+  cv_.notify_all();
 }
 
 // ----------------------------------------------------------------------------
 
 void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
 {
-  std::lock_guard<std::mutex> lock(mtx_);
+  std::unique_lock<std::mutex> lock(mtx_);
+  cv_.wait(lock, [this](){ return biditer_ >= 0; });
 
   // keep track of all bids across bid iterations
   bids_[iter].insert({vehid, bid});
@@ -289,7 +295,8 @@ bool Auctioneer::hasReachedConsensus() const
 
 void Auctioneer::reset()
 {
-  biditer_ = 0;
+  // indicates that there is no auction being performed
+  biditer_ = -1;
 
   // initialize my bid
   bid_->price.clear();
@@ -365,13 +372,17 @@ void Auctioneer::selectTaskAssignment()
     // n.b., within the same auction, this list of prices will be the same
     const float price = getPrice(q_.row(vehid_), paligned_.row(j));
 
+    std::cout << "task " << j << ": " << price << " ";
+
     // In addition to finding the task that I am most interested in,
     // only bid on a task if I think I will win (highest bidder of my nbhrs)
     if (price > max && price > bid_->price[j]) {
       max = price;
       task = j;
       was_assigned = true;
+      std::cout << "**";
     }
+    std::cout << std::endl;
   }
 
   // update my local information to reflect my bid

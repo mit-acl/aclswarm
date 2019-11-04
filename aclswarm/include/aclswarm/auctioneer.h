@@ -8,6 +8,7 @@
 #pragma once
 
 #include <algorithm>
+#include <condition_variable>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -101,7 +102,8 @@ namespace aclswarm {
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
     bool auctionCompleted_; ///< auctioneer has done work and is now idle
-    std::mutex mtx_; ///< for synchronizing start before bids are received
+    std::mutex mtx_; ///< for condvar synchronization
+    std::condition_variable cv_; ///< force start to happen before rcving bids
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;
