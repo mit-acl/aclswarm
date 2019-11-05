@@ -130,18 +130,24 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
 
       // n.b., 'who' maps task --> vehid, which is P^T
-      const auto lastP = P_;
-      Pt_ = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
-      P_ = Pt_.transpose();
-
-      // get ready for next auction
-      reset();
+      const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
+      const auto newP = newPt.transpose();
 
       // log the assignment for debugging
-      logAssignment(q_, adjmat_, p_, paligned_, lastP, P_);
+      logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
 
-      // let the caller know a new assignment is ready
-      notifyNewAssignment();
+      // determine if this assignment is better than the previous one
+      if (shouldUseAssignment(newP)) {
+        // set the assignment
+        P_ = newP;
+        Pt_ = newPt;
+
+        // let the caller know a new assignment is ready
+        notifyNewAssignment();
+      }
+
+      // get ready for next auction, makes auctioneer idle
+      reset();
     } else {
       // send latest bid to my neighbors
       notifySendBid();
@@ -169,8 +175,149 @@ void Auctioneer::notifyNewAssignment()
 
 // ----------------------------------------------------------------------------
 
+bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) const
+{
+  // don't bother if the assignment is the same
+  if (P_.indices().isApprox(newP.indices())) return false;
+
+  {
+    //
+    // Select Local Information (i.e., use only nbrs for alignment)
+    //
+
+    // work in "formation space" since we are using the adjmat to check nbhrs
+    const vehidx_t i = P_.indices()(vehid_);
+
+    // keep track this vehicle's neighbors ("formation space")---include myself
+    std::vector<vehidx_t> nbrpts;
+    for (size_t j=0; j<n_; ++j) if (adjmat_(i, j) || i==j) nbrpts.push_back(j);
+
+    // extract local nbrhd information for this vehicle to use in alignment
+    PtsMat pnbrs = PtsMat::Zero(nbrpts.size(), 3);
+    PtsMat qnbrs = PtsMat::Zero(nbrpts.size(), 3);
+    for (size_t k=0; k<nbrpts.size(); ++k) {
+      // correspondence btwn nbr formpts and nbr vehicles
+      pnbrs.row(k) = p_.row(nbrpts[k]);
+      qnbrs.row(k) = q_.row(Pt_.indices()(nbrpts[k]));
+    }
+
+    //
+    // Determine if the formation is a colinear, flat, or 3d
+    //
+
+    // be very stringent on what we consider a nonzero singular value (for noise)
+    constexpr double RANK_TH = 0.05;
+    Eigen::JacobiSVD<PtsMat> svdQ(qnbrs.rowwise() - qnbrs.colwise().mean());
+    Eigen::JacobiSVD<PtsMat> svdP(pnbrs.rowwise() - pnbrs.colwise().mean());
+    svdQ.setThreshold(RANK_TH);
+    svdP.setThreshold(RANK_TH);
+
+    // Only perform 3D Umeyama if there is structure in both swarm and formation
+    int d = (svdQ.rank() == 3 && svdP.rank() == 3) ? 3 : 2;
+
+    //
+    // Point cloud alignment (maps p onto q)
+    //
+
+    // We need our point clouds to be stored in 3xN matrices
+    const Eigen::Matrix<double, 3, Eigen::Dynamic> pp = pnbrs.transpose();
+    const Eigen::Matrix<double, 3, Eigen::Dynamic> qq = qnbrs.transpose();
+
+    const auto T = Eigen::umeyama(pp.topRows(d), qq.topRows(d), false);
+
+    // for the extracted transformation that maps p onto q
+    Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d t = Eigen::Vector3d::Zero();
+
+    // Make sure to embed back in 3D if necessary
+    if (d == 2) {
+      R.block<2,2>(0,0) = T.block<2,2>(0,0);
+      t.head(2) = T.block<2,1>(0,2);
+    } else {
+      R.block<3,3>(0,0) = T.block<3,3>(0,0);
+      t = T.block<3,1>(0,3);
+    }
+
+    // make sure to send back as an Nx3 PtsMat
+    PtsMat aligned = ((R * pnbrs.transpose()).colwise() + t).transpose();
+
+    std::cout << "current P: " << (qnbrs - aligned).colwise().squaredNorm().sum() << std::endl;
+  }
+
+  {
+    //
+    // Select Local Information (i.e., use only nbrs for alignment)
+    //
+
+    // work in "formation space" since we are using the adjmat to check nbhrs
+    const vehidx_t i = newP.indices()(vehid_);
+
+    const AssignmentPerm newPt = newP.transpose();
+
+    // keep track this vehicle's neighbors ("formation space")---include myself
+    std::vector<vehidx_t> nbrpts;
+    for (size_t j=0; j<n_; ++j) if (adjmat_(i, j) || i==j) nbrpts.push_back(j);
+
+    // extract local nbrhd information for this vehicle to use in alignment
+    PtsMat pnbrs = PtsMat::Zero(nbrpts.size(), 3);
+    PtsMat qnbrs = PtsMat::Zero(nbrpts.size(), 3);
+    for (size_t k=0; k<nbrpts.size(); ++k) {
+      // correspondence btwn nbr formpts and nbr vehicles
+      pnbrs.row(k) = p_.row(nbrpts[k]);
+      qnbrs.row(k) = q_.row(newPt.indices()(nbrpts[k]));
+    }
+
+    //
+    // Determine if the formation is a colinear, flat, or 3d
+    //
+
+    // be very stringent on what we consider a nonzero singular value (for noise)
+    constexpr double RANK_TH = 0.05;
+    Eigen::JacobiSVD<PtsMat> svdQ(qnbrs.rowwise() - qnbrs.colwise().mean());
+    Eigen::JacobiSVD<PtsMat> svdP(pnbrs.rowwise() - pnbrs.colwise().mean());
+    svdQ.setThreshold(RANK_TH);
+    svdP.setThreshold(RANK_TH);
+
+    // Only perform 3D Umeyama if there is structure in both swarm and formation
+    int d = (svdQ.rank() == 3 && svdP.rank() == 3) ? 3 : 2;
+
+    //
+    // Point cloud alignment (maps p onto q)
+    //
+
+    // We need our point clouds to be stored in 3xN matrices
+    const Eigen::Matrix<double, 3, Eigen::Dynamic> pp = pnbrs.transpose();
+    const Eigen::Matrix<double, 3, Eigen::Dynamic> qq = qnbrs.transpose();
+
+    const auto T = Eigen::umeyama(pp.topRows(d), qq.topRows(d), false);
+
+    // for the extracted transformation that maps p onto q
+    Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d t = Eigen::Vector3d::Zero();
+
+    // Make sure to embed back in 3D if necessary
+    if (d == 2) {
+      R.block<2,2>(0,0) = T.block<2,2>(0,0);
+      t.head(2) = T.block<2,1>(0,2);
+    } else {
+      R.block<3,3>(0,0) = T.block<3,3>(0,0);
+      t = T.block<3,1>(0,3);
+    }
+
+    // make sure to send back as an Nx3 PtsMat
+    PtsMat aligned = ((R * pnbrs.transpose()).colwise() + t).transpose();
+
+    std::cout << "new P: " << (qnbrs - aligned).colwise().squaredNorm().sum() << std::endl;
+  }
+
+
+  return true;
+}
+
+// ----------------------------------------------------------------------------
+
 PtsMat Auctioneer::alignFormation(const PtsMat& q,
-                                  const AdjMat& adjmat, const PtsMat& p)
+                                  const AdjMat& adjmat, const PtsMat& p) const
 {
   // Find (R,t) that minimizes ||q - (Rp + t)||^2
 
@@ -189,6 +336,7 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
   PtsMat pnbrs = PtsMat::Zero(nbrpts.size(), 3);
   PtsMat qnbrs = PtsMat::Zero(nbrpts.size(), 3);
   for (size_t k=0; k<nbrpts.size(); ++k) {
+    // correspondence btwn nbr formpts and nbr vehicles
     pnbrs.row(k) = p.row(nbrpts[k]);
     qnbrs.row(k) = q.row(Pt_.indices()(nbrpts[k]));
   }

@@ -269,7 +269,7 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
   //  the comms graph has been setup from the last assignment. Otherwise,
   //  some messages may be lost during the communication setup.
 
-  ROS_INFO("Starting new auction.");
+  // ROS_INFO("Starting new auction.");
 
   auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
 
