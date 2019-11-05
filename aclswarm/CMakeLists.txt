@@ -26,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.2.2 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} (${EIGEN3_DIR})")
 
 
