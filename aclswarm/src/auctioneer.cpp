@@ -63,9 +63,6 @@ void Auctioneer::start(const PtsMat& q)
 
   // Assumption: my internal state has already been (re)initialized
 
-  // let the caller know that an auction is now in session
-  auctionCompleted_ = false;
-
   // store the current state of vehicles in the swarm to be used throughout
   q_ = q;
 
@@ -126,9 +123,6 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
     //
 
     if (hasReachedConsensus()) {
-      // auction is complete
-      auctionCompleted_ = true;
-
       // Extract the best assignment from my local understanding,
       // which has reached consensus since the auction is complete.
 

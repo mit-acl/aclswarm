@@ -35,8 +35,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // Load parameters
   //
 
-  nhp_.param<double>("assignment_dt", assignment_dt_, 0.5);
-  nhp_.param<double>("auctioneer_tick_dt", auctioneer_tick_dt_, 0.02);
+  nhp_.param<double>("autoauction_dt", autoauction_dt_, 0.2);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
 
   //
@@ -46,9 +45,9 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   nhQ_ = ros::NodeHandle(nh_);
   nhQ_.setCallbackQueue(&task_queue_);
 
-  tim_auctioneertick_ = nhQ_.createTimer(ros::Duration(auctioneer_tick_dt_),
-                                    &CoordinationROS::auctioneertickCb, this);
-  tim_auctioneertick_.stop();
+  tim_autoauction_ = nhQ_.createTimer(ros::Duration(autoauction_dt_),
+                                    &CoordinationROS::autoauctionCb, this);
+  tim_autoauction_.stop();
   tim_control_ = nhQ_.createTimer(ros::Duration(control_dt_),
                                             &CoordinationROS::controlCb, this);
   tim_control_.stop();
@@ -70,7 +69,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
-  constexpr int NUM_TASKS = 1; // there are only two timers + normal pub/sub
+  constexpr int NUM_TASKS = 3; // there are only two timers + normal pub/sub
   spinner_ = std::unique_ptr<ros::AsyncSpinner>(
                             new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
   spinner_->start();
@@ -84,10 +83,10 @@ void CoordinationROS::spin()
   ros::Rate r(5);
   while (ros::ok()) {
 
-    if (formation_received_) {
+    if (formation_received_ && auctioneer_->auctionComplete()) {
       // stop tasks
       tim_control_.stop();
-      tim_auctioneertick_.stop();
+      tim_autoauction_.stop();
 
       // sends zero commands
       sendZeroControl();
@@ -103,7 +102,7 @@ void CoordinationROS::spin()
                         << formation_->name << "\033[0m");
       controller_->setFormation(formation_);
 
-      // find a reassignment for the new formation
+      // find an assignment for this new formation
       auctioneer_->setFormation(formation_->qdes, formation_->adjmat, true);
 
       // FYI: We assume that our communication graph is identical to the
@@ -114,9 +113,9 @@ void CoordinationROS::spin()
       // Assumption: Each vehicle is told to start an auction at the same time.
       // Challenge: Clearly, there will be jitter across all the vehicles. This
       //  jitter may cause some vehicles to start a new auction and send their
-      //  initial before other vehicles (i.e., their nbrs) have had a chance
-      //  to setup comms. As a result, if I am a slow vehicle, then I will miss
-      //  my fast nbr's first bids and will be stuck waiting for them forever.
+      //  initial bid before their neighbors have had a chance to setup their
+      //  communications. As a result, if I am a slow vehicle, then I will miss
+      //  my fast nbr's first bid and will be stuck waiting for them forever.
 
       // n.b., this sleep is okay since this thread is only handling the
       // formation callback (which should have a queue to make sure no vehicle
@@ -131,7 +130,7 @@ void CoordinationROS::spin()
 
       // allow downstream tasks to continue
       tim_control_.start();
-      tim_auctioneertick_.start();
+      tim_autoauction_.start();
       formation_received_ = false;
     }
 
@@ -264,20 +263,37 @@ void CoordinationROS::sendBidCb(uint32_t iter, const Auctioneer::BidConstPtr& bi
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::auctioneertickCb(const ros::TimerEvent& event)
+void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 {
-  // Assumption: the auction period is sufficiently long so that the comm graph
-  //  is correctly setup from the assignment of the last auction. Otherwise,
+  // Assumption: the autoauction period is sufficiently long enough so that
+  //  the comms graph has been setup from the last assignment. Otherwise,
   //  some messages may be lost during the communication setup.
 
-  // Challenge: what if the operator requests a new formation right after an
-  //  auction, during a communication graph setup? What saves us is the delay
-  //  in startAuction(), which is *hopefully* long enough to accommodate both
-  //  "slow" vehicles and comm graph setup time.
-  // Solution: A real solution would probably involve a condvar
+  ROS_INFO("Starting new auction.");
 
-  // determine if a new assignment should be sought for.
-  // if (time_to_perform_assignment) startAuction();
+  auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
+
+  // FYI: We assume that our communication graph is identical to the
+  // formation graph. Make sure that we can talk to our neighbors as
+  // defined by the adjmat of the formation.
+  connectToNeighbors();
+
+  // Assumption: Each vehicle is told to start an auction at the same time.
+  // Challenge: Clearly, there will be jitter across all the vehicles. This
+  //  jitter may cause some vehicles to start a new auction and send their
+  //  initial bid before their neighbors have had a chance to setup their
+  //  communications. As a result, if I am a slow vehicle, then I will miss
+  //  my fast nbr's first bid and will be stuck waiting for them forever.
+
+  // n.b., this sleep is okay since this thread is only handling the
+  // formation callback (which should have a queue to make sure no vehicle
+  // drops a msg while all the other swarm vehicles move on)
+  ros::Duration(0.5).sleep(); // this hack is so annoying
+
+  auctioneer_->start(q_);
+
+  // wait for CBAA to converge so that we get a good assignment
+  waitForNewAssignment();
 }
 
 // ----------------------------------------------------------------------------

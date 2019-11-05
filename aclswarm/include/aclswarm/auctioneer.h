@@ -78,7 +78,7 @@ namespace aclswarm {
     void start(const PtsMat& q);
 
     void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
-    bool auctionComplete() const { return auctionCompleted_; }
+    bool auctionComplete() const { return biditer_ == -1; }
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
