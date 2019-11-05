@@ -66,8 +66,8 @@ static bool loadVehicleInfo(std::string& name, vehidx_t& vehid,
   // deduce vehicle id
   vehid = std::distance(vehicles.begin(), it);
 
-  ROS_WARN_STREAM("Loading '" << name << "' as index " << vehid);
-
+  ROS_WARN_STREAM("Loading '" << name << "' as index "
+                  << static_cast<int>(vehid));
   return true;
 }
 
