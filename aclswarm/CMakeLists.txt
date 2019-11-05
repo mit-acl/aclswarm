@@ -145,7 +145,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(safety_node src/safety_node.cpp src/safety.cpp)
 add_executable(coordination_node src/coordination_node.cpp src/coordination_ros.cpp
-                                  src/distcntrl.cpp src/assignment.cpp)
+                                  src/distcntrl.cpp src/auctioneer.cpp)
 add_executable(localization_node src/localization_node.cpp src/localization_ros.cpp
                                   src/vehicle_tracker.cpp)
 

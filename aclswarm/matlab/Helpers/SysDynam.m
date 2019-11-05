@@ -60,7 +60,7 @@ if t - tAssign > T % Run assignment
     
     if strcmp(method, 'cbaa')
         % CBAA algorithm
-        assign = CBAA_aclswarm(adj, qs, qm)
+        [assign, ~] = CBAA_aclswarm(adj, qs, qm)
         
     elseif strcmp(method, 'hungarian')
         % Hungarian assignment for comparison

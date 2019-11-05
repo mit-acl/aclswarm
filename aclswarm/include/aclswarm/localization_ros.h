@@ -65,7 +65,7 @@ namespace aclswarm {
     void assignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg);
     void stateCb(const acl_msgs::StateConstPtr& msg);
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg,
-                          const std::string& vehname, int vehid);
+                          int vehid);
     void trackingCb(const ros::TimerEvent& event);
 
   };
