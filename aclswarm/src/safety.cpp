@@ -260,13 +260,15 @@ void Safety::controlCb(const ros::TimerEvent& event)
 
     // TODO: allow velocity tweaks from JOY
 
-    constexpr double LANDING_THRESHOLD = 0.050;
-    if (std::abs(initial_alt - pose_.pose.position.z) < LANDING_THRESHOLD) {
+    constexpr double LANDING_THRESHOLD = 0.005;
+    if ((pose_.pose.position.z - initial_alt) < LANDING_THRESHOLD) {
       mode_ = Mode::NOT_FLYING;
       ROS_INFO("Landing complete!");
     } else {
       // choose between fast landing and slow landing
-      const double dec = (pose_.pose.position.z > landing_fast_threshold_) ?
+      const double landing_fast_th = landing_fast_threshold_
+                                      + ((takeoff_rel_) ? initial_alt : 0.0);
+      const double dec = (pose_.pose.position.z > landing_fast_th) ?
                                       landing_fast_dec_ : landing_slow_dec_;
 
       goalmsg.pos.z = utils::clamp(goalmsg.pos.z - dec, 0.0, bounds_z_max_);
