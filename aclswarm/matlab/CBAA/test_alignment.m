@@ -23,7 +23,7 @@
 % scatter3(paligned(:,1),paligned(:,2),paligned(:,3));
 
 %% Using logged data
-vehid = 4;
+vehid = 3;
 vehid = vehid + 1; % matlab 1-based indexing
 
 % Load data from C++ implementation
@@ -45,9 +45,9 @@ pa = align(vehid, adjmat, q, p, P);
 figure(1), clf;
 subplot(3,3,[1 2 3 4 5 6]); grid on; hold on;
 plotPts(q, 'name','State','labels','show');
-plotPts(c.aligned, 'name','C++ Aligned', 'labels','show');%, 'permvec',c.newP);
-plotPts(m.aligned, 'name','MATLAB aligned', 'labels','show');%, 'permvec',m.newP);
-plotPts(pa, 'name','Arun aligned', 'labels','show');%, 'permvec',m.newP);
+plotPts(c.aligned, 'name','C++ Aligned', 'labels','show', 'permvec',c.newP);
+plotPts(m.aligned, 'name','MATLAB aligned', 'labels','show', 'permvec',m.newP);
+plotPts(pa, 'name','Arun aligned', 'labels','show', 'permvec',m.newP);
 axissq([q;c.aligned;m.aligned], 2);
 axis square;
 xlabel('X'); ylabel('Y'); zlabel('Z');
@@ -105,8 +105,40 @@ function aligned = align(vehid, adjmat, q, p, P)
 qq = qnbrs';
 pp = pnbrs';
 
-qq = qq(1:2,:);
-pp = pp(1:2,:);
+use2D = false;
+
+[~,sQ,~] = svd(qq' - mean(qq'));
+[~,sP,~] = svd(pp' - mean(pp'));
+sQ = diag(sQ);
+sP = diag(sP);
+rQ = sum(sQ>0.05*sQ(1));
+rP = sum(sP>0.05*sP(1));
+
+if rQ==1
+    disp('Line Swarm');
+    use2D = true;
+elseif rQ==2
+    disp('Flat Swarm');
+    use2D = true;
+elseif rQ==3
+    disp('3D Swarm');
+end
+
+if rP==1
+    disp('Line Formation');
+    use2D = true;
+elseif rP==2
+    disp('Flat Formation');
+    use2D = true;
+elseif rP==3
+    disp('3D Formation');
+end
+
+if use2D
+    disp('Using 2D Arun');
+    qq = qq(1:2,:);
+    pp = pp(1:2,:);
+end
 
 [R, t] = arun(qq, pp);
 
@@ -116,7 +148,6 @@ if size(R,1) == 2
 end
 
 aligned = (R*p' + t)';
-% aligned = (R*p')';
 end
 
 %% Arun's Method

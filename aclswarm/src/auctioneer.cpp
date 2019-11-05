@@ -200,64 +200,44 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
   }
 
   //
-  // Arun's method for point cloud alignment (maps p onto q)
+  // Determine if the formation is a colinear, flat, or 3d
+  //
+
+  // be very stringent on what we consider a nonzero singular value (for noise)
+  constexpr double RANK_TH = 0.05;
+  Eigen::JacobiSVD<PtsMat> svdQ(qnbrs.rowwise() - qnbrs.colwise().mean());
+  Eigen::JacobiSVD<PtsMat> svdP(pnbrs.rowwise() - pnbrs.colwise().mean());
+  svdQ.setThreshold(RANK_TH);
+  svdP.setThreshold(RANK_TH);
+
+  // Only perform 3D Umeyama if there is structure in both swarm and formation
+  int d = (svdQ.rank() == 3 && svdP.rank() == 3) ? 3 : 2;
+
+  //
+  // Point cloud alignment (maps p onto q)
   //
 
   // We need our point clouds to be stored in 3xN matrices
-  Eigen::Matrix<double, 3, Eigen::Dynamic> pp = pnbrs.transpose();
-  Eigen::Matrix<double, 3, Eigen::Dynamic> qq = qnbrs.transpose();
+  const Eigen::Matrix<double, 3, Eigen::Dynamic> pp = pnbrs.transpose();
+  const Eigen::Matrix<double, 3, Eigen::Dynamic> qq = qnbrs.transpose();
 
-  std::cout << "pp" << std::endl << pp << std::endl << std::endl;
-  std::cout << "qq" << std::endl << qq << std::endl << std::endl;
+  const auto T = Eigen::umeyama(pp.topRows(d), qq.topRows(d), false);
 
-  // shift points by their centroid
-  Eigen::Vector3d mu_q = qq.rowwise().mean();
-  Eigen::Vector3d mu_p = pp.rowwise().mean();
+  // for the extracted transformation that maps p onto q
+  Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+  Eigen::Vector3d t = Eigen::Vector3d::Zero();
 
-  std::cout << "mu_q" << std::endl << mu_q << std::endl << std::endl;
-  std::cout << "mu_p" << std::endl << mu_p << std::endl << std::endl;
-
-  Eigen::Matrix<double, 3, Eigen::Dynamic> Q = qq.colwise() - mu_q;
-  Eigen::Matrix<double, 3, Eigen::Dynamic> P = pp.colwise() - mu_p;
-
-  std::cout << "Q" << std::endl << Q << std::endl << std::endl;
-  std::cout << "P" << std::endl << P << std::endl << std::endl;
-
-  // construct H matrix (3x3)
-  Eigen::Matrix3d H = Q * P.transpose();
-
-  std::cout << "H" << std::endl << H << std::endl << std::endl;
-
-  // perform SVD of H
-  Eigen::JacobiSVD<Eigen::Matrix3d> svd(H, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  Eigen::Vector3d diag;
-  diag << 1, 1, (svd.matrixU()*svd.matrixV().transpose()).determinant();
-
-  std::cout << "U" << std::endl << svd.matrixU() << std::endl << std::endl;
-  std::cout << "S" << std::endl << svd.singularValues() << std::endl << std::endl;
-  std::cout << "V'" << std::endl << svd.matrixV().transpose() << std::endl << std::endl;
-
-  // solve rotation-only problem
-  Eigen::Matrix3d R = svd.matrixU() * diag.asDiagonal() * svd.matrixV().transpose();
-
-  std::cout << "R" << std::endl << R << std::endl << std::endl;
-
-  // use only planar rotation (yaw)---extract ZYX intrinsic
-  Eigen::Vector3d eul = R.eulerAngles(2, 1, 0);
-  std::cout << "eul: " << eul.transpose() << std::endl;
-  Eigen::Quaterniond qyaw(Eigen::AngleAxisd(eul[0], Eigen::Vector3d::UnitZ()));
-  // R = qyaw.toRotationMatrix();
-
-  std::cout << "R" << std::endl << qyaw.toRotationMatrix() << std::endl << std::endl;
-
-  // solve translation
-  Eigen::Vector3d t = mu_q - R*mu_p;
-
-  std::cout << "t " << t.transpose() << std::endl << std::endl;
+  // Make sure to embed back in 3D if necessary
+  if (d == 2) {
+    R.block<2,2>(0,0) = T.block<2,2>(0,0);
+    t.head(2) = T.block<2,1>(0,2);
+  } else {
+    R.block<3,3>(0,0) = T.block<3,3>(0,0);
+    t = T.block<3,1>(0,3);
+  }
 
   // make sure to send back as an Nx3 PtsMat
   PtsMat aligned = ((R * p.transpose()).colwise() + t).transpose();
-  std::cout << "palign" << std::endl << aligned << std::endl << std::endl;
   return aligned;
 }
 
@@ -372,17 +352,13 @@ void Auctioneer::selectTaskAssignment()
     // n.b., within the same auction, this list of prices will be the same
     const float price = getPrice(q_.row(vehid_), paligned_.row(j));
 
-    std::cout << "task " << j << ": " << price << " ";
-
     // In addition to finding the task that I am most interested in,
     // only bid on a task if I think I will win (highest bidder of my nbhrs)
     if (price > max && price > bid_->price[j]) {
       max = price;
       task = j;
       was_assigned = true;
-      std::cout << "**";
     }
-    std::cout << std::endl;
   }
 
   // update my local information to reflect my bid
@@ -417,9 +393,6 @@ void Auctioneer::logAssignment(const PtsMat& q, const AdjMat& adjmat,
   bin.write(reinterpret_cast<const char *>(aligned.data()), sizeof(aligned.data()[0])*aligned.size());
   bin.write(reinterpret_cast<const char *>(P.indices().data()), sizeof(P.indices().data()[0])*P.indices().size());
   bin.close();
-
-  std::cout << "lastP: " << lastP.indices().cast<int>().transpose() << std::endl;
-  std::cout << "P:     " <<     P.indices().cast<int>().transpose() << std::endl;
 }
 
 } // ns aclswarm
