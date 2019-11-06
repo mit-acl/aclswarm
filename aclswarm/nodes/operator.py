@@ -13,6 +13,8 @@ from acl_msgs.msg import QuadFlightMode
 from aclswarm_msgs.msg import Formation
 from behavior_selector.srv import MissionModeChange
 
+from aclswarm.control import createGainMatrix
+
 NOT_FLYING = 0
 FLYING = 1
 
@@ -129,9 +131,17 @@ class Operator:
         msg.adjmat.layout.dim[1].size = adjmat.shape[1]
         msg.adjmat.layout.dim[1].stride = adjmat.shape[1]
 
-        # pre-calculated gains may have been provided, but not required
-        if 'gains' in formation and self.send_gains:
-            gains = np.array(formation['gains'], dtype=np.float32)
+        # should we include formation gains in our message?
+        if self.send_gains:
+
+            # pre-calculated gains may have been provided, but not required
+            if 'gains' in formation:
+                A = formation['gains']
+            else:
+                A = createGainMatrix(adjmat, pts)
+
+            # pack up the gains into the message
+            gains = np.array(A, dtype=np.float32)
             msg.gains = UInt8MultiArray()
             msg.gains.data = gains.flatten().tolist()
             msg.gains.layout.dim.append(MultiArrayDimension())
@@ -142,6 +152,7 @@ class Operator:
             msg.gains.layout.dim[1].label = "cols"
             msg.gains.layout.dim[1].size = gains.shape[1]
             msg.gains.layout.dim[1].stride = gains.shape[1]
+
 
         return msg
 
