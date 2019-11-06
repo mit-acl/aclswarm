@@ -14,7 +14,7 @@ namespace aclswarm {
 
 CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                   const ros::NodeHandle nhp)
-: nh_(nh), nhp_(nhp), formation_(new DistCntrl::Formation)
+: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr)
 {
   if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
@@ -25,7 +25,6 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   n_ = vehs_.size();
 
   // initialize vehicle positions and my velocity
-  formation_->qdes = PtsMat::Zero(n_, 3);
   q_ = PtsMat::Zero(n_, 3);
   vel_ = Eigen::Vector3d::Zero();
 
@@ -83,13 +82,16 @@ void CoordinationROS::spin()
   ros::Rate r(5);
   while (ros::ok()) {
 
-    if (formation_received_ && auctioneer_->auctionComplete()) {
+    if (newformation_ != nullptr && auctioneer_->auctionComplete()) {
       // stop tasks
       tim_control_.stop();
       tim_autoauction_.stop();
 
       // sends zero commands
       sendZeroControl();
+
+      // commit to the new formation
+      formation_ = newformation_;
 
       // We only need to solve gains if they were not already provided
       if (formation_->gains.size() == 0) {
@@ -131,7 +133,7 @@ void CoordinationROS::spin()
       // allow downstream tasks to continue
       tim_control_.start();
       tim_autoauction_.start();
-      formation_received_ = false;
+      newformation_ = nullptr;
     }
 
     ros::spinOnce();
@@ -178,26 +180,29 @@ void CoordinationROS::init()
 
 void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
 {
+  // create a new formation corresponding to the newly received formation
+  newformation_.reset(new DistCntrl::Formation);
+
   // keep track of the current formation graph
-  formation_->adjmat = utils::decodeAdjMat(msg->adjmat);
-  assert(n_ == formation_->adjmat.rows());
+  newformation_->adjmat = utils::decodeAdjMat(msg->adjmat);
+  assert(n_ == newformation_->adjmat.rows());
 
   // store the desired formation points
+  newformation_->qdes = PtsMat::Zero(n_, 3);
   for (size_t i=0; i<n_; ++i) {
     Eigen::Vector3d qrow;
     tf::pointMsgToEigen(msg->points[i], qrow);
-    formation_->qdes.row(i) = qrow;
+    newformation_->qdes.row(i) = qrow;
   }
 
   // if no gains are sent, this will be empty---causing the solver to run
   if (msg->gains.layout.dim.size() == 2) {
-    formation_->gains = utils::decodeGainMat(msg->gains);
+    newformation_->gains = utils::decodeGainMat(msg->gains);
   } else {
-    formation_->gains = Eigen::MatrixXd();
+    newformation_->gains = Eigen::MatrixXd();
   }
 
-  formation_->name = msg->name;
-  formation_received_ = true;
+  newformation_->name = msg->name;
 }
 
 // ----------------------------------------------------------------------------

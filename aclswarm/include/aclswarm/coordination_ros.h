@@ -58,8 +58,8 @@ namespace aclswarm {
     std::unique_ptr<Auctioneer> auctioneer_; ///< module for assignment task
 
     /// \brief Internal state
-    bool formation_received_ = false; ///< should a new gain matrix be used?
     std::shared_ptr<DistCntrl::Formation> formation_; ///< current formation
+    std::shared_ptr<DistCntrl::Formation> newformation_; ///< rcv'd formation
     PtsMat q_; ///< 3D positions of swarm vehicles
     Eigen::Vector3d vel_; ///< my current velocity
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
