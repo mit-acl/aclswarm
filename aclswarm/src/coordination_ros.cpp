@@ -374,6 +374,8 @@ void CoordinationROS::waitForNewAssignment()
     // if we couldn't come up with an assignment, just bail...
     if ((ros::Time::now() - start).toSec() > TIMEOUT_SEC) {
       ROS_ERROR("Assignment auction timed out.");
+      // TODO: This should tell auctioneer to stop and reset in some sense
+      // so that we don't get in a deadlock condition with the mutexes
       return;
     }
   }
