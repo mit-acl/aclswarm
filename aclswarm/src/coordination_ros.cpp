@@ -104,9 +104,6 @@ void CoordinationROS::spin()
                         << formation_->name << "\033[0m");
       controller_->setFormation(formation_);
 
-      // find an assignment for this new formation
-      auctioneer_->setFormation(formation_->qdes, formation_->adjmat, true);
-
       // FYI: We assume that our communication graph is identical to the
       // formation graph. Make sure that we can talk to our neighbors as
       // defined by the adjmat of the formation.
@@ -125,7 +122,7 @@ void CoordinationROS::spin()
       ros::Duration(0.5).sleep(); // this hack is so annoying
 
       // Now that we have neighbors to talk to, let the bidding begin.
-      auctioneer_->start(q_);
+      auctioneer_->start(q_, formation_->qdes, formation_->adjmat, true);
 
       // wait for CBAA to converge so that we get a good assignment
       waitForNewAssignment();
@@ -276,12 +273,10 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 
   // ROS_INFO("Starting new auction.");
 
-  auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
-
   // FYI: We assume that our communication graph is identical to the
   // formation graph. Make sure that we can talk to our neighbors as
   // defined by the adjmat of the formation.
-  connectToNeighbors();
+  // connectToNeighbors();
 
   // Assumption: Each vehicle is told to start an auction at the same time.
   // Challenge: Clearly, there will be jitter across all the vehicles. This
@@ -293,12 +288,12 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
   // n.b., this sleep is okay since this thread is only handling the
   // formation callback (which should have a queue to make sure no vehicle
   // drops a msg while all the other swarm vehicles move on)
-  ros::Duration(0.5).sleep(); // this hack is so annoying
+  // ros::Duration(0.5).sleep(); // this hack is so annoying
 
-  auctioneer_->start(q_);
+  auctioneer_->start(q_, formation_->qdes, formation_->adjmat);
 
   // wait for CBAA to converge so that we get a good assignment
-  waitForNewAssignment();
+  // waitForNewAssignment();
 }
 
 // ----------------------------------------------------------------------------

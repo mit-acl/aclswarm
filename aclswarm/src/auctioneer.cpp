@@ -35,9 +35,15 @@ void Auctioneer::setSendBidHandler(
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat,
-                                                        bool resetAssignment)
+void Auctioneer::start(const PtsMat& q, const PtsMat& p, const AdjMat& adjmat,
+                        bool resetAssignment)
 {
+  std::lock_guard<std::mutex> lock(mtx_);
+
+  //
+  // Setup the auction parameters
+  //
+
   assert(n_ == p.rows());
   assert(n_ == adjmat.rows());
 
@@ -53,24 +59,15 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat,
     P_.setIdentity(n_);
     Pt_.setIdentity(n_);
   }
-}
-
-// ----------------------------------------------------------------------------
-
-void Auctioneer::start(const PtsMat& q)
-{
-  std::lock_guard<std::mutex> lock(mtx_);
-
-  // Assumption: my internal state has already been (re)initialized
 
   // store the current state of vehicles in the swarm to be used throughout
   q_ = q;
 
   //
-  // Alignment
+  // Alignment: use my local info to fit the formpts to me and my nbrs
   //
 
-  // align current swarm positions to desired formation (using neighbors only)
+  // align current swarm positions to desired formation (using me & nbrs only)
   paligned_ = alignFormation(q_, adjmat_, p_);
 
   //
@@ -98,8 +95,15 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
   std::unique_lock<std::mutex> lock(mtx_);
   cv_.wait(lock, [this](){ return biditer_ >= 0; });
 
-  // keep track of all bids across bid iterations
-  bids_[iter].insert({vehid, bid});
+  // always save the START bid in a special bucket in case we haven't started
+  // yet. That way we don't blow it away when we start and do a reset.
+  if (iter == 0) pricetable_zero_.insert({vehid, bid});
+
+  // put incoming bids into the right bucket. Because CBAA needs all nbrs to
+  // respond before it can proceed, we should never see a bid from an iteration
+  // more than one ahead of us. If we do, it should be a START (zero) bid.
+  if (iter == biditer_) pricetable_curr_.insert({vehid, bid});
+  else if (iter == biditer_+1) pricetable_next_.insert({vehid, bid});
 
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
@@ -256,9 +260,6 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
 
 bool Auctioneer::bidIterComplete() const
 {
-  // for convenience: my neighbors' bids from this bid iteration
-  const auto& bids = bids_[biditer_];
-
   // work in "formation space" since we are using the adjmat to check nbhrs
   const vehidx_t i = P_.indices()(vehid_);
 
@@ -268,7 +269,7 @@ bool Auctioneer::bidIterComplete() const
       vehidx_t nbhr = Pt_.indices()(j);
 
       // CBAA iteration is not complete if I am missing any of my nbhrs' bids
-      if (bids.find(nbhr) == bids.end()) return false;
+      if (pricetable_curr_.find(nbhr) == pricetable_curr_.end()) return false;
     }
   }
 

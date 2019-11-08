@@ -53,8 +53,9 @@ namespace aclswarm {
     void setSendBidHandler(std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f);
 
     /**
-     * @brief      Sets the desired formation points and the current adjacency
-     *             matrix describing the formation.
+     * @brief      Kicks off the auction. A snapshot of the current states of
+     *             vehicles in the swarm is given. Note that only information
+     *             about neighbors is used (via adjmat and current assignment).
      *             
      *             Note: the default behavior is to use the assignment from the
      *             last auction to understand who the vehicle's neighbors are.
@@ -62,20 +63,13 @@ namespace aclswarm {
      *             identity assignment (i.e., use the adjmat as given) for the
      *             next auction iteration.
      *
+     * @param[in]  q       A snapshot of the current states.
      * @param[in]  p       The new desired formation points
      * @param[in]  adjmat  The underlying adjacency matrix to use
      * @param[in]  reset   Whether or not to reset the assignment to Id
      */
-    void setFormation(const PtsMat& p, const AdjMat& adjmat, bool resetAssignment=false);
-
-    /**
-     * @brief      Kicks off the auction. A snapshot of the current states of
-     *             vehicles in the swarm is given. Note that only information
-     *             about neighbors is used (via adjmat and current assignment).
-     *
-     * @param[in]  q     A snapshot of the current states.
-     */
-    void start(const PtsMat& q);
+    void start(const PtsMat& q, const PtsMat& p, const AdjMat& adjmat,
+                bool resetAssignment=false);
 
     void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
     bool auctionComplete() const { return biditer_ == -1; }
@@ -95,7 +89,9 @@ namespace aclswarm {
     AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
     int biditer_; ///< current bidding iteration of the CBAA process
     BidPtr bid_; ///< my current bid, to be sent to others
-    std::vector<BidMap> bids_; ///< all of the bids from the current auction
+    BidMap pricetable_zero_; ///< save these in case my nbr starts before I do
+    BidMap pricetable_curr_; ///< the bids of the current iteration
+    BidMap pricetable_next_; ///< bids from nbrs who have started the next iter
     PtsMat q_; ///< the current formation points
     PtsMat p_; ///< the desired formation points
     PtsMat paligned_; ///< the desired formation points, aligned
