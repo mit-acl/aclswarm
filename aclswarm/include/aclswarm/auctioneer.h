@@ -8,7 +8,6 @@
 #pragma once
 
 #include <algorithm>
-#include <condition_variable>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -53,26 +52,33 @@ namespace aclswarm {
     void setSendBidHandler(std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f);
 
     /**
+     * @brief      Sets the desired formation points and the current adjacency
+     *             matrix describing the formation.
+     *
+     *             Note: by calling setFormation, the assignment will be reset
+     *             back to identity (i.e., use the admat as given). Thus, it is
+     *             imperative that vehicle's are connected according to the
+     *             adjmat (since assignment is identity).
+     *
+     *             For the intermediate auto auctions, this method need not be
+     *             called since these params only change for new formations.
+     *
+     * @param[in]  p       The new desired formation points
+     * @param[in]  adjmat  The underlying adjacency matrix to use
+     */
+    void setFormation(const PtsMat& p, const AdjMat& adjmat);
+
+    /**
      * @brief      Kicks off the auction. A snapshot of the current states of
      *             vehicles in the swarm is given. Note that only information
      *             about neighbors is used (via adjmat and current assignment).
-     *             
-     *             Note: the default behavior is to use the assignment from the
-     *             last auction to understand who the vehicle's neighbors are.
-     *             By setting 'reset' to true, the auction will assume an
-     *             identity assignment (i.e., use the adjmat as given) for the
-     *             next auction iteration.
      *
-     * @param[in]  q       A snapshot of the current states.
-     * @param[in]  p       The new desired formation points
-     * @param[in]  adjmat  The underlying adjacency matrix to use
-     * @param[in]  reset   Whether or not to reset the assignment to Id
+     * @param[in]  q     A snapshot of the current states.
      */
-    void start(const PtsMat& q, const PtsMat& p, const AdjMat& adjmat,
-                bool resetAssignment=false);
+    void start(const PtsMat& q);
 
     void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
-    bool auctionComplete() const { return biditer_ == -1; }
+    bool isIdle() const { return !auction_is_open_; }
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
@@ -89,17 +95,16 @@ namespace aclswarm {
     AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
     int biditer_; ///< current bidding iteration of the CBAA process
     BidPtr bid_; ///< my current bid, to be sent to others
-    BidMap pricetable_zero_; ///< save these in case my nbr starts before I do
-    BidMap pricetable_curr_; ///< the bids of the current iteration
-    BidMap pricetable_next_; ///< bids from nbrs who have started the next iter
+    BidMap bids_zero_; ///< save these in case my nbr starts before I do
+    BidMap bids_curr_; ///< the bids of the current iteration
+    BidMap bids_next_; ///< bids from nbrs who have started the next iter
     PtsMat q_; ///< the current formation points
     PtsMat p_; ///< the desired formation points
     PtsMat paligned_; ///< the desired formation points, aligned
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
-    bool auctionCompleted_; ///< auctioneer has done work and is now idle
+    bool auction_is_open_; ///< auctioneer is ready to receive/send bids
     std::mutex mtx_; ///< for condvar synchronization
-    std::condition_variable cv_; ///< force start to happen before rcving bids
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;

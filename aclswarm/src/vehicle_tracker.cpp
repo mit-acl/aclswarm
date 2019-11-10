@@ -15,7 +15,7 @@ VehicleTracker::VehicleTracker(uint8_t n)
 {
   // initialize data structures
   stamps_.resize(n, 0);
-  positions_.resize(n);
+  positions_.resize(n, Eigen::Vector3d::Zero());
 }
 
 // ----------------------------------------------------------------------------

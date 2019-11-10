@@ -63,6 +63,7 @@ namespace aclswarm {
     PtsMat q_; ///< 3D positions of swarm vehicles
     Eigen::Vector3d vel_; ///< my current velocity
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
+    bool reassign_ = false;
 
     /// \brief Parameters
     double autoauction_dt_; ///< period of auto auctions (btwn form rcvd)
