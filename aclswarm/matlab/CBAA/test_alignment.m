@@ -23,7 +23,7 @@
 % scatter3(paligned(:,1),paligned(:,2),paligned(:,3));
 
 %% Using logged data
-vehid = 3;
+vehid = 1;
 vehid = vehid + 1; % matlab 1-based indexing
 
 % Load data from C++ implementation

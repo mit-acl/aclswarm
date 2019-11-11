@@ -137,9 +137,7 @@ void CoordinationROS::spin()
       tim_control_.start();
       tim_autoauction_.start();
       newformation_ = nullptr;
-    }/* else if (newformation_ != nullptr && !auctioneer_->isIdle()) {
-      ROS_WARN("Auctioneer not idle");
-    }*/
+    }
 
     ros::spinOnce();
     r.sleep();
@@ -167,7 +165,8 @@ void CoordinationROS::init()
   auctioneer_->setNewAssignmentHandler(std::bind(
                             &CoordinationROS::newAssignmentCb, this, ph::_1));
   auctioneer_->setSendBidHandler(std::bind(
-                          &CoordinationROS::sendBidCb, this, ph::_1, ph::_2));
+                          &CoordinationROS::sendBidCb, this,
+                          ph::_1, ph::_2, ph::_3));
 
   //
   // Distributed Control
@@ -239,7 +238,6 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
   Auctioneer::Bid bid;
   bid.price = msg->price;
   bid.who = msg->who;
-  ROS_INFO_STREAM("R iter " << msg->iter << " from " << static_cast<int>(vehid));
   auctioneer_->receiveBid(msg->iter, bid, vehid);
 }
 
@@ -262,15 +260,16 @@ void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::sendBidCb(uint32_t iter, const Auctioneer::BidConstPtr& bid)
+void CoordinationROS::sendBidCb(uint32_t auctionid, uint32_t iter,
+                                const Auctioneer::BidConstPtr& bid)
 {
   aclswarm_msgs::CBAA msg;
   msg.header.stamp = ros::Time::now();
   msg.price = bid->price;
   msg.who = bid->who;
   msg.iter = iter;
+  msg.auctionId = auctionid;
   pub_cbaabid_.publish(msg);
-  ROS_INFO_STREAM("Sent bid " << iter);
 }
 
 // ----------------------------------------------------------------------------
@@ -280,6 +279,12 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
   // Assumption: the autoauction period is sufficiently long enough so that
   //  the comms graph has been setup from the last assignment. Otherwise,
   //  some messages may be lost during the communication setup.
+
+  if (auctioneer_->stopTimer_) {
+    auctioneer_->stopTimer_ = false;
+    tim_autoauction_.stop();
+    return;
+  }
 
   // make sure auctioneer is not in the middle of something
   if (!auctioneer_->isIdle()) {

@@ -11,7 +11,7 @@ namespace acl {
 namespace aclswarm {
 
 Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
-: n_(n), vehid_(vehid), bid_(new Bid)
+: n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid)
 {
   reset();
 }
@@ -26,8 +26,8 @@ void Auctioneer::setNewAssignmentHandler(
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::setSendBidHandler(
-          std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f)
+void Auctioneer::setSendBidHandler(std::function<void(uint32_t, uint32_t,
+                                          const Auctioneer::BidConstPtr&)> f)
 {
   fn_sendbid_ = f;
 }
@@ -57,9 +57,6 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat)
 
 void Auctioneer::start(const PtsMat& q)
 {
-  std::cout << std::endl;
-  std::cout << "<<<<< auctioneer wants to start (lock) >>>>>" << std::endl;
-  std::cout << std::endl;
   std::lock_guard<std::mutex> lock(mtx_);
 
   // reset internal state
@@ -89,6 +86,7 @@ void Auctioneer::start(const PtsMat& q)
 
   // allow processing of received bids from my neighbors
   auction_is_open_ = true;
+  auctionid_++;
 
   // send my START bid to my neighbors
   notifySendBid();
@@ -99,7 +97,6 @@ void Auctioneer::start(const PtsMat& q)
 void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
 {
   std::lock_guard<std::mutex> lock(mtx_);
-  std::cout << "P iter " << iter << " from " << static_cast<int>(vehid) << std::endl;
 
   // always save the START bid in a special bucket in case we haven't started
   // yet. That way we don't blow it away when we start and do a reset.
@@ -156,8 +153,6 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       // Extract the best assignment from my local understanding,
       // which has reached consensus since the auction is complete.
 
-      std::cout << "************************* cbaa convergence" << std::endl;
-
       // note: we are making implicit type casts here
       std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
 
@@ -165,11 +160,12 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
       const auto newP = newPt.transpose();
 
-      // log the assignment for debugging
-      logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
-
       // determine if this assignment is better than the previous one
       if (shouldUseAssignment(newP)) {
+
+        // log the assignment for debugging
+        logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
+
         // set the assignment
         P_ = newP;
         Pt_ = newPt;
@@ -194,7 +190,7 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
 void Auctioneer::notifySendBid()
 {
   // let the caller know
-  fn_sendbid_(biditer_, bid_);
+  fn_sendbid_(auctionid_, biditer_, bid_);
 }
 
 // ----------------------------------------------------------------------------
@@ -207,10 +203,20 @@ void Auctioneer::notifyNewAssignment()
 
 // ----------------------------------------------------------------------------
 
-bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) const
+bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
 {
   // don't bother if the assignment is the same
   if (P_.indices().isApprox(newP.indices())) return false;
+
+  // make sure the assignment is a one-to-one correspondence
+  // TODO: this check could be removed once auction IDs are checked
+  if ((newP.toDenseMatrix().rowwise().sum().array() != 1).any() ||
+        (newP.toDenseMatrix().colwise().sum().array() != 1).any()) {
+    std::cout << std::endl << "\033[95;1m!!!! Invalid Assignment !!!!\033[0m";
+    std::cout << std::endl << std::endl;
+    stopTimer_ = true;
+    return false;
+  }
 
   return true;
 }
@@ -298,7 +304,6 @@ bool Auctioneer::bidIterComplete() const
 
       // CBAA iteration is not complete if I am missing any of my nbrs' bids
       if (bids_curr_.find(nbr) == bids_curr_.end()) {
-        std::cout << "--- missing bid from " << static_cast<int>(nbr) << std::endl;
         return false;
       }
     }

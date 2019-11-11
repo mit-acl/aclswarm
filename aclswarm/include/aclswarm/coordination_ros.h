@@ -63,7 +63,6 @@ namespace aclswarm {
     PtsMat q_; ///< 3D positions of swarm vehicles
     Eigen::Vector3d vel_; ///< my current velocity
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
-    bool reassign_ = false;
 
     /// \brief Parameters
     double autoauction_dt_; ///< period of auto auctions (btwn form rcvd)
@@ -93,7 +92,8 @@ namespace aclswarm {
 
     /// \brief Auctioneer callback handlers
     void newAssignmentCb(const AssignmentPerm& P);
-    void sendBidCb(uint32_t iter, const Auctioneer::BidConstPtr& bid);
+    void sendBidCb(uint32_t auctionid, uint32_t iter,
+                    const Auctioneer::BidConstPtr& bid);
   };
 
 } // ns aclswarm

@@ -49,7 +49,8 @@ namespace aclswarm {
      *
      * @param[in]  f     The function to call
      */
-    void setSendBidHandler(std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f);
+    void setSendBidHandler(std::function<void(uint32_t, uint32_t,
+                                          const Auctioneer::BidConstPtr&)> f);
 
     /**
      * @brief      Sets the desired formation points and the current adjacency
@@ -83,6 +84,9 @@ namespace aclswarm {
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
 
+
+    bool stopTimer_ = false;
+
   private:
     enum class State { IDLE, AUCTION };
     using BidMap = std::map<vehidx_t, Bid>;
@@ -93,6 +97,7 @@ namespace aclswarm {
     State state_; ///< current state of auctioneer (state machine)
     AssignmentPerm P_; ///< nxn assignment permutation (P: vehid --> formpt)
     AssignmentPerm Pt_; ///< nxn inv assign. permutation (Pt: formpt --> vehid)
+    int auctionid_; ///< unique id associated with the current auction
     int biditer_; ///< current bidding iteration of the CBAA process
     BidPtr bid_; ///< my current bid, to be sent to others
     BidMap bids_zero_; ///< save these in case my nbr starts before I do
@@ -108,7 +113,8 @@ namespace aclswarm {
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;
-    std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> fn_sendbid_;
+    std::function<void(uint32_t, uint32_t,
+                        const Auctioneer::BidConstPtr&)> fn_sendbid_;
 
     PtsMat alignFormation(const PtsMat& q,
                           const AdjMat& adjmat, const PtsMat& p) const;
@@ -116,7 +122,7 @@ namespace aclswarm {
                        const PtsMat& p, const PtsMat& aligned,
                        const AssignmentPerm& lastP, const AssignmentPerm& P);
 
-    bool shouldUseAssignment(const AssignmentPerm& newP) const;
+    bool shouldUseAssignment(const AssignmentPerm& newP) /*const*/;
     bool hasReachedConsensus() const;
     bool bidIterComplete() const;
     void reset();
