@@ -110,6 +110,7 @@ namespace aclswarm {
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
     bool auction_is_open_; ///< auctioneer is ready to receive/send bids
     std::mutex mtx_; ///< for condvar synchronization
+    bool formation_just_received_ = false; ///< first auction of new formation?
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;

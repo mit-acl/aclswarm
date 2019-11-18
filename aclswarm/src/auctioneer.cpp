@@ -48,6 +48,9 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat)
   // reset internal state
   reset();
 
+  // the next auction will be the first to use this newly specified formation
+  formation_just_received_ = true;
+
   // reset the assignment to identity
   P_.setIdentity(n_);
   Pt_.setIdentity(n_);
@@ -160,11 +163,11 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
       const auto newP = newPt.transpose();
 
+      // log the assignment for debugging
+      logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
+
       // determine if this assignment is better than the previous one
       if (shouldUseAssignment(newP)) {
-
-        // log the assignment for debugging
-        logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
 
         // set the assignment
         P_ = newP;
@@ -205,6 +208,11 @@ void Auctioneer::notifyNewAssignment()
 
 bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
 {
+  if (formation_just_received_) {
+    formation_just_received_ = false;
+    return true;
+  }
+
   // don't bother if the assignment is the same
   if (P_.indices().isApprox(newP.indices())) return false;
 
