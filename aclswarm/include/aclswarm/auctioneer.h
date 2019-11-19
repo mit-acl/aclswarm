@@ -13,7 +13,9 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <tuple>
 #include <vector>
+#include <queue>
 
 #include "aclswarm/utils.h"
 #include "aclswarm/distcntrl.h"
@@ -78,18 +80,22 @@ namespace aclswarm {
      */
     void start(const PtsMat& q);
 
-    void receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid);
+    void enqueueBid(vehidx_t vehid, uint32_t auctionid, uint32_t iter,
+                    const Bid& bid);
+    void tick();
     bool isIdle() const { return !auction_is_open_; }
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
 
+    std::string reportMissing();
 
     bool stopTimer_ = false;
 
   private:
     enum class State { IDLE, AUCTION };
     using BidMap = std::map<vehidx_t, Bid>;
+    using BidPkt = std::tuple<vehidx_t, uint32_t, uint32_t, Bid>;
 
     /// \brief Internal state
     uint8_t n_; ///< number of vehicles in swarm
@@ -103,19 +109,23 @@ namespace aclswarm {
     BidMap bids_zero_; ///< save these in case my nbr starts before I do
     BidMap bids_curr_; ///< the bids of the current iteration
     BidMap bids_next_; ///< bids from nbrs who have started the next iter
+    std::queue<BidPkt> rxbids_; ///< Queue of received bids to process
     PtsMat q_; ///< the current formation points
     PtsMat p_; ///< the desired formation points
     PtsMat paligned_; ///< the desired formation points, aligned
     AdjMat adjmat_; ///< the required formation graph adjacency matrix
     uint32_t cbaa_max_iter_; ///< number of iterations until convergence
     bool auction_is_open_; ///< auctioneer is ready to receive/send bids
-    std::mutex mtx_; ///< for condvar synchronization
+    std::mutex queue_mtx_; ///< for bid queue resource management
+    std::mutex auction_mtx_; ///< for synchronization of start and bid proc
     bool formation_just_received_ = false; ///< first auction of new formation?
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;
     std::function<void(uint32_t, uint32_t,
                         const Auctioneer::BidConstPtr&)> fn_sendbid_;
+
+    void processBid(const BidPkt& bidpkt);
 
     PtsMat alignFormation(const PtsMat& q,
                           const AdjMat& adjmat, const PtsMat& p) const;

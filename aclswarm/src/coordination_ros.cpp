@@ -34,6 +34,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // Load parameters
   //
 
+  nhp_.param<double>("auctioneer_dt", auctioneer_dt_, 0.001);
   nhp_.param<double>("autoauction_dt", autoauction_dt_, 0.2);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
 
@@ -44,6 +45,8 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   nhQ_ = ros::NodeHandle(nh_);
   nhQ_.setCallbackQueue(&task_queue_);
 
+  tim_auctioneer_ = nhQ_.createTimer(ros::Duration(auctioneer_dt_),
+                                    &CoordinationROS::auctioneerCb, this);
   tim_autoauction_ = nhQ_.createTimer(ros::Duration(autoauction_dt_),
                                     &CoordinationROS::autoauctionCb, this);
   tim_autoauction_.stop();
@@ -135,7 +138,7 @@ void CoordinationROS::spin()
 
       // allow downstream tasks to continue
       tim_control_.start();
-      tim_autoauction_.start();
+      // tim_autoauction_.start();
       newformation_ = nullptr;
     }
 
@@ -238,7 +241,7 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
   Auctioneer::Bid bid;
   bid.price = msg->price;
   bid.who = msg->who;
-  auctioneer_->receiveBid(msg->iter, bid, vehid);
+  auctioneer_->enqueueBid(vehid, msg->auctionId, msg->iter, bid);
 }
 
 // ----------------------------------------------------------------------------
@@ -296,6 +299,13 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 
 // ----------------------------------------------------------------------------
 
+void CoordinationROS::auctioneerCb(const ros::TimerEvent& event)
+{
+  auctioneer_->tick();
+}
+
+// ----------------------------------------------------------------------------
+
 void CoordinationROS::controlCb(const ros::TimerEvent& event)
 {
   const Eigen::Vector3d u = controller_->compute(q_, vel_);
@@ -341,7 +351,7 @@ void CoordinationROS::connectToNeighbors()
 
       // don't subscribe if already subscribed
       if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
-        constexpr int Qsize = 100; // we don't want to loose any of these
+        constexpr int Qsize = 1; // we don't want to loose any of these
         vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
       }
     } else {
@@ -366,9 +376,8 @@ void CoordinationROS::waitForNewAssignment()
 
     // if we couldn't come up with an assignment, just bail...
     if ((ros::Time::now() - start).toSec() > TIMEOUT_SEC) {
-      ROS_ERROR("Assignment auction timed out.");
-      // TODO: This should tell auctioneer to stop and reset in some sense
-      // so that we don't get in a deadlock condition with the mutexes
+      ROS_ERROR_STREAM("Assignment auction timed out. Missing: " 
+                        << auctioneer_->reportMissing());
       return;
     }
   }

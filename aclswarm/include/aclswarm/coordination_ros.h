@@ -44,7 +44,7 @@ namespace aclswarm {
     ros::NodeHandle nh_, nhQ_, nhp_;
     ros::CallbackQueue task_queue_;
     std::unique_ptr<ros::AsyncSpinner> spinner_;
-    ros::Timer tim_autoauction_, tim_control_;
+    ros::Timer tim_auctioneer_, tim_autoauction_, tim_control_;
     ros::Subscriber sub_formation_, sub_tracker_;
     ros::Publisher pub_distcmd_, pub_assignment_, pub_cbaabid_;
 
@@ -65,6 +65,7 @@ namespace aclswarm {
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
 
     /// \brief Parameters
+    double auctioneer_dt_; ///< period at which rcvd bids are processed
     double autoauction_dt_; ///< period of auto auctions (btwn form rcvd)
     double control_dt_; ///< period of high-level distributed control task
 
@@ -87,6 +88,7 @@ namespace aclswarm {
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
     void stateCb(const acl_msgs::StateConstPtr& msg);
     void cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehid);
+    void auctioneerCb(const ros::TimerEvent& event);
     void autoauctionCb(const ros::TimerEvent& event);
     void controlCb(const ros::TimerEvent& event);
 

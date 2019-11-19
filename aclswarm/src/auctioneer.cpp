@@ -60,7 +60,7 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat)
 
 void Auctioneer::start(const PtsMat& q)
 {
-  std::lock_guard<std::mutex> lock(mtx_);
+  std::lock_guard<std::mutex> lock(auction_mtx_);
 
   // reset internal state
   reset();
@@ -91,15 +91,104 @@ void Auctioneer::start(const PtsMat& q)
   auction_is_open_ = true;
   auctionid_++;
 
+  std::cout << std::endl;
+  std::cout << "********* Starting auction " << auctionid_ << " *********";
+  std::cout << std::endl << std::endl;
+
   // send my START bid to my neighbors
   notifySendBid();
 }
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
+void Auctioneer::enqueueBid(vehidx_t vehid, uint32_t auctionid, uint32_t iter,
+                            const Bid& bid)
 {
-  std::lock_guard<std::mutex> lock(mtx_);
+  std::lock_guard<std::mutex> lock(queue_mtx_);
+  rxbids_.emplace(vehid, auctionid, iter, bid);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::tick()
+{
+  BidPkt bidpkt;
+
+  if (auction_is_open_) std::cout << "Missing (tick): " << reportMissing() << std::endl;
+
+  {
+    std::lock_guard<std::mutex> lock(queue_mtx_);
+
+    // nothing to do anything if there are no bids to process
+    if (rxbids_.size() == 0) return;
+
+    // get the oldest bid in the queue (copy)
+    bidpkt = rxbids_.front();
+
+    // remove the bid we are about to process
+    rxbids_.pop();
+  }
+
+  processBid(bidpkt);
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Auctioneer::reportMissing()
+{
+  // work in "formation space" since we are using the adjmat to check nbhrs
+  const vehidx_t i = P_.indices()(vehid_);
+
+  std::string missing = "(A" + std::to_string(auctionid_) + "B" + std::to_string(biditer_) + ") ";
+
+  for (size_t j=0; j<n_; ++j) {
+    if (adjmat_(i, j)) {
+      // map back to "vehicle space" since that's how our bids are keyed
+      vehidx_t nbr = Pt_.indices()(j);
+
+      // CBAA iteration is not complete if I am missing any of my nbrs' bids
+      if (bids_curr_.find(nbr) == bids_curr_.end()) {
+        missing += std::to_string(nbr) + " ";
+      }
+    }
+  }
+
+  return missing;
+}
+
+// ----------------------------------------------------------------------------
+// Private Methods
+// ----------------------------------------------------------------------------
+
+void Auctioneer::notifySendBid()
+{
+  // let the caller know
+  fn_sendbid_(auctionid_, biditer_, bid_);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::notifyNewAssignment()
+{
+  // let the caller know
+  fn_assignment_(P_);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::processBid(const BidPkt& bidpkt)
+{
+  std::lock_guard<std::mutex> lock(auction_mtx_);
+
+  // unpack bid packet
+  const auto& vehid = std::get<0>(bidpkt);
+  const auto& auctionid = std::get<1>(bidpkt);
+  const auto& iter = std::get<2>(bidpkt);
+  const auto& bid = std::get<3>(bidpkt);
+
+  std::cout << "A" << auctionid_ << "B" << biditer_ << ": Processing ";
+  std::cout << "a" << auctionid  << "b" <<    iter  << " from " << static_cast<int>(vehid);
+  std::cout << std::endl;
 
   // always save the START bid in a special bucket in case we haven't started
   // yet. That way we don't blow it away when we start and do a reset.
@@ -184,24 +273,6 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       notifySendBid();
     }
   }
-}
-
-// ----------------------------------------------------------------------------
-// Private Methods
-// ----------------------------------------------------------------------------
-
-void Auctioneer::notifySendBid()
-{
-  // let the caller know
-  fn_sendbid_(auctionid_, biditer_, bid_);
-}
-
-// ----------------------------------------------------------------------------
-
-void Auctioneer::notifyNewAssignment()
-{
-  // let the caller know
-  fn_assignment_(P_);
 }
 
 // ----------------------------------------------------------------------------
