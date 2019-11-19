@@ -208,14 +208,6 @@ void Auctioneer::notifyNewAssignment()
 
 bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
 {
-  if (formation_just_received_) {
-    formation_just_received_ = false;
-    return true;
-  }
-
-  // don't bother if the assignment is the same
-  if (P_.indices().isApprox(newP.indices())) return false;
-
   // make sure the assignment is a one-to-one correspondence
   // TODO: this check could be removed once auction IDs are checked
   if ((newP.toDenseMatrix().rowwise().sum().array() != 1).any() ||
@@ -225,6 +217,14 @@ bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
     stopTimer_ = true;
     return false;
   }
+
+  if (formation_just_received_) {
+    formation_just_received_ = false;
+    return true;
+  }
+
+  // don't bother if the assignment is the same
+  if (P_.indices().isApprox(newP.indices())) return false;
 
   return true;
 }

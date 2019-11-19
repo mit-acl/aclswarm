@@ -341,7 +341,7 @@ void CoordinationROS::connectToNeighbors()
 
       // don't subscribe if already subscribed
       if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
-        constexpr int Qsize = 5; // we don't want to loose any of these
+        constexpr int Qsize = 100; // we don't want to loose any of these
         vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
       }
     } else {
@@ -352,12 +352,6 @@ void CoordinationROS::connectToNeighbors()
       }
     }
   }
-
-  std::string nbrs;
-  for (auto it = vehsubs_.cbegin(); it != vehsubs_.cend(); ++it) {
-    nbrs += std::to_string(static_cast<int>(it->first)) + " ";
-  }
-  ROS_WARN_STREAM("My neighbors: " << nbrs);
 }
 
 // ----------------------------------------------------------------------------
