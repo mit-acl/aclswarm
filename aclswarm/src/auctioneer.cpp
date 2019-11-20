@@ -106,6 +106,10 @@ void Auctioneer::enqueueBid(vehidx_t vehid, uint32_t auctionid, uint32_t iter,
 {
   std::lock_guard<std::mutex> lock(queue_mtx_);
   rxbids_.emplace(vehid, auctionid, iter, bid);
+
+  std::cout << "A" << auctionid_ << "B" << biditer_ << ": Enqueued ";
+  std::cout << "a" << auctionid  << "b" <<    iter  << " from " << static_cast<int>(vehid);
+  std::cout << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -114,7 +118,7 @@ void Auctioneer::tick()
 {
   BidPkt bidpkt;
 
-  if (auction_is_open_) std::cout << "Missing (tick): " << reportMissing() << std::endl;
+  // if (auction_is_open_) std::cout << "Missing (tick): " << reportMissing() << std::endl;
 
   {
     std::lock_guard<std::mutex> lock(queue_mtx_);
@@ -188,6 +192,7 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
 
   std::cout << "A" << auctionid_ << "B" << biditer_ << ": Processing ";
   std::cout << "a" << auctionid  << "b" <<    iter  << " from " << static_cast<int>(vehid);
+  std::cout << " [missing " << reportMissing() << "]";
   std::cout << std::endl;
 
   // always save the START bid in a special bucket in case we haven't started
@@ -208,6 +213,7 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
   // more than one ahead of us. If we do, it would be a START (zero) bid.
   if (iter == biditer_) bids_curr_.insert({vehid, bid});
   else if (iter == biditer_+1) bids_next_.insert({vehid, bid});
+  else std::cout << "!! Threw away A" << auctionid << "B" << iter << " from " << static_cast<int>(vehid) << std::endl;
 
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {

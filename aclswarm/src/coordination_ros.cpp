@@ -138,7 +138,7 @@ void CoordinationROS::spin()
 
       // allow downstream tasks to continue
       tim_control_.start();
-      // tim_autoauction_.start();
+      tim_autoauction_.start();
       newformation_ = nullptr;
     }
 
@@ -292,6 +292,8 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
   // make sure auctioneer is not in the middle of something
   if (!auctioneer_->isIdle()) {
     ROS_ERROR("Auctioneer is busy!");
+    tim_autoauction_.stop();
+    return;
   }
 
   auctioneer_->start(q_);
@@ -351,7 +353,7 @@ void CoordinationROS::connectToNeighbors()
 
       // don't subscribe if already subscribed
       if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
-        constexpr int Qsize = 1; // we don't want to loose any of these
+        constexpr int Qsize = 10; // we don't want to loose any of these
         vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
       }
     } else {
