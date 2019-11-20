@@ -9,9 +9,11 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -29,12 +31,24 @@ namespace aclswarm {
     struct Bid {
       std::vector<float> price;
       std::vector<int> who;
+
+      friend std::ostream& operator<<(std::ostream& o, const Bid& b)
+      {
+        o << "<";
+        for (size_t j=0; j<b.who.size(); ++j) {
+          o << std::to_string(b.who[j]) << "(";
+          o << std::fixed << std::setprecision(2) << b.price[j] << ")";
+          if (j != (b.who.size()-1)) o << ", ";
+        }
+        o << ">";
+        return o;
+      }
     };
     using BidPtr = std::shared_ptr<Bid>;
     using BidConstPtr = std::shared_ptr<const Bid>;
 
   public:
-    Auctioneer(vehidx_t vehid, uint8_t n);
+    Auctioneer(vehidx_t vehid, uint8_t n, bool verbose = false);
     ~Auctioneer() = default;
 
     /**
@@ -119,6 +133,7 @@ namespace aclswarm {
     std::mutex queue_mtx_; ///< for bid queue resource management
     std::mutex auction_mtx_; ///< for synchronization of start and bid proc
     bool formation_just_received_ = false; ///< first auction of new formation?
+    bool verbose_; ///< should print verbose auction/bid information
 
     /// \brief Function handles for callbacks
     std::function<void(const AssignmentPerm&)> fn_assignment_;

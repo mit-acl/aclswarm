@@ -153,12 +153,16 @@ void CoordinationROS::spin()
 
 void CoordinationROS::init()
 {
+
+  bool verbose;
+  nhp_.param<bool>("verbose", verbose, false);
+
   //
   // Instantiate module objects for tasks
   //
 
   controller_.reset(new DistCntrl(vehid_, n_));
-  auctioneer_.reset(new Auctioneer(vehid_, n_));
+  auctioneer_.reset(new Auctioneer(vehid_, n_, verbose));
 
   //
   // Auctioneer Callbacks

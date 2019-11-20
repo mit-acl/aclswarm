@@ -20,6 +20,9 @@
       <param name="autoauction_dt" value="0.5" />
       <param name="control_dt" value="0.01" />
 
+      <!-- useful for auctioneer debugging -->
+      <param name="verbose" value="true" />
+
       <param name="cntrl/K" value="4.0" />
       <param name="cntrl/kp" value="1.0" />
       <param name="cntrl/kd" value="0.0" />

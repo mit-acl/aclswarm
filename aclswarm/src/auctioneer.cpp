@@ -10,8 +10,8 @@
 namespace acl {
 namespace aclswarm {
 
-Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
-: n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid)
+Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n, bool verbose)
+: n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid), verbose_(verbose)
 {
   reset();
 
@@ -95,9 +95,12 @@ void Auctioneer::start(const PtsMat& q)
   auction_is_open_ = true;
   auctionid_++;
 
-  std::cout << std::endl;
-  std::cout << "********* Starting auction " << auctionid_ << " *********";
-  std::cout << std::endl << std::endl;
+  if (verbose_) {
+    std::cout << std::endl;
+    std::cout << "********* Starting auction " << auctionid_ << " *********";
+    std::cout << std::endl << std::endl;
+    std::cout << "START: " << *bid_ << std::endl << std::endl;
+  }
 
   // send my START bid to my neighbors
   notifySendBid();
@@ -108,12 +111,14 @@ void Auctioneer::start(const PtsMat& q)
 void Auctioneer::enqueueBid(vehidx_t vehid, uint32_t auctionid, uint32_t iter,
                             const Bid& bid)
 {
+  if (verbose_) {
+    std::cout << "A" << auctionid_ << "B" << biditer_ << ": Enqueued ";
+    std::cout << "a" << auctionid  << "b" <<    iter  << " from ";
+    std::cout << static_cast<int>(vehid) << " " << bid << std::endl;
+  }
+
   std::lock_guard<std::mutex> lock(queue_mtx_);
   rxbids_.emplace(vehid, auctionid, iter, bid);
-
-  std::cout << "A" << auctionid_ << "B" << biditer_ << ": Enqueued ";
-  std::cout << "a" << auctionid  << "b" <<    iter  << " from " << static_cast<int>(vehid);
-  std::cout << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -195,10 +200,11 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
   const auto& iter = std::get<2>(bidpkt);
   const auto& bid = std::get<3>(bidpkt);
 
-  std::cout << "A" << auctionid_ << "B" << biditer_ << ": Processing ";
-  std::cout << "a" << auctionid  << "b" <<    iter  << " from " << static_cast<int>(vehid);
-  std::cout << " [missing " << reportMissing() << "]";
-  std::cout << std::endl;
+  if (verbose_) {
+    std::cout << "A" << auctionid_ << "B" << biditer_ << ": Processing ";
+    std::cout << "a" << auctionid  << "b" <<    iter;
+    std::cout << " from " << static_cast<int>(vehid) << std::endl;
+  }
 
   // always save the START bid in a special bucket in case we haven't started
   // yet. That way we don't blow it away when we start and do a reset.
@@ -211,7 +217,8 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
   // more than one ahead of us. If we do, it would be a START (zero) bid.
   if (iter == biditer_) bids_curr_.insert({vehid, bid});
   else if (iter == biditer_+1) bids_next_.insert({vehid, bid});
-  else std::cout << "!! Threw away A" << auctionid << "B" << iter << " from " << static_cast<int>(vehid) << std::endl;
+  else if (verbose_) std::cout << "!! Threw away a" << auctionid << "b" << iter
+                            <<" from " << static_cast<int>(vehid) << std::endl;
 
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
@@ -226,6 +233,12 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
 
     // If I was outbid, I will need to select a new task.
     if (was_outbid) selectTaskAssignment();
+
+    if (verbose_) {
+      std::cout << "A" << auctionid_ << "B" << biditer_ << ": ";
+      std::cout << "\033[97;1mNew Price Table " << *bid_ << "\033[0m";
+      std::cout << std::endl;
+    }
 
     // start the next iteration
     ++biditer_;
@@ -281,8 +294,10 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
       } else {
         std::cout << std::endl << "\033[95;1m!!!! Invalid Assignment !!!!\033[0m";
         std::cout << std::endl << std::endl;
-        for (const auto& v : pvec) std::cout << static_cast<int>(v) << " ";
-        std::cout << std::endl << std::endl;
+        if (verbose_) {
+          for (const auto& v : pvec) std::cout << static_cast<int>(v) << " ";
+          std::cout << std::endl << std::endl;
+        }
         stopTimer_ = true;
       }
 
@@ -291,6 +306,11 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
     } else {
       // send latest bid to my neighbors
       notifySendBid();
+    }
+  } else {
+    if (verbose_) {
+      std::cout << "A" << auctionid_ << "B" << biditer_ << ": Missing ";
+      std::cout << reportMissing() << std::endl;
     }
   }
 }
