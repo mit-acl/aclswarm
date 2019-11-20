@@ -289,7 +289,7 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 {
   // Make sure to wait for comm changes to settle. Otherwise,
   //  some messages may be lost during the communication setup.
-  if ((ros::Time::now() - comminit_) < ros::Duration(comm_settle_time_)) return;
+  // if ((ros::Time::now() - comminit_) < ros::Duration(comm_settle_time_)) return;
 
   if (auctioneer_->stopTimer_) {
     auctioneer_->stopTimer_ = false;

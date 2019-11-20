@@ -301,8 +301,9 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
         }
 
       } else {
-        std::cout << std::endl << "\033[95;1m!!!! Invalid Assignment !!!!\033[0m";
-        std::cout << std::endl << std::endl;
+        if (verbose_) std::cout << std::endl;
+        std::cout << "\033[95;1mInvalid Assignment\033[0m" << std::endl;
+        if (verbose_) std::cout << std::endl;
         if (verbose_) {
           for (const auto& v : pvec) std::cout << static_cast<int>(v) << " ";
           std::cout << std::endl << std::endl;
