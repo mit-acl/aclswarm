@@ -77,9 +77,11 @@ namespace aclswarm {
     void waitForNewAssignment();
 
     /**
-     * @brief      Update communication graph to neighbors using current adjmat
+     * @brief      Update comm. graph. Connects to new nbrs using adjmat.
+     *
+     * @return     True if a new connection was made
      */
-    void connectToNeighbors();
+    bool connectToNeighbors();
 
     void sendZeroControl();
 

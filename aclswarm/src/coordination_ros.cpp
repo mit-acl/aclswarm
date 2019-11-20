@@ -115,20 +115,21 @@ void CoordinationROS::spin()
       // FYI: We assume that our communication graph is identical to the
       // formation graph. Make sure that we can talk to our neighbors as
       // defined by the adjmat of the formation.
-      connectToNeighbors();
+      if (connectToNeighbors()) {
 
-      // Assumption: Each vehicle is told to start an auction at the same time.
-      // Challenge: Clearly, there will be jitter across all the vehicles. This
-      //  jitter may cause some vehicles to start a new auction and send their
-      //  initial bid before their neighbors have had a chance to setup their
-      //  communications. As a result, if I am a slow vehicle, then I will miss
-      //  my fast nbr's first bid and will be stuck waiting for them forever.
-      // Hack solution: Wait for a duration longer than the expected jitter.
+        // Assumption: Each vehicle is told to start an auction at the same time.
+        // Challenge: Clearly, there will be jitter across all the vehicles. This
+        //  jitter may cause some vehicles to start a new auction and send their
+        //  initial bid before their neighbors have had a chance to setup their
+        //  communications. As a result, if I am a slow vehicle, then I will miss
+        //  my fast nbr's first bid and will be stuck waiting for them forever.
+        // Hack solution: Wait for a duration longer than the expected jitter.
 
-      // n.b., this sleep is okay since this thread is only handling the
-      // formation callback (which should have a queue to make sure no vehicle
-      // drops a msg while all the other swarm vehicles move on)
-      ros::Duration(0.5).sleep(); // this hack is so annoying
+        // n.b., this sleep is okay since this thread is only handling the
+        // formation callback (which should have a queue to make sure no vehicle
+        // drops a msg while all the other swarm vehicles move on)
+        ros::Duration(0.5).sleep(); // this hack is so annoying
+      }
 
       // Now that we have neighbors to talk to, let the bidding begin.
       auctioneer_->start(q_);
@@ -334,8 +335,10 @@ void CoordinationROS::sendZeroControl()
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::connectToNeighbors()
+bool CoordinationROS::connectToNeighbors()
 {
+  bool was_changed = false; // indicates if nbr was added
+
   // which formation point am I currently assigned to?
   const auto i = auctioneer_->getAssignment().indices()(vehid_);
 
@@ -359,6 +362,7 @@ void CoordinationROS::connectToNeighbors()
       if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
         constexpr int Qsize = 10; // we don't want to loose any of these
         vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
+        was_changed = true;
       }
     } else {
       // if a subscriber exists, break communication and remove from map
@@ -368,6 +372,8 @@ void CoordinationROS::connectToNeighbors()
       }
     }
   }
+
+  return was_changed;
 }
 
 // ----------------------------------------------------------------------------
