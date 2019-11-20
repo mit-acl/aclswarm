@@ -160,8 +160,6 @@ void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
     goal.vy  = goal.vy/velxy * max_vel_xy_;
   }
 
-  collisionAvoidance(goal);
-
   // TODO: kill z vel? fix z alt?
   goal.vz = 0;
 }
@@ -239,6 +237,8 @@ void Safety::controlCb(const ros::TimerEvent& event)
         // TODO: does this make sense for joy override?
         const double dt = control_dt_;
         // const double dt = g.stamp_s - last_active_goal_time;
+
+        collisionAvoidance(g);
 
         // Use this velocity goal to make a safe pos+vel trajectory goal
         makeSafeTraj(dt, g, goalmsg);

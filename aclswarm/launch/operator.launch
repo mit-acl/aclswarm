@@ -10,6 +10,12 @@
     <!-- Load vehicles and room bounds -->
     <rosparam file="$(find aclswarm)/param/vehicles.yaml" command="load"/>
     <rosparam ns="room_bounds" file="$(find acl_demos)/room_cfg/$(arg room).yaml" command="load"/>
+<!--     <rosparam ns="room_bounds">
+        x_min: -30
+        x_max:  30
+        y_min: -30
+        y_max:  30
+    </rosparam> -->
 
     <!-- Start operator script -->
     <node name="operator" pkg="aclswarm" type="operator.py" output="screen">

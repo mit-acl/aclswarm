@@ -10,9 +10,12 @@
 namespace acl {
 namespace aclswarm {
 
-Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
-: n_(n), vehid_(vehid), biditer_(-1), bid_(new Bid)
+Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n, bool verbose)
+: n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid), verbose_(verbose)
 {
+  reset();
+
+  // initialize assignment as identity
   P_.setIdentity(n_);
   Pt_.setIdentity(n_);
 }
@@ -27,16 +30,15 @@ void Auctioneer::setNewAssignmentHandler(
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::setSendBidHandler(
-          std::function<void(uint32_t, const Auctioneer::BidConstPtr&)> f)
+void Auctioneer::setSendBidHandler(std::function<void(uint32_t, uint32_t,
+                                          const Auctioneer::BidConstPtr&)> f)
 {
   fn_sendbid_ = f;
 }
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat,
-                                                        bool resetAssignment)
+void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat)
 {
   assert(n_ == p.rows());
   assert(n_ == adjmat.rows());
@@ -47,59 +49,185 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat,
   constexpr uint32_t diameter = 2; // hardcoded for now...
   cbaa_max_iter_ = n_ * diameter;
 
+  // reset internal state
   reset();
 
-  if (resetAssignment) {
-    P_.setIdentity(n_);
-    Pt_.setIdentity(n_);
-  }
+  // the next auction will be the first to use this newly specified formation
+  formation_just_received_ = true;
+
+  // reset the assignment to identity
+  P_.setIdentity(n_);
+  Pt_.setIdentity(n_);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::flush()
+{
+  reset();
+  bids_zero_.clear();
+  std::queue<BidPkt>().swap(rxbids_);
 }
 
 // ----------------------------------------------------------------------------
 
 void Auctioneer::start(const PtsMat& q)
 {
-  std::lock_guard<std::mutex> lock(mtx_);
+  std::lock_guard<std::mutex> lock(auction_mtx_);
 
-  // Assumption: my internal state has already been (re)initialized
+  // reset internal state
+  reset();
 
-  // store the current state of vehicles in the swarm to be used throughout
+  // Account for any START bids we received before we officially started
+  bids_curr_ = bids_zero_;
+  bids_zero_.clear();
+
+  // store the current state of nbrs to be used throughout the auction
   q_ = q;
 
   //
-  // Alignment
+  // Alignment: use my local info to fit the formpts to me and my nbrs
   //
 
-  // align current swarm positions to desired formation (using neighbors only)
+  // align current swarm positions to desired formation (using me & nbrs only)
   paligned_ = alignFormation(q_, adjmat_, p_);
 
   //
   // Assignment (kick off with an initial bid)
   //
 
-  // Using only knowledgde of my current state and what I think the aligned
+  // Using only knowledge of my current state and what I think the aligned
   // formation is, make an initial bid for the formation point I am closest to.
   selectTaskAssignment();
 
-  // indicates that the auction has started
-  biditer_ = 0;
+  // allow processing of received bids from my neighbors
+  auction_is_open_ = true;
+  auctionid_++;
 
-  // send my bid to my neighbors
+  if (verbose_) {
+    std::cout << std::endl;
+    std::cout << "********* Starting auction " << auctionid_ << " *********";
+    std::cout << std::endl << std::endl;
+    std::cout << "START: " << *bid_ << std::endl << std::endl;
+  }
+
+  // send my START bid to my neighbors
   notifySendBid();
-
-  // let any threads waiting on the start bid iteration know we are done
-  cv_.notify_all();
 }
 
 // ----------------------------------------------------------------------------
 
-void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
+void Auctioneer::enqueueBid(vehidx_t vehid, uint32_t auctionid, uint32_t iter,
+                            const Bid& bid)
 {
-  std::unique_lock<std::mutex> lock(mtx_);
-  cv_.wait(lock, [this](){ return biditer_ >= 0; });
+  if (verbose_) {
+    std::cout << "A" << auctionid_ << "B" << biditer_ << ": Enqueued ";
+    std::cout << "a" << auctionid  << "b" <<    iter  << " from ";
+    std::cout << static_cast<int>(vehid) << " " << bid << std::endl;
+  }
 
-  // keep track of all bids across bid iterations
-  bids_[iter].insert({vehid, bid});
+  std::lock_guard<std::mutex> lock(queue_mtx_);
+  rxbids_.emplace(vehid, auctionid, iter, bid);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::tick()
+{
+  BidPkt bidpkt;
+
+  // if the auction is not yet opened, there is nothing to do.
+  if (!auction_is_open_) return;
+
+  {
+    std::lock_guard<std::mutex> lock(queue_mtx_);
+
+    // nothing to do anything if there are no bids to process
+    if (rxbids_.size() == 0) return;
+
+    // get the oldest bid in the queue (copy)
+    bidpkt = rxbids_.front();
+
+    // remove the bid we are about to process
+    rxbids_.pop();
+  }
+
+  processBid(bidpkt);
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Auctioneer::reportMissing()
+{
+  // work in "formation space" since we are using the adjmat to check nbhrs
+  const vehidx_t i = P_.indices()(vehid_);
+
+  std::string missing = "(A" + std::to_string(auctionid_) + "B" + std::to_string(biditer_) + ") ";
+
+  for (size_t j=0; j<n_; ++j) {
+    if (adjmat_(i, j)) {
+      // map back to "vehicle space" since that's how our bids are keyed
+      vehidx_t nbr = Pt_.indices()(j);
+
+      // CBAA iteration is not complete if I am missing any of my nbrs' bids
+      if (bids_curr_.find(nbr) == bids_curr_.end()) {
+        missing += std::to_string(nbr) + " ";
+      }
+    }
+  }
+
+  return missing;
+}
+
+// ----------------------------------------------------------------------------
+// Private Methods
+// ----------------------------------------------------------------------------
+
+void Auctioneer::notifySendBid()
+{
+  // let the caller know
+  fn_sendbid_(auctionid_, biditer_, bid_);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::notifyNewAssignment()
+{
+  // let the caller know
+  fn_assignment_(P_);
+}
+
+// ----------------------------------------------------------------------------
+
+void Auctioneer::processBid(const BidPkt& bidpkt)
+{
+  std::lock_guard<std::mutex> lock(auction_mtx_);
+
+  // unpack bid packet
+  const auto& vehid = std::get<0>(bidpkt);
+  const auto& auctionid = std::get<1>(bidpkt);
+  const auto& iter = std::get<2>(bidpkt);
+  const auto& bid = std::get<3>(bidpkt);
+
+  if (verbose_) {
+    std::cout << "A" << auctionid_ << "B" << biditer_ << ": Processing ";
+    std::cout << "a" << auctionid  << "b" <<    iter;
+    std::cout << " from " << static_cast<int>(vehid) << std::endl;
+  }
+
+  // always save the START bid in a special bucket in case we haven't started
+  // yet. That way we don't blow it away when we start and do a reset.
+  // We should not see any bids from iter>0 since our nbrs would need
+  // our START bid in order to advance to the next bid iteration.
+  if (iter == 0) bids_zero_.insert({vehid, bid});
+
+  // put incoming bids into the right bucket. Because CBAA needs all nbrs to
+  // respond before it can proceed, we should never see a bid from an iteration
+  // more than one ahead of us. If we do, it would be a START (zero) bid.
+  if (iter == biditer_) bids_curr_.insert({vehid, bid});
+  else if (iter == biditer_+1) bids_next_.insert({vehid, bid});
+  else if (verbose_) std::cout << "!! Threw away a" << auctionid << "b" << iter
+                            <<" from " << static_cast<int>(vehid) << std::endl;
 
   // once my neighbors' bids are in, tally them up and decide who the winner is
   if (bidIterComplete()) {
@@ -115,8 +243,25 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
     // If I was outbid, I will need to select a new task.
     if (was_outbid) selectTaskAssignment();
 
+    if (verbose_) {
+      std::cout << "A" << auctionid_ << "B" << biditer_ << ": ";
+      std::cout << "\033[97;1mNew Price Table " << *bid_ << "\033[0m";
+      std::cout << std::endl;
+    }
+
     // start the next iteration
     ++biditer_;
+
+    //
+    // House cleaning
+    //
+
+    // account for any bids we received but weren't ready for
+    bids_curr_ = bids_next_;
+    bids_next_.clear();
+
+    // clear after iter zero is complete so we are ready for next START bids
+    if (biditer_ == 1) bids_zero_.clear();
 
     //
     // Determine convergence or continue bidding
@@ -127,23 +272,43 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       // which has reached consensus since the auction is complete.
 
       // note: we are making implicit type casts here
-      std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
+      std::vector<vehidx_t> pvec(bid_->who.begin(), bid_->who.end());
 
-      // n.b., 'who' maps task --> vehid, which is P^T
-      const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
-      const auto newP = newPt.transpose();
+      // make sure the assignment is a one-to-one correspondence
+      // TODO: this only happens because of the complexities and timing
+      // btwn autoauction and new formation, occasionally causing old
+      // bids to be mixed with new bids. This is not a failing of CBAA.
+      // A better synchronization on start would remedy this.
+      if (isValidAssignment(pvec)) {
 
-      // log the assignment for debugging
-      logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
+        // n.b., 'who' maps task --> vehid, which is P^T
+        const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(
+                                                pvec.data(), pvec.size()));
+        const auto newP = newPt.transpose();
 
-      // determine if this assignment is better than the previous one
-      if (shouldUseAssignment(newP)) {
-        // set the assignment
-        P_ = newP;
-        Pt_ = newPt;
+        // log the assignment for debugging
+        logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
 
-        // let the caller know a new assignment is ready
-        notifyNewAssignment();
+        // determine if this assignment is better than the previous one
+        if (shouldUseAssignment(newP)) {
+
+          // set the assignment
+          P_ = newP;
+          Pt_ = newPt;
+
+          // let the caller know a new assignment is ready
+          notifyNewAssignment();
+        }
+
+      } else {
+        if (verbose_) std::cout << std::endl;
+        std::cout << "\033[95;1mInvalid Assignment\033[0m" << std::endl;
+        if (verbose_) std::cout << std::endl;
+        if (verbose_) {
+          for (const auto& v : pvec) std::cout << static_cast<int>(v) << " ";
+          std::cout << std::endl << std::endl;
+        }
+        stopTimer_ = true;
       }
 
       // get ready for next auction, makes auctioneer idle
@@ -152,35 +317,49 @@ void Auctioneer::receiveBid(uint32_t iter, const Bid& bid, vehidx_t vehid)
       // send latest bid to my neighbors
       notifySendBid();
     }
+  } else {
+    if (verbose_) {
+      std::cout << "A" << auctionid_ << "B" << biditer_ << ": Missing ";
+      std::cout << reportMissing() << std::endl;
+    }
   }
 }
 
 // ----------------------------------------------------------------------------
-// Private Methods
-// ----------------------------------------------------------------------------
 
-void Auctioneer::notifySendBid()
+bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
 {
-  // let the caller know
-  fn_sendbid_(biditer_, bid_);
-}
+  if (formation_just_received_) {
+    formation_just_received_ = false;
+    return true;
+  }
 
-// ----------------------------------------------------------------------------
-
-void Auctioneer::notifyNewAssignment()
-{
-  // let the caller know
-  fn_assignment_(P_);
-}
-
-// ----------------------------------------------------------------------------
-
-bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) const
-{
   // don't bother if the assignment is the same
   if (P_.indices().isApprox(newP.indices())) return false;
 
   return true;
+}
+
+// ----------------------------------------------------------------------------
+
+bool Auctioneer::isValidAssignment(const std::vector<vehidx_t>& permvec) const
+{
+  // create a list of indices we expect to see in permvec
+  std::vector<vehidx_t> v(n_);
+  std::iota(v.begin(), v.end(), 0);
+
+  for (const auto& i : permvec) {
+    // look for this index in the list of what we expect
+    const auto found = std::find(v.begin(), v.end(), i);
+
+    // if it wasn't found, something is wrong
+    if (found == v.end()) return false;
+
+    // if it was found, remove it because we shouldn't see it again
+    if (found != v.end()) v.erase(found);
+  }
+
+  return v.size() == 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -256,19 +435,18 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
 
 bool Auctioneer::bidIterComplete() const
 {
-  // for convenience: my neighbors' bids from this bid iteration
-  const auto& bids = bids_[biditer_];
-
   // work in "formation space" since we are using the adjmat to check nbhrs
   const vehidx_t i = P_.indices()(vehid_);
 
   for (size_t j=0; j<n_; ++j) {
     if (adjmat_(i, j)) {
       // map back to "vehicle space" since that's how our bids are keyed
-      vehidx_t nbhr = Pt_.indices()(j);
+      vehidx_t nbr = Pt_.indices()(j);
 
-      // CBAA iteration is not complete if I am missing any of my nbhrs' bids
-      if (bids.find(nbhr) == bids.end()) return false;
+      // CBAA iteration is not complete if I am missing any of my nbrs' bids
+      if (bids_curr_.find(nbr) == bids_curr_.end()) {
+        return false;
+      }
     }
   }
 
@@ -286,8 +464,11 @@ bool Auctioneer::hasReachedConsensus() const
 
 void Auctioneer::reset()
 {
-  // indicates that there is no auction being performed
-  biditer_ = -1;
+  // the auctioneer is not ready to receive bids
+  auction_is_open_ = false;
+
+  // Ready to receive/send any START bids
+  biditer_ = 0;
 
   // initialize my bid
   bid_->price.clear();
@@ -295,9 +476,9 @@ void Auctioneer::reset()
   bid_->who.clear();
   std::fill_n(std::back_inserter(bid_->who), n_, -1);
 
-  // Create a table to hold my neighbor's bids for each CBAA iteration.
-  bids_.clear();
-  bids_.resize(cbaa_max_iter_);
+  // initialize the price tables that will hold current and next iter bids
+  bids_curr_.clear();
+  bids_next_.clear();
 }
 
 // ----------------------------------------------------------------------------
@@ -310,12 +491,10 @@ bool Auctioneer::updateTaskAssignment()
   // n.b., a nbhr might have *info* about who has the highest bid for a given
   // formpt, but it may not be that nbhr---it's just in their local info
 
-  // for convenience: my neighbors' bids from this bid iteration
-  auto& bids = bids_[biditer_];
   bool was_outbid = false;
 
   // add myself so that my local information is considered
-  bids.insert({vehid_, *bid_});
+  bids_curr_.insert({vehid_, *bid_});
 
   // loop through each task and decide on the winner
   for (size_t j=0; j<n_; ++j) {
@@ -325,10 +504,10 @@ bool Auctioneer::updateTaskAssignment()
     //
 
     // arbitrarily assume that the first nhbr in the list has the highest bid
-    auto maxit = bids.cbegin();
+    auto maxit = bids_curr_.cbegin();
 
     // but then loop through each nbhr (and me) and decide who bid the most
-    for (auto it = bids.cbegin(); it!=bids.cend(); it++) {
+    for (auto it = bids_curr_.cbegin(); it!=bids_curr_.cend(); it++) {
       if (it->second.price[j] > maxit->second.price[j]) maxit = it;
     }
 

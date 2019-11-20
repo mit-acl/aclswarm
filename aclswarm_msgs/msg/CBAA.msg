@@ -1,5 +1,7 @@
 Header header
 
+uint32 auctionId
+
 # The iteration this bid is associated with
 uint32 iter
 

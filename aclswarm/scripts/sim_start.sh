@@ -1,5 +1,15 @@
 #!/bin/bash
 
+function make_tmux_session {
+  cmd="new-session -d -s $1"
+  for ((i=1; i<$2; i++)); do
+    cmd="$cmd ; split-window ; select-layout tiled"
+  done
+  # add any extra commands
+  cmd="$cmd ; ${3:-}"
+  tmux -2 $cmd
+}
+
 usage="$(basename "$0") [-h] [-n #] -- script to start vehicle sim and aclswarm nodes
 
 where:
@@ -29,84 +39,44 @@ while getopts ':hn:' option; do
   esac
 done
 
+#
+# quad sim
+#
+
 echo "Starting vehicle sims"
-
-tmux -2 new-session -d -s 'sims'
-# tmux set pan-boarder-status top
-
-tmux split-window -h
-tmux split-window -h
-tmux select-pane -t 0
-tmux split-window -v
-if (( $num > 4 ))
-then
-	tmux split-window -v
-	tmux split-window -v
-	tmux split-window -v
-	tmux select-pane -t 5
-	tmux split-window -v
-	if (( $num > 9 ))
-	then
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -v
-		tmux select-pane -t 10
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -h
-	fi
-fi
-tmux select-layout tiled
+make_tmux_session sims $num
 
 for _sim in $(eval echo {01..$num}); do
 	_pane=`echo "$_sim - 1" | bc`
 	echo "Starting sim $_sim"
 	x=`echo "($_pane % 5) * 1.5 - 4" | bc`
 	y=`echo "($_pane / 5) * 1.5" | bc`
-	tmux send-keys -t ${_pane} "roslaunch quad_sim quad_sim.launch num:=$_sim x:=$x y:=$y" C-m
-	sleep 1.0
+  tmux send-keys -t sims:0.${_pane} "roslaunch quad_sim quad_sim.launch num:=$_sim x:=$x y:=$y" C-m
 done
 
+# send commands to all panes
+tmux set-window-option -t sims:0 synchronize-panes on
+
+#
+# aclswarm stack
+#
+
 echo "Starting aclswarm nodes"
-
-tmux -2 new-session -d -s 'aclswarm'
-# tmux set pan-boarder-status top
-
-tmux split-window -h
-tmux split-window -h
-tmux select-pane -t 0
-tmux split-window -v
-if (( $num > 4 ))
-then
-	tmux split-window -v
-	tmux split-window -v
-	tmux split-window -v
-	tmux select-pane -t 5
-	tmux split-window -v
-	if (( $num > 9 ))
-	then
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -v
-		tmux select-pane -t 10
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -v
-		tmux split-window -h
-	fi
-fi
-tmux select-layout tiled
+make_tmux_session aclswarm $num
 
 for _sim in $(eval echo {01..$num}); do
 	_pane=`echo "$_sim - 1" | bc`
 	echo "Starting aclswarm $_sim"
-	_veh="SQ$_sim"
-	_veh+="s"
-	tmux send-keys -t ${_pane} "roslaunch aclswarm start.launch veh:=$_veh leader:=0" C-m
-	sleep 1.0
+	_veh="SQ${_sim}s"
+	tmux send-keys -t aclswarm:0.${_pane} "roslaunch aclswarm start.launch veh:=$_veh leader:=0" C-m
 done
 
-tmux a -t "aclswarm"
+# send commands to all panes
+tmux set-window-option -t aclswarm:0 synchronize-panes on
+
+#
+# attach to aclswarm stack session
+#
+
+tmux attach-session -t aclswarm
+

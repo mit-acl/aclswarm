@@ -23,7 +23,7 @@
 % scatter3(paligned(:,1),paligned(:,2),paligned(:,3));
 
 %% Using logged data
-vehid = 3;
+vehid = 1;
 vehid = vehid + 1; % matlab 1-based indexing
 
 % Load data from C++ implementation
@@ -47,7 +47,7 @@ subplot(3,3,[1 2 3 4 5 6]); grid on; hold on;
 plotPts(q, 'name','State','labels','show');
 plotPts(c.aligned, 'name','C++ Aligned', 'labels','show', 'permvec',c.newP);
 plotPts(m.aligned, 'name','MATLAB aligned', 'labels','show', 'permvec',m.newP);
-plotPts(pa, 'name','Arun aligned', 'labels','show', 'permvec',m.newP);
+% plotPts(pa, 'name','Arun aligned', 'labels','show', 'permvec',m.newP);
 axissq([q;c.aligned;m.aligned], 2);
 axis square;
 xlabel('X'); ylabel('Y'); zlabel('Z');
