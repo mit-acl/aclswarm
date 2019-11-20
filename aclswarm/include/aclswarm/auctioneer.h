@@ -98,6 +98,8 @@ namespace aclswarm {
                     const Bid& bid);
     void tick();
     bool isIdle() const { return !auction_is_open_; }
+
+    void flush();
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }

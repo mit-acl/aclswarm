@@ -14,7 +14,8 @@ namespace aclswarm {
 
 CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                   const ros::NodeHandle nhp)
-: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr)
+: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr),
+  comminit_(ros::Time::now())
 {
   if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
@@ -34,6 +35,8 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // Load parameters
   //
 
+  nhp_.param<double>("comm_settle_time", comm_settle_time_, 0.5);
+  nhp_.param<double>("flush_settle_time", flush_settle_time_, 0.1);
   nhp_.param<double>("auctioneer_dt", auctioneer_dt_, 0.001);
   nhp_.param<double>("autoauction_dt", autoauction_dt_, 0.2);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
@@ -107,7 +110,7 @@ void CoordinationROS::spin()
                         << formation_->name << "\033[0m");
       controller_->setFormation(formation_);
 
-      if (!auctioneer_->isIdle()) ROS_ERROR("FYI, hard resetting auctioneer");
+      if (!auctioneer_->isIdle()) ROS_WARN("Interrupting current auction");
 
       // setup the parameters for this new formation
       auctioneer_->setFormation(formation_->qdes, formation_->adjmat);
@@ -257,7 +260,7 @@ void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
   controller_->setAssignment(P);
 
   // change the communication graph accordingly
-  connectToNeighbors();
+  if (connectToNeighbors()) comminit_ = ros::Time::now();
 
   // publish
   std_msgs::UInt8MultiArray msg;
@@ -284,13 +287,16 @@ void CoordinationROS::sendBidCb(uint32_t auctionid, uint32_t iter,
 
 void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 {
-  // Assumption: the autoauction period is sufficiently long enough so that
-  //  the comms graph has been setup from the last assignment. Otherwise,
+  // Make sure to wait for comm changes to settle. Otherwise,
   //  some messages may be lost during the communication setup.
+  if ((ros::Time::now() - comminit_) < ros::Duration(comm_settle_time_)) return;
 
   if (auctioneer_->stopTimer_) {
     auctioneer_->stopTimer_ = false;
     tim_autoauction_.stop();
+    ros::Duration(flush_settle_time_).sleep();
+    auctioneer_->flush();
+    tim_autoauction_.start();
     return;
   }
 
@@ -298,6 +304,9 @@ void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
   if (!auctioneer_->isIdle()) {
     ROS_ERROR("Auctioneer is busy!");
     tim_autoauction_.stop();
+    ros::Duration(flush_settle_time_).sleep();
+    auctioneer_->flush();
+    tim_autoauction_.start();
     return;
   }
 
@@ -360,7 +369,7 @@ bool CoordinationROS::connectToNeighbors()
 
       // don't subscribe if already subscribed
       if (vehsubs_.find(j_vehid) == vehsubs_.end()) {
-        constexpr int Qsize = 10; // we don't want to loose any of these
+        constexpr int Qsize = 1; // we don't want to loose any of these
         vehsubs_[j_vehid] = nhQ_.subscribe("/" + ns + "/cbaabid", Qsize, cb);
         was_changed = true;
       }

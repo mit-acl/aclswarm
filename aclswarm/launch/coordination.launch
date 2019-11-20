@@ -20,8 +20,10 @@
       <param name="autoauction_dt" value="0.5" />
       <param name="control_dt" value="0.01" />
 
-      <!-- useful for auctioneer debugging -->
-      <param name="verbose" value="true" />
+      <!-- auctioneer parameters -->
+      <param name="comm_settle_time" value="0.5" />
+      <param name="flush_settle_time" value="0.1" />
+      <param name="verbose" value="false" />
 
       <param name="cntrl/K" value="4.0" />
       <param name="cntrl/kp" value="1.0" />

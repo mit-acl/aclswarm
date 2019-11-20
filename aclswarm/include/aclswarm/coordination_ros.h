@@ -63,8 +63,11 @@ namespace aclswarm {
     PtsMat q_; ///< 3D positions of swarm vehicles
     Eigen::Vector3d vel_; ///< my current velocity
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
+    ros::Time comminit_; ///< the time that new nbrs were connected to
 
     /// \brief Parameters
+    double comm_settle_time_; ///< time to wait after comm changes
+    double flush_settle_time_; ///< time to wait after a flush (cbaa failure)
     double auctioneer_dt_; ///< period at which rcvd bids are processed
     double autoauction_dt_; ///< period of auto auctions (btwn form rcvd)
     double control_dt_; ///< period of high-level distributed control task

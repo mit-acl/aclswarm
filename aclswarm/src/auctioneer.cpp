@@ -62,6 +62,15 @@ void Auctioneer::setFormation(const PtsMat& p, const AdjMat& adjmat)
 
 // ----------------------------------------------------------------------------
 
+void Auctioneer::flush()
+{
+  reset();
+  bids_zero_.clear();
+  std::queue<BidPkt>().swap(rxbids_);
+}
+
+// ----------------------------------------------------------------------------
+
 void Auctioneer::start(const PtsMat& q)
 {
   std::lock_guard<std::mutex> lock(auction_mtx_);
@@ -87,7 +96,7 @@ void Auctioneer::start(const PtsMat& q)
   // Assignment (kick off with an initial bid)
   //
 
-  // Using only knowledgde of my current state and what I think the aligned
+  // Using only knowledge of my current state and what I think the aligned
   // formation is, make an initial bid for the formation point I am closest to.
   selectTaskAssignment();
 
