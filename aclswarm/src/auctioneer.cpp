@@ -122,7 +122,8 @@ void Auctioneer::tick()
 {
   BidPkt bidpkt;
 
-  // if (auction_is_open_) std::cout << "Missing (tick): " << reportMissing() << std::endl;
+  // if the auction is not yet opened, there is nothing to do.
+  if (!auction_is_open_) return;
 
   {
     std::lock_guard<std::mutex> lock(queue_mtx_);
@@ -201,16 +202,9 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
 
   // always save the START bid in a special bucket in case we haven't started
   // yet. That way we don't blow it away when we start and do a reset.
-  if (iter == 0) bids_zero_.insert({vehid, bid});
-
-  // if the auction is not yet opened, there is nothing to do (we may not even
-  // have an adjmat yet!). If we receive any START bids from our neighbors,
-  // we will assume that they are from an auction that is about to open---we
-  // are just slower to start than the others. These START bids (in bids_zero_)
-  // will not be lost.
-  // Further, we should not see any bids from iter>0 since our nbrs would need
+  // We should not see any bids from iter>0 since our nbrs would need
   // our START bid in order to advance to the next bid iteration.
-  if (!auction_is_open_) return;
+  if (iter == 0) bids_zero_.insert({vehid, bid});
 
   // put incoming bids into the right bucket. Because CBAA needs all nbrs to
   // respond before it can proceed, we should never see a bid from an iteration
