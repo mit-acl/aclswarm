@@ -133,6 +133,7 @@ namespace aclswarm {
                        const PtsMat& p, const PtsMat& aligned,
                        const AssignmentPerm& lastP, const AssignmentPerm& P);
 
+    bool isValidAssignment(const std::vector<vehidx_t>& permvec) const;
     bool shouldUseAssignment(const AssignmentPerm& newP) /*const*/;
     bool hasReachedConsensus() const;
     bool bidIterComplete() const;

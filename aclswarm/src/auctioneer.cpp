@@ -14,6 +14,10 @@ Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n)
 : n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid)
 {
   reset();
+
+  // initialize assignment as identity
+  P_.setIdentity(n_);
+  Pt_.setIdentity(n_);
 }
 
 // ----------------------------------------------------------------------------
@@ -252,24 +256,40 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
       // which has reached consensus since the auction is complete.
 
       // note: we are making implicit type casts here
-      std::vector<vehidx_t> tmp(bid_->who.begin(), bid_->who.end());
+      std::vector<vehidx_t> pvec(bid_->who.begin(), bid_->who.end());
 
-      // n.b., 'who' maps task --> vehid, which is P^T
-      const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(tmp.data(), tmp.size()));
-      const auto newP = newPt.transpose();
+      // make sure the assignment is a one-to-one correspondence
+      // TODO: this only happens because of the complexities and timing
+      // btwn autoauction and new formation, occasionally causing old
+      // bids to be mixed with new bids. This is not a failing of CBAA.
+      // A better synchronization on start would remedy this.
+      if (isValidAssignment(pvec)) {
 
-      // log the assignment for debugging
-      logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
+        // n.b., 'who' maps task --> vehid, which is P^T
+        const auto newPt = AssignmentPerm(Eigen::Map<AssignmentVec>(
+                                                pvec.data(), pvec.size()));
+        const auto newP = newPt.transpose();
 
-      // determine if this assignment is better than the previous one
-      if (shouldUseAssignment(newP)) {
+        // log the assignment for debugging
+        logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
 
-        // set the assignment
-        P_ = newP;
-        Pt_ = newPt;
+        // determine if this assignment is better than the previous one
+        if (shouldUseAssignment(newP)) {
 
-        // let the caller know a new assignment is ready
-        notifyNewAssignment();
+          // set the assignment
+          P_ = newP;
+          Pt_ = newPt;
+
+          // let the caller know a new assignment is ready
+          notifyNewAssignment();
+        }
+
+      } else {
+        std::cout << std::endl << "\033[95;1m!!!! Invalid Assignment !!!!\033[0m";
+        std::cout << std::endl << std::endl;
+        for (const auto& v : pvec) std::cout << static_cast<int>(v) << " ";
+        std::cout << std::endl << std::endl;
+        stopTimer_ = true;
       }
 
       // get ready for next auction, makes auctioneer idle
@@ -285,16 +305,6 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
 
 bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
 {
-  // make sure the assignment is a one-to-one correspondence
-  // TODO: this check could be removed once auction IDs are checked
-  if ((newP.toDenseMatrix().rowwise().sum().array() != 1).any() ||
-        (newP.toDenseMatrix().colwise().sum().array() != 1).any()) {
-    std::cout << std::endl << "\033[95;1m!!!! Invalid Assignment !!!!\033[0m";
-    std::cout << std::endl << std::endl;
-    stopTimer_ = true;
-    return false;
-  }
-
   if (formation_just_received_) {
     formation_just_received_ = false;
     return true;
@@ -304,6 +314,28 @@ bool Auctioneer::shouldUseAssignment(const AssignmentPerm& newP) /*const*/
   if (P_.indices().isApprox(newP.indices())) return false;
 
   return true;
+}
+
+// ----------------------------------------------------------------------------
+
+bool Auctioneer::isValidAssignment(const std::vector<vehidx_t>& permvec) const
+{
+  // create a list of indices we expect to see in permvec
+  std::vector<vehidx_t> v(n_);
+  std::iota(v.begin(), v.end(), 0);
+
+  for (const auto& i : permvec) {
+    // look for this index in the list of what we expect
+    const auto found = std::find(v.begin(), v.end(), i);
+
+    // if it wasn't found, something is wrong
+    if (found == v.end()) return false;
+
+    // if it was found, remove it because we shouldn't see it again
+    if (found != v.end()) v.erase(found);
+  }
+
+  return v.size() == 0;
 }
 
 // ----------------------------------------------------------------------------
