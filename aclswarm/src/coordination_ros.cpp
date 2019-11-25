@@ -14,8 +14,7 @@ namespace aclswarm {
 
 CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                   const ros::NodeHandle nhp)
-: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr),
-  comminit_(ros::Time::now())
+: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr)
 {
   if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
@@ -35,8 +34,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   // Load parameters
   //
 
-  nhp_.param<double>("comm_settle_time", comm_settle_time_, 0.5);
-  nhp_.param<double>("flush_settle_time", flush_settle_time_, 0.1);
+  nhp_.param<double>("form_settle_time", form_settle_time_, 1.5);
   nhp_.param<double>("auctioneer_dt", auctioneer_dt_, 0.001);
   nhp_.param<double>("autoauction_dt", autoauction_dt_, 0.2);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
@@ -50,7 +48,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   tim_auctioneer_ = nhQ_.createTimer(ros::Duration(auctioneer_dt_),
                                     &CoordinationROS::auctioneerCb, this);
-  tim_autoauction_ = nhQ_.createTimer(ros::Duration(autoauction_dt_),
+  tim_autoauction_ = nhQ_.createTimer(ros::Duration(auctioneer_dt_),
                                     &CoordinationROS::autoauctionCb, this);
   tim_autoauction_.stop();
   tim_control_ = nhQ_.createTimer(ros::Duration(control_dt_),
@@ -74,7 +72,7 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
 
   // Create a pool of threads to handle the task queue.
   // This prevent timer tasks (and others) from blocking each other
-  constexpr int NUM_TASKS = 1; // there are only two timers + normal pub/sub
+  constexpr int NUM_TASKS = 3; // there are only two timers + normal pub/sub
   spinner_ = std::unique_ptr<ros::AsyncSpinner>(
                             new ros::AsyncSpinner(NUM_TASKS, &task_queue_));
   spinner_->start();
@@ -88,7 +86,7 @@ void CoordinationROS::spin()
   ros::Rate r(5);
   while (ros::ok()) {
 
-    if (newformation_ != nullptr /*&& auctioneer_->isIdle()*/) {
+    if (newformation_ != nullptr) {
       // stop tasks
       tim_control_.stop();
       tim_autoauction_.stop();
@@ -118,30 +116,18 @@ void CoordinationROS::spin()
       // FYI: We assume that our communication graph is identical to the
       // formation graph. Make sure that we can talk to our neighbors as
       // defined by the adjmat of the formation.
-      if (connectToNeighbors()) {
+      connectToNeighbors();
 
-        // Assumption: Each vehicle is told to start an auction at the same time.
-        // Challenge: Clearly, there will be jitter across all the vehicles. This
-        //  jitter may cause some vehicles to start a new auction and send their
-        //  initial bid before their neighbors have had a chance to setup their
-        //  communications. As a result, if I am a slow vehicle, then I will miss
-        //  my fast nbr's first bid and will be stuck waiting for them forever.
-        // Hack solution: Wait for a duration longer than the expected jitter.
+      // indicate that this is the first assignment of the new formation.
+      // When this is true, the control timer is started, but only after
+      // a valid assignment.
+      first_assignment_ = true;
 
-        // n.b., this sleep is okay since this thread is only handling the
-        // formation callback (which should have a queue to make sure no vehicle
-        // drops a msg while all the other swarm vehicles move on)
-        ros::Duration(0.5).sleep(); // this hack is so annoying
-      }
+      // calculate the time remaining for formation setup
+      // (i.e., when to start the next assignment)
+      startauction_ = (formationsent_ + ros::Duration(form_settle_time_));
 
-      // Now that we have neighbors to talk to, let the bidding begin.
-      auctioneer_->start(q_);
-
-      // wait for CBAA to converge so that we get a good assignment
-      waitForNewAssignment();
-
-      // allow downstream tasks to continue
-      tim_control_.start();
+      // manage when auctions should be initiated
       tim_autoauction_.start();
       newformation_ = nullptr;
     }
@@ -217,6 +203,7 @@ void CoordinationROS::formationCb(const aclswarm_msgs::FormationConstPtr& msg)
     newformation_->gains = Eigen::MatrixXd();
   }
 
+  formationsent_ = msg->header.stamp;
   newformation_->name = msg->name;
 }
 
@@ -260,13 +247,20 @@ void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
   controller_->setAssignment(P);
 
   // change the communication graph accordingly
-  if (connectToNeighbors()) comminit_ = ros::Time::now();
+  // Assumption: autoauction period is long enough to let comm changes settle
+  connectToNeighbors();
 
   // publish
   std_msgs::UInt8MultiArray msg;
   msg.data = std::vector<uint8_t>(P.indices().data(),
                                   P.indices().data() + P.indices().size());
   pub_assignment_.publish(msg);
+
+  // if this is the first valid assignment of the new formation, start ctrl
+  if (first_assignment_) {
+    first_assignment_ = false;
+    tim_control_.start();
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -287,28 +281,24 @@ void CoordinationROS::sendBidCb(uint32_t auctionid, uint32_t iter,
 
 void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 {
-  // Make sure to wait for comm changes to settle. Otherwise,
-  //  some messages may be lost during the communication setup.
-  // if ((ros::Time::now() - comminit_) < ros::Duration(comm_settle_time_)) return;
+  // are we ready to start a new auction?
+  if ((ros::Time::now() - startauction_).toNSec() < 0) return;
 
-  if (auctioneer_->stopTimer_) {
-    auctioneer_->stopTimer_ = false;
-    tim_autoauction_.stop();
-    ros::Duration(flush_settle_time_).sleep();
+  // set the time of the next autoauction
+  startauction_ = ros::Time::now() + ros::Duration(autoauction_dt_);
+
+  if (auctioneer_->didConvergeOnInvalidAssignment()) {
+    // since invalid auctions are reached in consensus, this is synchronized.
+    // Therefore, it is okay to  skip this auction, because *all* vehicles
+    // will be told to skip this auction.
+    // Also, since the old/new data in the queue caused this problem, flush.
     auctioneer_->flush();
-    tim_autoauction_.start();
     return;
   }
 
-  // make sure auctioneer is not in the middle of something
-  if (!auctioneer_->isIdle()) {
-    ROS_ERROR("Auctioneer is busy!");
-    tim_autoauction_.stop();
-    ros::Duration(flush_settle_time_).sleep();
-    auctioneer_->flush();
-    tim_autoauction_.start();
-    return;
-  }
+  // indicate if auctioneer is in the middle of an auction. If this happens
+  // frequently, then autoauction_dt may need to be increased.
+  if (!auctioneer_->isIdle()) ROS_WARN("Auctioneer is busy! Restarting.");
 
   auctioneer_->start(q_);
 }
@@ -383,25 +373,6 @@ bool CoordinationROS::connectToNeighbors()
   }
 
   return was_changed;
-}
-
-// ----------------------------------------------------------------------------
-
-void CoordinationROS::waitForNewAssignment()
-{
-  constexpr double TIMEOUT_SEC = 1;
-  constexpr double POLL_PERIOD = 0.1;
-  auto start = ros::Time::now();
-  while (ros::ok() && !auctioneer_->isIdle()) {
-    ros::Duration(POLL_PERIOD).sleep();
-
-    // if we couldn't come up with an assignment, just bail...
-    if ((ros::Time::now() - start).toSec() > TIMEOUT_SEC) {
-      ROS_ERROR_STREAM("Assignment auction timed out. Missing: " 
-                        << auctioneer_->reportMissing());
-      return;
-    }
-  }
 }
 
 } // ms aclswarm

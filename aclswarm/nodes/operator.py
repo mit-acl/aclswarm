@@ -112,7 +112,6 @@ class Operator:
         adjmat = np.array(adjmat, dtype=np.uint8)
 
         msg = Formation()
-        msg.header.stamp = rospy.Time.now()
         msg.name = formation['name']
 
         # formation points
@@ -134,11 +133,12 @@ class Operator:
         # should we include formation gains in our message?
         if self.send_gains:
 
-            # pre-calculated gains may have been provided, but not required
-            if 'gains' in formation:
-                A = formation['gains']
-            else:
-                A = createGainMatrix(adjmat, pts)
+            # pre-calculated gains may have been provided, but not required.
+            # Store the gains so we do not need to redo work.
+            if 'gains' not in formation:
+                formation['gains'] = createGainMatrix(adjmat, pts)
+
+            A = formation['gains']
 
             # pack up the gains into the message
             gains = np.array(A, dtype=np.float32)
@@ -153,7 +153,7 @@ class Operator:
             msg.gains.layout.dim[1].size = gains.shape[1]
             msg.gains.layout.dim[1].stride = gains.shape[1]
 
-
+        msg.header.stamp = rospy.Time.now()
         return msg
 
     def genEnvironment(self):

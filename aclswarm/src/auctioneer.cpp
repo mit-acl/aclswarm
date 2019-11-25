@@ -11,7 +11,8 @@ namespace acl {
 namespace aclswarm {
 
 Auctioneer::Auctioneer(vehidx_t vehid, uint8_t n, bool verbose)
-: n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid), verbose_(verbose)
+: n_(n), vehid_(vehid), auctionid_(-1), bid_(new Bid),
+  formation_just_received_(false), verbose_(verbose)
 {
   reset();
 
@@ -67,6 +68,9 @@ void Auctioneer::flush()
   reset();
   bids_zero_.clear();
   std::queue<BidPkt>().swap(rxbids_);
+
+  // reset flags from invalid auction
+  invalid_assignment_ = false;
 }
 
 // ----------------------------------------------------------------------------
@@ -153,30 +157,6 @@ void Auctioneer::tick()
   }
 
   processBid(bidpkt);
-}
-
-// ----------------------------------------------------------------------------
-
-std::string Auctioneer::reportMissing()
-{
-  // work in "formation space" since we are using the adjmat to check nbhrs
-  const vehidx_t i = P_.indices()(vehid_);
-
-  std::string missing = "(A" + std::to_string(auctionid_) + "B" + std::to_string(biditer_) + ") ";
-
-  for (size_t j=0; j<n_; ++j) {
-    if (adjmat_(i, j)) {
-      // map back to "vehicle space" since that's how our bids are keyed
-      vehidx_t nbr = Pt_.indices()(j);
-
-      // CBAA iteration is not complete if I am missing any of my nbrs' bids
-      if (bids_curr_.find(nbr) == bids_curr_.end()) {
-        missing += std::to_string(nbr) + " ";
-      }
-    }
-  }
-
-  return missing;
 }
 
 // ----------------------------------------------------------------------------
@@ -308,7 +288,7 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
           for (const auto& v : pvec) std::cout << static_cast<int>(v) << " ";
           std::cout << std::endl << std::endl;
         }
-        stopTimer_ = true;
+        invalid_assignment_ = true;
       }
 
       // get ready for next auction, makes auctioneer idle
@@ -563,6 +543,30 @@ void Auctioneer::selectTaskAssignment()
 float Auctioneer::getPrice(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2)
 {
   return 1.0 / ((p1 - p2).norm() + 1e-8);
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Auctioneer::reportMissing()
+{
+  // work in "formation space" since we are using the adjmat to check nbhrs
+  const vehidx_t i = P_.indices()(vehid_);
+
+  std::string missing = "(A" + std::to_string(auctionid_) + "B" + std::to_string(biditer_) + ") ";
+
+  for (size_t j=0; j<n_; ++j) {
+    if (adjmat_(i, j)) {
+      // map back to "vehicle space" since that's how our bids are keyed
+      vehidx_t nbr = Pt_.indices()(j);
+
+      // CBAA iteration is not complete if I am missing any of my nbrs' bids
+      if (bids_curr_.find(nbr) == bids_curr_.end()) {
+        missing += std::to_string(nbr) + " ";
+      }
+    }
+  }
+
+  return missing;
 }
 
 // ----------------------------------------------------------------------------

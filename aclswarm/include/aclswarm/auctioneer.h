@@ -97,16 +97,14 @@ namespace aclswarm {
     void enqueueBid(vehidx_t vehid, uint32_t auctionid, uint32_t iter,
                     const Bid& bid);
     void tick();
-    bool isIdle() const { return !auction_is_open_; }
 
     void flush();
     
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
 
-    std::string reportMissing();
-
-    bool stopTimer_ = false;
+    bool isIdle() const { return !auction_is_open_; }
+    bool didConvergeOnInvalidAssignment() const { return invalid_assignment_; }
 
   private:
     enum class State { IDLE, AUCTION };
@@ -134,7 +132,8 @@ namespace aclswarm {
     bool auction_is_open_; ///< auctioneer is ready to receive/send bids
     std::mutex queue_mtx_; ///< for bid queue resource management
     std::mutex auction_mtx_; ///< for synchronization of start and bid proc
-    bool formation_just_received_ = false; ///< first auction of new formation?
+    bool invalid_assignment_; ///< this is not CBAA's fault
+    bool formation_just_received_; ///< first auction of new formation?
     bool verbose_; ///< should print verbose auction/bid information
 
     /// \brief Function handles for callbacks
@@ -146,6 +145,9 @@ namespace aclswarm {
 
     PtsMat alignFormation(const PtsMat& q,
                           const AdjMat& adjmat, const PtsMat& p) const;
+
+    std::string reportMissing();
+
     void logAssignment(const PtsMat& q, const AdjMat& adjmat,
                        const PtsMat& p, const PtsMat& aligned,
                        const AssignmentPerm& lastP, const AssignmentPerm& P);

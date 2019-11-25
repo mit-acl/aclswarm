@@ -63,11 +63,12 @@ namespace aclswarm {
     PtsMat q_; ///< 3D positions of swarm vehicles
     Eigen::Vector3d vel_; ///< my current velocity
     std::map<int, ros::Subscriber> vehsubs_; ///< subscribers keyed by vehid
-    ros::Time comminit_; ///< the time that new nbrs were connected to
+    ros::Time formationsent_; ///< timestamp of when formation was sent
+    ros::Time startauction_; ///< timestamp of when to start next auction
+    bool first_assignment_; ///< indicates first assignment of a new formation
 
     /// \brief Parameters
-    double comm_settle_time_; ///< time to wait after comm changes
-    double flush_settle_time_; ///< time to wait after a flush (cbaa failure)
+    double form_settle_time_; ///< time to wait after formation was sent
     double auctioneer_dt_; ///< period at which rcvd bids are processed
     double autoauction_dt_; ///< period of auto auctions (btwn form rcvd)
     double control_dt_; ///< period of high-level distributed control task
@@ -76,8 +77,6 @@ namespace aclswarm {
      * @brief      Initialize control and assignment modules with rosparams
      */
     void init();
-
-    void waitForNewAssignment();
 
     /**
      * @brief      Update comm. graph. Connects to new nbrs using adjmat.
