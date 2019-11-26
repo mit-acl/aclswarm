@@ -21,33 +21,32 @@ if [ $? -ne 0 ]; then
 	exit
 fi
 
-tmux -2 new-session -d -s $SESSION
-# tmux set pan-boarder-status top
+cmd="new-session -d -s $SESSION"
+cmd="$cmd ; split-window -h"
+cmd="$cmd ; split-window -v"
+cmd="$cmd ; select-pane -t $SESSION:0.0"
+cmd="$cmd ; split-window -v"
+cmd="$cmd ; select-pane -t $SESSION:0.2"
+cmd="$cmd ; split-window -v"
+cmd="$cmd ; select-pane -t $SESSION:0.1"
+cmd="$cmd ; split-window -v"
+cmd="$cmd ; select-pane -t $SESSION:0.5"
+cmd="$cmd ; split-window -v"
 
-tmux split-window -h
-tmux split-window -v
-tmux select-pane -t 0
-tmux split-window -v
-tmux select-pane -t 2
-tmux split-window -v
-tmux select-pane -t 1
-tmux split-window -v
-tmux select-pane -t 5
-tmux split-window -v
+tmux -2 $cmd
 
 for _pane in $(tmux list-pane -F '#P'); do
-	# ssh into vehicle using env variables from cfg file
-	tmux send-keys -t ${_pane} "ssh root@$QUAD.local" C-m
+	tmux send-keys -t $SESSION:0.${_pane} "ssh root@$QUAD.local" C-m
 	sleep 1
 done
 
-tmux send-keys -t 4 "imu_app -s 2" C-m
-tmux send-keys -t 5 "roslaunch snap snap.launch veh:=$VEH num:=$NUM" C-m
-tmux send-keys -t 0 "roslaunch system_launch quad.launch veh:=$VEH num:=$NUM" C-m
-tmux send-keys -t 3 "rosrun snap esc_interface_node __ns:=$VEH$NUM" C-m
-tmux send-keys -t 1 "roslaunch aclswarm start.launch veh:=$VEH$NUM"
-#tmux send-keys -t 2 "roslaunch vislam vislam.launch"
-#tmux send-keys -t 6 "rosrun aclswarm bagrecord.sh -o $VEH$NUM"
+tmux send-keys -t $SESSION:0.4 "imu_app -s 2" C-m
+tmux send-keys -t $SESSION:0.5 "roslaunch snap snap.launch veh:=$VEH num:=$NUM" C-m
+tmux send-keys -t $SESSION:0.0 "roslaunch system_launch quad.launch veh:=$VEH num:=$NUM" C-m
+tmux send-keys -t $SESSION:0.3 "rosrun snap esc_interface_node __ns:=$VEH$NUM" C-m
+tmux send-keys -t $SESSION:0.1 "roslaunch aclswarm start.launch veh:=$VEH$NUM"
+#tmux send-keys -t $SESSION:0.2 "roslaunch vislam vislam.launch"
+#tmux send-keys -t $SESSION:0.6 "rosrun aclswarm bagrecord.sh -o $VEH$NUM"
 
-tmux select-pane -t 1
+tmux select-pane -t $SESSION:0.1
 tmux -2 attach-session -t $SESSION
