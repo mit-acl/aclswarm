@@ -7,6 +7,8 @@ if [[ `uname -r` != *"eagle8074" ]]; then
   exit -1;
 fi
 
+apt-get install ros-indigo-eigen-conversions
+
 # build and install CMake 3.5.1 (default for Ubuntu 16.04)
 VERSTR=$(cmake --version)
 if [[ $VERSTR != *"3.5.1"* ]]; then
