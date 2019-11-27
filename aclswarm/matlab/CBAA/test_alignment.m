@@ -25,17 +25,21 @@
 %% Using logged data
 vehid = 1;
 vehid = vehid + 1; % matlab 1-based indexing
+assignment = 6;
 
 % Load data from C++ implementation
-[n,q,adjmat,P,p,aligned,newP] = read_alignment(['~/.ros/alignment_' num2str(vehid-1) '.bin']);
+fname = ['~/.ros/veh' num2str(vehid-1) '_assignment' num2str(assignment) '.bin'];
+[n,q,adjmat,P,p,aligned,newP] = read_alignment(fname);
 c = struct();
+c.P = P;
 c.aligned = aligned;
-c.newP = newP;
+c.newP = newP
 
 % Load data from MATLAB implementation
 [newP, aligned_ps] = CBAA_aclswarm(adjmat, p(:,1:2)', q(:,1:2)');
 pa = [aligned_ps{vehid}; zeros(1,n)]';
 m = struct();
+m.P = P;
 m.aligned = pa;
 m.newP = newP;
 

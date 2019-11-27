@@ -266,11 +266,11 @@ void Auctioneer::processBid(const BidPkt& bidpkt)
                                                 pvec.data(), pvec.size()));
         const auto newP = newPt.transpose();
 
-        // log the assignment for debugging
-        logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
-
         // determine if this assignment is better than the previous one
         if (shouldUseAssignment(newP)) {
+
+          // log the assignment for debugging
+          logAssignment(q_, adjmat_, p_, paligned_, P_, newP);
 
           // set the assignment
           P_ = newP;
@@ -575,9 +575,13 @@ void Auctioneer::logAssignment(const PtsMat& q, const AdjMat& adjmat,
                         const PtsMat& p, const PtsMat& aligned,
                         const AssignmentPerm& lastP, const AssignmentPerm& P)
 {
+  static uint32_t assignment = 1;
+
   // open a binary file
-  std::ofstream bin("alignment_" + std::to_string(vehid_) + ".bin",
-                    std::ios::binary);
+  std::ofstream bin("veh" + std::to_string(vehid_) + "_assignment"
+                    + std::to_string(assignment) + ".bin", std::ios::binary);
+
+  assignment++;
 
   bin.write(reinterpret_cast<const char *>(&n_), sizeof n_);
   bin.write(reinterpret_cast<const char *>(q.data()), sizeof(q.data()[0])*q.size());
