@@ -468,8 +468,8 @@ bool Auctioneer::updateTaskAssignment()
   // Given all of the bids from my neighbors (and me), which agent is most
   // deserving of each of the formation points (tasks)? In other words,
   // At this point in the current auction, who currently has the highest bids?
-  // n.b., a nbhr might have *info* about who has the highest bid for a given
-  // formpt, but it may not be that nbhr---it's just in their local info
+  // n.b., a nbr might have *info* about who has the highest bid for a given
+  // formpt, but it may not be that nbr---it's just in their local info
 
   bool was_outbid = false;
 
@@ -480,13 +480,13 @@ bool Auctioneer::updateTaskAssignment()
   for (size_t j=0; j<n_; ++j) {
 
     //
-    // Which of my nbhrs (or me) bid the most for task / formpt j?
+    // Which of my nbrs (or me) bid the most for task / formpt j?
     //
 
-    // arbitrarily assume that the first nhbr in the list has the highest bid
+    // arbitrarily assume that the first nbr in the list has the highest bid
     auto maxit = bids_curr_.cbegin();
 
-    // but then loop through each nbhr (and me) and decide who bid the most
+    // but then loop through each nbr (and me) and decide who bid the most
     for (auto it = bids_curr_.cbegin(); it!=bids_curr_.cend(); it++) {
       if (it->second.price[j] > maxit->second.price[j]) maxit = it;
     }
@@ -523,7 +523,7 @@ void Auctioneer::selectTaskAssignment()
     const float price = getPrice(q_.row(vehid_), paligned_.row(j));
 
     // In addition to finding the task that I am most interested in,
-    // only bid on a task if I think I will win (highest bidder of my nbhrs)
+    // only bid on a task if I think I will win (highest bidder of my nbrs)
     if (price > max && price > bid_->price[j]) {
       max = price;
       task = j;
@@ -532,7 +532,7 @@ void Auctioneer::selectTaskAssignment()
   }
 
   // update my local information to reflect my bid
-  if (was_assigned) { // TODO: will this always be true?
+  if (was_assigned) { // TODO: won't this always be true?
     bid_->price[task] = max;
     bid_->who[task] = vehid_;
   }
