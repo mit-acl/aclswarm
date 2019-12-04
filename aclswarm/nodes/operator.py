@@ -108,7 +108,8 @@ class Operator:
     def buildFormationMessage(self, adjmat, formation):
 
         # formation-related matrices
-        pts = np.array(formation['points'], dtype=np.float32)
+        scale = float(formation['scale']) if 'scale' in formation else 1.0
+        pts = scale * np.array(formation['points'], dtype=np.float32)
         adjmat = np.array(adjmat, dtype=np.uint8)
 
         msg = Formation()
