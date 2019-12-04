@@ -25,14 +25,13 @@ class VizCommands:
         self.viz_mesh = rospy.get_param('~mesh', True)
 
         # setup markers
-        COLORS = {}
-        COLORS['distcmd'] = (0,0,1)
-        COLORS['safecmd'] = (1,0,0)
-        self.create_arrow_markers(COLORS.keys(), COLORS)
-        self.create_mesh_markers()
+        self.markers_distcmd = self.create_arrow_markers('distcmd', (0,0,1))
+        self.markers_safecmd = self.create_arrow_markers('safecmd', (1,0,0))
+        self.markers_mesh = self.create_mesh_markers()
 
         # publishers
-        self.pub_vizcmds = rospy.Publisher('viz_cmds', MarkerArray, queue_size=1)
+        self.pub_vizdistcmd = rospy.Publisher('viz_dist_cmd', MarkerArray, queue_size=1)
+        self.pub_vizsafecmd = rospy.Publisher('viz_safe_cmd', MarkerArray, queue_size=1)
         self.pub_vizmesh = rospy.Publisher('viz_mesh', MarkerArray, queue_size=1)
 
         # subscribe to relevant topics
@@ -54,22 +53,22 @@ class VizCommands:
 
     def distcmdCb(self, msg, t, veh):
         p = Point(msg.vector.x, msg.vector.y, msg.vector.z)
-        self.update_arrow_marker(p, t, veh)
-        self.pub_vizcmds.publish(self.markers)
+        self.update_arrow_marker(self.markers_distcmd, p, t, veh)
+        self.pub_vizdistcmd.publish(self.markers_distcmd)
 
     def safecmdCb(self, msg, t, veh):
         p = Point(msg.vel.x, msg.vel.y, msg.vel.z)
-        self.update_arrow_marker(p, t, veh)
-        self.pub_vizcmds.publish(self.markers)
+        self.update_arrow_marker(self.markers_safecmd, p, t, veh)
+        self.pub_vizsafecmd.publish(self.markers_safecmd)
 
     def poseCb(self, msg, vehid, vehname):
+        # update mesh marker
         self.markers_mesh.markers[vehid].pose = msg.pose
         self.markers_mesh.markers[vehid].header = msg.header
-
         self.pub_vizmesh.publish(self.markers_mesh)
 
     def create_mesh_markers(self):
-        self.markers_mesh = MarkerArray()
+        markers = MarkerArray()
 
         for i in range(self.n):
             m = Marker()
@@ -85,36 +84,36 @@ class VizCommands:
             m.scale = Vector3(0.75, 0.75, 0.75)
             m.lifetime = rospy.Duration(1.0)
 
-            self.markers_mesh.markers.append(m)
+            markers.markers.append(m)
 
-    def create_arrow_markers(self, topics, c):
-        self.markers = MarkerArray()
+        return markers
+
+    def create_arrow_markers(self, mtype, color):
+        markers = MarkerArray()
 
         for i in range(self.n):
-            for t in topics:
-                m = Marker()
-                m.action = Marker.ADD
-                m.header.frame_id = self.vehs[i]
-                m.ns = t
-                m.id = i*10 + topics.index(t)
-                m.type = Marker.ARROW
-                m.color.a = 1.0
-                m.color.r, m.color.g, m.color.b = c[t]
-                m.pose.orientation.w = 1.0
-                m.pose.orientation.x = 0.0
-                m.pose.orientation.y = 0.0
-                m.pose.orientation.z = 0.0
-                if t == 'safecmd':
-                    m.scale = Vector3(0.1, 0.1, 0.1) # magic numbers!
-                else:
-                    m.scale = Vector3(0.075, 0.075, 0.075) # magic numbers!
-                m.lifetime = rospy.Duration(0.1) # this marker will be removed if not updated every period
+            m = Marker()
+            m.action = Marker.ADD
+            m.header.frame_id = self.vehs[i]
+            m.ns = mtype
+            m.id = i*10
+            m.type = Marker.ARROW
+            m.color.a = 1.0
+            m.color.r, m.color.g, m.color.b = color
+            m.pose.orientation.w = 1.0
+            m.pose.orientation.x = 0.0
+            m.pose.orientation.y = 0.0
+            m.pose.orientation.z = 0.0
+            m.scale = Vector3(0.1, 0.1, 0.1) # magic numbers!
+            m.lifetime = rospy.Duration(1.0)
 
-                self.markers.markers.append(m)
+            markers.markers.append(m)
 
-    def update_arrow_marker(self, p, t, veh):
-        s = 0.3 # ta-da!
-        m = next((x for x in self.markers.markers if x.ns == t and x.header.frame_id == veh), None)
+        return markers
+
+    def update_arrow_marker(self, markers, p, t, veh):
+        s = 0.5 # ta-da!
+        m = next((x for x in markers.markers if x.ns == t and x.header.frame_id == veh), None)
         if m:
             m.header.stamp = rospy.Time.now()
             m.action = Marker.MODIFY
