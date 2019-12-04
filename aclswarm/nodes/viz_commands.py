@@ -41,15 +41,18 @@ class VizCommands:
             if self.viz_distcmds:
                 self.subs[veh]['distcmd'] = rospy.Subscriber(
                         "/{}/distcmd".format(veh), Vector3Stamped,
-                        lambda msg, v=veh: self.distcmdCb(msg, 'distcmd', v))
+                        lambda msg, v=veh: self.distcmdCb(msg, 'distcmd', v),
+                        queue_size=1)
             if self.viz_safecmds:
                 self.subs[veh]['safecmd'] = rospy.Subscriber(
                         "/{}/goal".format(veh), QuadGoal,
-                        lambda msg, v=veh: self.safecmdCb(msg, 'safecmd', v))
+                        lambda msg, v=veh: self.safecmdCb(msg, 'safecmd', v),
+                        queue_size=1)
             if self.viz_mesh:
                 self.subs[veh]['pose'] = rospy.Subscriber(
                         "/{}/vicon".format(veh), ViconState,
-                        lambda msg, i=idx, v=veh: self.poseCb(msg, i, v))
+                        lambda msg, i=idx, v=veh: self.poseCb(msg, i, v),
+                        queue_size=1)
 
     def distcmdCb(self, msg, t, veh):
         p = Point(msg.vector.x, msg.vector.y, msg.vector.z)
