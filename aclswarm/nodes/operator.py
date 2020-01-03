@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-import time
+import sys, time
 import rospy
 import numpy as np
 
@@ -138,6 +138,11 @@ class Operator:
             # Store the gains so we do not need to redo work.
             if 'gains' not in formation:
                 formation['gains'] = createGainMatrix(adjmat, pts)
+
+                # # Print gain matrix for easy copying into formations.yaml
+                # np.set_printoptions(linewidth=500, threshold=sys.maxsize)
+                # print(np.array2string(formation['gains'], separator=', ',
+                #             formatter={'float_kind':lambda x: "% 0.4f" % x}))
 
             A = formation['gains']
 
