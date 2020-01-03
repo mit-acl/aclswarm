@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Used by the swarm operator to dispatch formation shapes -->
+<launch>
+    <arg name="formations" />
+    <arg name="send_gains" default="false" />
+    <arg name="room" default="vicon"/>
+    <arg name="leader" default=""/>
+    <arg name="dev" default="js0"/>
+
+    <!-- Load vehicles and room bounds -->
+    <rosparam file="$(find aclswarm)/param/vehicles.yaml" command="load"/>
+    <group unless="$(eval room == 'sim')">
+        <rosparam ns="room_bounds" file="$(find acl_demos)/room_cfg/$(arg room).yaml" command="load"/>
+    </group>
+    <group if="$(eval room == 'sim')">
+        <rosparam ns="room_bounds">
+            x_min: -30
+            x_max:  30
+            y_min: -30
+            y_max:  30
+        </rosparam>
+    </group>
+
+    <!-- Start operator script -->
+    <node name="operator" pkg="aclswarm" type="operator.py" output="screen">
+        <param name="formation_group" value="$(arg formations)" />
+        <param name="send_gains" value="$(arg send_gains)" />
+        <rosparam file="$(find aclswarm)/param/formations.yaml" command="load"/>
+    </node>
+
+    <!-- Start visualization script -->
+    <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
+        <param name="distcmds" value="true" />
+        <param name="safecmds" value="true" />
+    </node>
+
+    <!-- Start GUI -->
+    <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui" args="--perspective-file $(find aclswarm)/cfg/controls.perspective"/>
+
+    <!-- Start the joy node if a leader is specified -->
+    <group if="$(eval leader != '')">
+        <node ns="$(arg leader)" pkg="joy" type="joy_node" name="joystick" >
+            <param name="dev" type="string" value="/dev/input/$(arg dev)" />
+            <param name="deadzone" value="0.18" />
+            <param name="autorepeat_rate" value="100" />
+        </node>
+    </group>
+</launch>
