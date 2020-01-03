@@ -45,7 +45,7 @@ function draw_nonoverlapping_circles {
     done
 
     # If we've made it here, this circle does not overlap
-    if [ "$overlapped" = false ];
+    if [ "$overlapped" = false ]; then
       circles_x+=($x)
       circles_y+=($y)
     fi
@@ -67,14 +67,15 @@ usage="$(basename "$0") [-h] [-n #] -- script to start vehicle sim and aclswarm 
 where:
     -h              show this help text
     -n              number of vehicles to simulate
-    -r <w>x<h>x<r>  random initialization in [-w/2 w/2]x[-h/2 h/2] with radius r"
+    -r <w>x<h>x<r>  random initialization in [-w/2 w/2]x[-h/2 h/2] with radius r
+    -x              headless---do not attach to tmux at end"
 
 if [ "$#" -le 1 ]; then
     echo "$usage"
     exit 1
 fi
 
-while getopts 'hn:r:' option; do
+while getopts 'hn:r:x' option; do
   case "$option" in
     h)
       echo "$usage"
@@ -88,6 +89,9 @@ while getopts 'hn:r:' option; do
       h=$(echo $OPTARG | cut -d'x' -f2)
       r=$(echo $OPTARG | cut -d'x' -f3)
       rtxt=" (randomly initialized in $w x $h square; buffer radius $r)"
+      ;;
+    x)
+      headless=true
       ;;
    \?)
       printf "illegal option: -%s\n" "$OPTARG" >&2
@@ -148,5 +152,6 @@ tmux set-window-option -t aclswarm:0 synchronize-panes on
 # attach to aclswarm stack session
 #
 
-tmux attach-session -t aclswarm
-
+if [ -z $headless ]; then
+  tmux attach-session -t aclswarm
+fi
