@@ -17,8 +17,8 @@
     </node>
 
     <!-- Start visualization script -->
-    <!-- <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
+    <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
         <param name="distcmds" value="true" />
         <param name="safecmds" value="true" />
-    </node> -->
+    </node>
 </launch>

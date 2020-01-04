@@ -3,8 +3,10 @@
 from __future__ import division
 
 import time
+from collections import deque
+
 import rospy
-import numpy as np
+import numpy as np; np.set_printoptions(linewidth=500)
 
 from behavior_selector.srv import MissionModeChange
 from acl_msgs.msg import QuadGoal, ViconState
@@ -31,6 +33,9 @@ def S(state):
 
 
 class Supervisor:
+    # for each predicate, how much data should be averaged over?
+    BUFFER_SECONDS = 1
+
     # times for state machine---in units of seconds
     SIM_INIT_TIMEOUT = 10
     TAKE_OFF_TIMEOUT = 5
@@ -40,7 +45,8 @@ class Supervisor:
 
     # thresholds
     ZERO_POS_THR = 0.05 # m
-    ZERO_VEL_THR = 0.15 # m/s
+    ORIG_VEL_THR = 1.00 # m/s
+    SAFE_VEL_THR = 0.15 # m/s
 
     def __init__(self):
 
@@ -81,10 +87,14 @@ class Supervisor:
         # initialize state machine variables
         self.state = State.IDLE
         self.last_state = None
-        self.timer_ticks = 0
+        self.timer_ticks = -1
         self.curr_formation_idx = -1
-
         self.tick_rate = 50
+
+        # ring buffers for checking windowed signal averages
+        self.BUFFLEN = self.BUFFER_SECONDS * self.tick_rate
+        self.buffers = {}
+
         rate = rospy.Rate(self.tick_rate)
         while not rospy.is_shutdown():
             self.tick()
@@ -111,6 +121,11 @@ class Supervisor:
         """State machine tick
         """
 
+        # increment timer, used for waiting
+        # n.b.: order matters since the first time each state runs this will
+        # increment from -1 to 0
+        self.timer_ticks += 1
+
         if self.state is State.IDLE:
             if self.has_sim_initialized():
                 self.takeoff()
@@ -118,13 +133,13 @@ class Supervisor:
             elif self.has_elapsed(self.SIM_INIT_TIMEOUT):
                 self.next_state(State.TERMINATE)
 
-        if self.state is State.TAKING_OFF:
+        elif self.state is State.TAKING_OFF:
             if self.has_taken_off():
                 self.next_state(State.HOVERING)
             elif self.has_elapsed(self.TAKE_OFF_TIMEOUT):
                 self.next_state(State.TERMINATE)
 
-        if self.state is State.HOVERING:
+        elif self.state is State.HOVERING:
             if self.has_elapsed(self.HOVER_WAIT):
                 if self.has_cycled_through_formations():
                     self.next_state(State.TERMINATE)
@@ -132,24 +147,21 @@ class Supervisor:
                     self.next_formation()
                     self.next_state(State.FLYING)
 
-        if self.state is State.FLYING:
+        elif self.state is State.FLYING:
             if self.has_elapsed(self.FORMATION_RECEIVED_WAIT):
                 if self.has_converged():
                     self.next_state(State.HOVERING)
                 elif self.has_gridlocked():
                     self.next_state(State.GRIDLOCK)
 
-        if self.state is State.GRIDLOCK:
-            if not self.has_gridlocked():
+        elif self.state is State.GRIDLOCK:
+            if self.has_left_gridlock():
                 self.next_state(State.FLYING)
             elif self.has_elapsed(self.GRIDLOCK_TIMEOUT):
                 self.next_state(State.TERMINATE)
 
-        if self.state is State.TERMINATE:
+        elif self.state is State.TERMINATE:
             self.terminate()
-
-        # increment timer, used for waiting
-        self.timer_ticks += 1
 
     def next_state(self, state):
         self.last_state = self.state
@@ -159,7 +171,10 @@ class Supervisor:
                         format(S(self.last_state), S(self.state)))
 
         # reset timer
-        self.timer_ticks = 0
+        self.timer_ticks = -1
+
+        # empty buffers
+        self.buffers = {}
 
     #
     # Predicates
@@ -182,22 +197,59 @@ class Supervisor:
         return (np.abs(np.array(z) - self.takeoff_alt)
                                 < self.ZERO_POS_THR).all()
 
-    def has_converged(self):
-        v = [np.linalg.norm((msg.vector.x, msg.vector.y, msg.vector.z))
-                for (veh,msg) in self.voriggoal.items()]
+    def has_converged(self, sample=True):
+        if 'norm_vel_origgoal' not in self.buffers:
+            self.buffers['norm_vel_origgoal'] = deque(maxlen=self.BUFFLEN)
 
-        # the swarwm has converged to the desired formation
+        if sample:
+            v = [np.linalg.norm((msg.vector.x, msg.vector.y, msg.vector.z))
+                    for (veh,msg) in self.voriggoal.items()]
+
+            self.buffers['norm_vel_origgoal'].append(v)
+
+        # If we don't have enough data, we can't know the answer
+        if len(self.buffers['norm_vel_origgoal']) < self.BUFFLEN:
+            return False
+
+        # average each sample over vehicles
+        vbuff = np.array(self.buffers['norm_vel_origgoal']).mean(axis=0)
+
+        # the swarm has converged to the desired formation
         # if the original motion planning goal is zero.
-        return (np.array(v) < self.ZERO_VEL_THR).all()
+        return (vbuff < self.ORIG_VEL_THR).all()
 
-    def has_gridlocked(self):
-        v = [np.linalg.norm((msg.vel.x, msg.vel.y, msg.vel.z))
-                for (veh,msg) in self.vsafegoal.items()]
+    def has_gridlocked(self, sample=True):
+        if 'norm_vel_safegoal' not in self.buffers:
+            self.buffers['norm_vel_safegoal'] = deque(maxlen=self.BUFFLEN)
 
-        # the swarm is gridlocked if we haven't converged,
+        if sample:
+            v = [np.linalg.norm((msg.vel.x, msg.vel.y, msg.vel.z))
+                    for (veh,msg) in self.vsafegoal.items()]
+
+            self.buffers['norm_vel_safegoal'].append(v)
+
+        # If we don't have enough data, we can't know the answer
+        if len(self.buffers['norm_vel_safegoal']) < self.BUFFLEN:
+            return False
+
+        # average each sample over vehicles
+        vbuff = np.array(self.buffers['norm_vel_safegoal']).mean(axis=0)
+
+        # the swarm is gridlocked if we haven't converged
         # but the safe velocity commands are zero.
-        return (not self.has_converged() and
-                    (np.array(v) < self.ZERO_VEL_THR).all())
+        return (not self.has_converged(sample=False) and
+                    (vbuff < self.SAFE_VEL_THR).all())
+
+    def has_left_gridlock(self, sample=True):
+
+        # check if we are in gridlock
+        gridlocked = self.has_gridlocked(sample)
+
+        # If we don't have enough data, we can't know the answer
+        if len(self.buffers['norm_vel_safegoal']) < self.BUFFLEN:
+            return False
+
+        return not gridlocked
 
     def has_cycled_through_formations(self):
         # We want to cycle through formations and end up converged to first one
@@ -212,6 +264,10 @@ class Supervisor:
 
     def next_formation(self):
         self.curr_formation_idx += 1
+
+        idx = self.curr_formation_idx % len(self.formations['formations'])
+        rospy.logwarn("Current formation: {}".
+                            format(self.formations['formations'][idx]['name']))
 
         # request operator to send next formation
         self.change_mode(MissionModeChange._request_class.START)
