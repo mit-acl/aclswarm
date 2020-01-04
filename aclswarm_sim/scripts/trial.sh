@@ -48,7 +48,7 @@ rosparam set /operator/formation_group "$formation"
 
 roslaunch aclswarm_sim headless_operator.launch >/dev/null 2>&1 &
 
-# rviz &
+rviz &
 
 #
 # Start swarm simulations
@@ -71,7 +71,7 @@ rosrun aclswarm_sim supervisor.py
 
 # be a good computer citizen!!1!
 tmux kill-server
-pkill -x rvix
+pkill -x rviz
 pkill -x roslaunch
 pkill -x roscore
 pkill -x -9 vicon_relay
