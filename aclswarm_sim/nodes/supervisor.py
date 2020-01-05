@@ -10,15 +10,17 @@ import numpy as np; np.set_printoptions(linewidth=500)
 
 from behavior_selector.srv import MissionModeChange
 from acl_msgs.msg import QuadGoal, ViconState
+from std_msgs.msg import UInt8MultiArray
 from geometry_msgs.msg import Vector3Stamped
 
 class State:
     IDLE = 1
     TAKING_OFF = 2
     HOVERING = 3
-    FLYING = 4
-    GRIDLOCK = 5
-    TERMINATE = 6
+    WAITING_ON_ASSIGNMENT = 4
+    FLYING = 5
+    GRIDLOCK = 6
+    TERMINATE = 7
 
 
 def S(state):
@@ -27,6 +29,7 @@ def S(state):
     if state == State.IDLE: return "IDLE"
     if state == State.TAKING_OFF: return "TAKING_OFF"
     if state == State.HOVERING: return "HOVERING"
+    if state == State.WAITING_ON_ASSIGNMENT: return "WAITING_ON_ASSIGNMENT"
     if state == State.FLYING: return "FLYING"
     if state == State.GRIDLOCK: return "GRIDLOCK"
     if state == State.TERMINATE: return "TERMINATE"
@@ -40,6 +43,7 @@ class Supervisor:
     SIM_INIT_TIMEOUT = 10
     TAKE_OFF_TIMEOUT = 5
     HOVER_WAIT = 5
+    CBAA_TIMEOUT = 10
     FORMATION_RECEIVED_WAIT = 5
     GRIDLOCK_TIMEOUT = 60
 
@@ -74,7 +78,7 @@ class Supervisor:
         self.voriggoal = {}
         self.vsafegoal = {}
 
-        for veh in self.vehs:
+        for idx, veh in enumerate(self.vehs):
             # ground truth state of each vehicle
             rospy.Subscriber('/{}/vicon'.format(veh), ViconState,
                     lambda msg, v=veh: self.stateCb(msg, v), queue_size=1)
@@ -85,11 +89,18 @@ class Supervisor:
             rospy.Subscriber('/{}/goal'.format(veh), QuadGoal,
                     lambda msg, v=veh: self.safeGoalCb(msg, v), queue_size=1)
 
+            # we only need one subscriber for the following
+            if idx == 0:
+                # an assignment was generated
+                rospy.Subscriber('/{}/assignment'.format(veh), UInt8MultiArray,
+                    lambda msg, v=veh: self.assignmentCb(msg, v), queue_size=1)
+
         # initialize state machine variables
         self.state = State.IDLE
         self.last_state = None
         self.timer_ticks = -1
         self.curr_formation_idx = -1
+        self.received_assignment = False
         self.tick_rate = 50
 
         # ring buffers for checking windowed signal averages
@@ -113,6 +124,9 @@ class Supervisor:
 
     def safeGoalCb(self, msg, veh):
         self.vsafegoal[veh] = msg
+
+    def assignmentCb(self, msg, veh):
+        self.received_assignment = True
 
     #
     # State Machine
@@ -146,7 +160,13 @@ class Supervisor:
                     self.next_state(State.TERMINATE)
                 else:
                     self.next_formation()
-                    self.next_state(State.FLYING)
+                    self.next_state(State.WAITING_ON_ASSIGNMENT)
+
+        elif self.state is State.WAITING_ON_ASSIGNMENT:
+            if self.has_set_assignment():
+                self.next_state(State.FLYING)
+            elif self.has_elapsed(self.CBAA_TIMEOUT):
+                self.next_state(State.TERMINATE)
 
         elif self.state is State.FLYING:
             if self.has_elapsed(self.FORMATION_RECEIVED_WAIT):
@@ -197,6 +217,9 @@ class Supervisor:
         # the takeoff altitude
         return (np.abs(np.array(z) - self.takeoff_alt)
                                 < self.ZERO_POS_THR).all()
+
+    def has_set_assignment(self):
+        return self.received_assignment
 
     def has_converged(self):
         if 'converged_orig_vel' not in self.buffers:
@@ -289,6 +312,10 @@ class Supervisor:
         idx = self.curr_formation_idx % len(self.formations['formations'])
         rospy.logwarn("Current formation: {}".
                             format(self.formations['formations'][idx]['name']))
+
+        # we expect every formation to generate an assignment.
+        # clear the last assignment flag so we can wait for the next one
+        self.received_assignment = False
 
         # request operator to send next formation
         self.change_mode(MissionModeChange._request_class.START)
