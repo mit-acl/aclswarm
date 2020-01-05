@@ -38,6 +38,9 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   nhp_.param<double>("auctioneer_dt", auctioneer_dt_, 0.001);
   nhp_.param<double>("autoauction_dt", autoauction_dt_, 0.2);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
+  nhp_.param<bool>("use_assignment", use_assignment_, true);
+
+  if (!use_assignment_) ROS_ERROR("Not using auctioneer");
 
   //
   // Timers for assignment and distributed control tasks
@@ -131,8 +134,15 @@ void CoordinationROS::spin()
       // (i.e., when to start the next assignment)
       startauction_ = (formationsent_ + ros::Duration(form_settle_time_));
 
-      // manage when auctions should be initiated
-      tim_autoauction_.start();
+      if (use_assignment_) {
+        // manage when auctions should be initiated
+        tim_autoauction_.start();
+      } else {
+        // just skip the auctioneer and set an identity assignment
+        AssignmentPerm Pident;
+        Pident.setIdentity(n_);
+        newAssignmentCb(Pident);
+      }
       newformation_ = nullptr;
     }
 

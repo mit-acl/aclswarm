@@ -70,6 +70,7 @@ namespace aclswarm {
     bool first_assignment_; ///< indicates first assignment of a new formation
 
     /// \brief Parameters
+    bool use_assignment_; ///< use auctioneer or just set identity assignment?
     double form_settle_time_; ///< time to wait after formation was sent
     double auctioneer_dt_; ///< period at which rcvd bids are processed
     double autoauction_dt_; ///< period of auto auctions (btwn form rcvd)
