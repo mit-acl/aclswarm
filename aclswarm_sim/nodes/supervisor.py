@@ -45,8 +45,9 @@ class Supervisor:
 
     # thresholds
     ZERO_POS_THR = 0.05 # m
-    ORIG_VEL_THR = 1.00 # m/s
-    SAFE_VEL_THR = 0.15 # m/s
+    ORIG_ZERO_VEL_THR = 1.00 # m/s
+    SAFE_ZERO_VEL_THR = 0.15 # m/s
+    ANG_DIFF_THR = np.pi/60.0 # 3 degrees
 
     def __init__(self):
 
@@ -197,56 +198,76 @@ class Supervisor:
         return (np.abs(np.array(z) - self.takeoff_alt)
                                 < self.ZERO_POS_THR).all()
 
-    def has_converged(self, sample=True):
-        if 'norm_vel_origgoal' not in self.buffers:
-            self.buffers['norm_vel_origgoal'] = deque(maxlen=self.BUFFLEN)
+    def has_converged(self):
+        if 'converged_orig_vel' not in self.buffers:
+            self.buffers['converged_orig_vel'] = deque(maxlen=self.BUFFLEN)
 
-        if sample:
-            v = [np.linalg.norm((msg.vector.x, msg.vector.y, msg.vector.z))
-                    for (veh,msg) in self.voriggoal.items()]
+        # for convenience (note, deque is mutable---'by ref')
+        buff_orig_vel = self.buffers['converged_orig_vel']
 
-            self.buffers['norm_vel_origgoal'].append(v)
+        # sample signals we need to determine predicate
+        buff_orig_vel.append(self.sample_origgoal_speed_heading())
 
         # If we don't have enough data, we can't know the answer
-        if len(self.buffers['norm_vel_origgoal']) < self.BUFFLEN:
+        if len(buff_orig_vel) < self.BUFFLEN:
             return False
 
         # average each sample over vehicles
-        vbuff = np.array(self.buffers['norm_vel_origgoal']).mean(axis=0)
+        avg_orig_mag, avg_orig_ang = np.array(buff_orig_vel).mean(axis=0).T
 
         # the swarm has converged to the desired formation
         # if the original motion planning goal is zero.
-        return (vbuff < self.ORIG_VEL_THR).all()
+        return (avg_orig_mag < self.ORIG_ZERO_VEL_THR).all()
 
-    def has_gridlocked(self, sample=True):
-        if 'norm_vel_safegoal' not in self.buffers:
-            self.buffers['norm_vel_safegoal'] = deque(maxlen=self.BUFFLEN)
+    def has_gridlocked(self):
+        if 'gridlocked_orig_vel' not in self.buffers:
+            self.buffers['gridlocked_orig_vel'] = deque(maxlen=self.BUFFLEN)
+        if 'gridlocked_safe_vel' not in self.buffers:
+            self.buffers['gridlocked_safe_vel'] = deque(maxlen=self.BUFFLEN)
 
-        if sample:
-            v = [np.linalg.norm((msg.vel.x, msg.vel.y, msg.vel.z))
-                    for (veh,msg) in self.vsafegoal.items()]
+        # for convenience (note, deque is mutable---'by ref')
+        buff_orig_vel = self.buffers['gridlocked_orig_vel']
+        buff_safe_vel = self.buffers['gridlocked_safe_vel']
 
-            self.buffers['norm_vel_safegoal'].append(v)
+        # sample signals we need to determine predicate
+        buff_orig_vel.append(self.sample_origgoal_speed_heading())
+        buff_safe_vel.append(self.sample_safegoal_speed_heading())
 
         # If we don't have enough data, we can't know the answer
-        if len(self.buffers['norm_vel_safegoal']) < self.BUFFLEN:
+        if len(buff_orig_vel) < self.BUFFLEN:
             return False
 
         # average each sample over vehicles
-        vbuff = np.array(self.buffers['norm_vel_safegoal']).mean(axis=0)
+        avg_orig_mag, avg_orig_ang = np.array(buff_orig_vel).mean(axis=0).T
+        avg_safe_mag, avg_safe_ang = np.array(buff_safe_vel).mean(axis=0).T
 
-        # the swarm is gridlocked if we haven't converged
-        # but the safe velocity commands are zero.
-        return (not self.has_converged(sample=False) and
-                    (vbuff < self.SAFE_VEL_THR).all())
+        # a vehicle is safety stopped when its safe speed is zero but its
+        # desired speed from motion planning in nonzero
+        safety_stop = np.logical_and(avg_safe_mag < self.SAFE_ZERO_VEL_THR,
+                                        avg_orig_mag > self.SAFE_ZERO_VEL_THR)
 
-    def has_left_gridlock(self, sample=True):
+        # a vehicle is safety avoiding when its safe speed direction is
+        # different than the motion planning speed direction
+        ang_diff = np.abs(self.wrapToPi(self.wrapToPi(avg_orig_ang)
+                                            - self.wrapToPi(avg_safe_ang)))
+        safety_avoid = (ang_diff > self.ANG_DIFF_THR)
+
+        # a vehicle is in collision avoidance mode if it is safety stopped
+        # or if is safety avoiding
+        # collision_avoidance = np.logical_or(safety_stop, safety_avoid)
+        collision_avoidance = safety_stop
+
+        # the swarm is gridlocked if there exists a vehicle that is
+        # in collision avoidance mode
+        return collision_avoidance.any()
+
+    def has_left_gridlock(self):
 
         # check if we are in gridlock
-        gridlocked = self.has_gridlocked(sample)
+        gridlocked = self.has_gridlocked()
 
         # If we don't have enough data, we can't know the answer
-        if len(self.buffers['norm_vel_safegoal']) < self.BUFFLEN:
+        if len(self.buffers['gridlocked_orig_vel']) < self.BUFFLEN:
             return False
 
         return not gridlocked
@@ -274,6 +295,27 @@ class Supervisor:
 
     def terminate(self):
         rospy.signal_shutdown("from state {}".format(S(self.last_state)))
+
+    #
+    # Helpers
+    #
+
+    def sample_origgoal_speed_heading(self):
+        return [(np.linalg.norm((msg.vector.x, msg.vector.y, msg.vector.z)),
+                    np.arctan2(msg.vector.y, msg.vector.x))
+                for (veh,msg) in self.voriggoal.items()]
+
+    def sample_safegoal_speed_heading(self):
+        return [(np.linalg.norm((msg.vel.x, msg.vel.y, msg.vel.z)),
+                    np.arctan2(msg.vel.y, msg.vel.x))
+                for (veh,msg) in self.vsafegoal.items()]
+
+    def wrapToPi(self, x):
+        return (x + np.pi) % (2 * np.pi) - np.pi
+
+    def wrapTo2Pi(self, x):
+        return x % (2 * np.pi)
+
 
 
 if __name__ == '__main__':
