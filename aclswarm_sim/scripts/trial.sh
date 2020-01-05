@@ -3,13 +3,20 @@
 # Get path to the directory of this file, no matter where it is sourced from
 MYPATH=$(dirname ${BASH_SOURCE[0]})
 
-n=15    # number of agents
+# n=6   # number of agents --- deduced from formation
 w=20    # width of initialization area
 h=20    # height of initialization area
 r=0.75  # buffer radius btwn initializations
 
 formparam="$MYPATH/../param/formations.yaml"
-formation=mitacl15
+formation=$1
+
+if [ -z "$formation" ]; then
+  echo
+  echo "A formation group is required"
+  echo
+  exit 1
+fi
 
 #
 # Start ROS
@@ -20,7 +27,7 @@ if pgrep -x roscore > /dev/null ; then
   echo
   echo "A roscore is already running. Shutdown roscore and try again."
   echo
-  exit 1
+  exit 2
 fi
 
 roscore >/dev/null 2>&1 &
@@ -29,6 +36,13 @@ sleep 1 # wait for roscore to initialize
 #
 # Start Operator
 #
+
+# set formation
+rosparam load "$formparam" operator
+rosparam set /operator/formation_group "$formation"
+
+# retrieve how many agents are needed for this formation
+n=$(rosparam get "/operator/${formation}/agents")
 
 # set vehicle list as a rosparam (SQ00s)
 for i in $(seq -f "%02g" 1 $n); do
@@ -40,11 +54,6 @@ for i in $(seq -f "%02g" 1 $n); do
   fi
 done
 rosparam set /vehs "[$tmp]"
-
-# set formation
-rosparam load "$formparam" operator
-rosparam set /operator/formation_group "$formation"
-
 
 roslaunch aclswarm_sim headless_operator.launch >/dev/null 2>&1 &
 
