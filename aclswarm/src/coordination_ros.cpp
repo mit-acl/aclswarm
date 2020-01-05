@@ -287,7 +287,7 @@ void CoordinationROS::sendBidCb(uint32_t auctionid, uint32_t iter,
 void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 {
   // are we ready to start a new auction?
-  if ((ros::Time::now() - startauction_).toNSec() < 0) return;
+  if (ros::Time::now() < startauction_) return;
 
   // set the time of the next autoauction
   startauction_ = ros::Time::now() + ros::Duration(autoauction_dt_);
