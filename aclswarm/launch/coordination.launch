@@ -21,7 +21,7 @@
       <param name="control_dt" value="0.01" />
 
       <!-- auctioneer parameters -->
-      <param name="form_settle_time" value="1.5" />
+      <param name="form_settle_time" value="5" />
       <param name="verbose" value="false" />
 
       <param name="cntrl/K" value="8.0" />

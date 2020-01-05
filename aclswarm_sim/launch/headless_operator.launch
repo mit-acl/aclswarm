@@ -20,5 +20,6 @@
     <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
         <param name="distcmds" value="true" />
         <param name="safecmds" value="true" />
+        <param name="mesh" value="true" />
     </node>
 </launch>
