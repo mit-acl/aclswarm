@@ -105,7 +105,8 @@ done
 # quad sim
 #
 
-echo "Starting vehicle sims$rtxt"
+echo -e "\e[33;1mStarting Simulation\e[0m"
+echo -e $rtxt
 make_tmux_session sims $num
 
 # generate initialization points if needed
@@ -117,7 +118,6 @@ fi
 
 for _sim in $(eval echo {01..$num}); do
   _pane=`echo "$_sim - 1" | bc`
-  echo "Starting sim $_sim"
   if [ -z "$rtxt" ]; then
     x=$(echo "($_pane % 5) * 1.5 - 4" | bc)
     y=$(echo "($_pane / 5) * 1.5" | bc)
@@ -135,12 +135,10 @@ tmux set-window-option -t sims:0 synchronize-panes on
 # aclswarm stack
 #
 
-echo "Starting aclswarm nodes"
 make_tmux_session aclswarm $num
 
 for _sim in $(eval echo {01..$num}); do
   _pane=`echo "$_sim - 1" | bc`
-  echo "Starting aclswarm $_sim"
   _veh="SQ${_sim}s"
   tmux send-keys -t aclswarm:0.${_pane} "roslaunch aclswarm start.launch veh:=$_veh leader:=0" C-m
 done
