@@ -75,7 +75,7 @@ class VizCommands:
 
         for i in range(self.n):
             m = Marker()
-            m.header = None
+            m.header.frame_id = self.vehs[i]
             m.ns = 'mesh'
             m.id = i*10
             m.type = Marker.MESH_RESOURCE
