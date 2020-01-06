@@ -8,10 +8,11 @@ from collections import deque
 import rospy
 import numpy as np; np.set_printoptions(linewidth=500)
 
-from behavior_selector.srv import MissionModeChange
-from acl_msgs.msg import QuadGoal, ViconState
 from std_msgs.msg import UInt8MultiArray
 from geometry_msgs.msg import Vector3Stamped
+from aclswarm_msgs.msg import SafetyStatus
+from behavior_selector.srv import MissionModeChange
+from acl_msgs.msg import QuadGoal, ViconState
 
 class State:
     IDLE = 1
@@ -50,8 +51,7 @@ class Supervisor:
     # thresholds
     ZERO_POS_THR = 0.05 # m
     ORIG_ZERO_VEL_THR = 1.00 # m/s
-    SAFE_ZERO_VEL_THR = 0.15 # m/s
-    ANG_DIFF_THR = np.pi/60.0 # 3 degrees
+    AVG_ACTIVE_CA_THR = 0.95 # percent
 
     def __init__(self):
 
@@ -77,6 +77,7 @@ class Supervisor:
         self.vstates = {}
         self.voriggoal = {}
         self.vsafegoal = {}
+        self.vstatus = {}
 
         for idx, veh in enumerate(self.vehs):
             # ground truth state of each vehicle
@@ -88,6 +89,9 @@ class Supervisor:
             # the safe, collision-free version of the motion planner vel goal
             rospy.Subscriber('/{}/goal'.format(veh), QuadGoal,
                     lambda msg, v=veh: self.safeGoalCb(msg, v), queue_size=1)
+            # status flags from Safety goal (i.e., collision avoidance active)
+            rospy.Subscriber('/{}/safety/status'.format(veh), SafetyStatus,
+                    lambda msg, v=veh: self.statusCb(msg, v), queue_size=1)
 
             # we only need one subscriber for the following
             if idx == 0:
@@ -127,6 +131,9 @@ class Supervisor:
 
     def assignmentCb(self, msg, veh):
         self.received_assignment = True
+
+    def statusCb(self, msg, veh):
+        self.vstatus[veh] = msg
 
     #
     # State Machine
@@ -243,46 +250,25 @@ class Supervisor:
         return (avg_orig_mag < self.ORIG_ZERO_VEL_THR).all()
 
     def has_gridlocked(self):
-        if 'gridlocked_orig_vel' not in self.buffers:
-            self.buffers['gridlocked_orig_vel'] = deque(maxlen=self.BUFFLEN)
-        if 'gridlocked_safe_vel' not in self.buffers:
-            self.buffers['gridlocked_safe_vel'] = deque(maxlen=self.BUFFLEN)
+        if 'gridlocked_active_ca' not in self.buffers:
+            self.buffers['gridlocked_active_ca'] = deque(maxlen=self.BUFFLEN)
 
         # for convenience (note, deque is mutable---'by ref')
-        buff_orig_vel = self.buffers['gridlocked_orig_vel']
-        buff_safe_vel = self.buffers['gridlocked_safe_vel']
+        buff_active_ca = self.buffers['gridlocked_active_ca']
 
         # sample signals we need to determine predicate
-        buff_orig_vel.append(self.sample_origgoal_speed_heading())
-        buff_safe_vel.append(self.sample_safegoal_speed_heading())
+        buff_active_ca.append(self.sample_collision_avoidance_active())
 
         # If we don't have enough data, we can't know the answer
-        if len(buff_orig_vel) < self.BUFFLEN:
+        if len(buff_active_ca) < self.BUFFLEN:
             return False
 
         # average each sample over vehicles
-        avg_orig_mag, avg_orig_ang = np.array(buff_orig_vel).mean(axis=0).T
-        avg_safe_mag, avg_safe_ang = np.array(buff_safe_vel).mean(axis=0).T
-
-        # a vehicle is safety stopped when its safe speed is zero but its
-        # desired speed from motion planning in nonzero
-        safety_stop = np.logical_and(avg_safe_mag < self.SAFE_ZERO_VEL_THR,
-                                        avg_orig_mag > self.SAFE_ZERO_VEL_THR)
-
-        # a vehicle is safety avoiding when its safe speed direction is
-        # different than the motion planning speed direction
-        ang_diff = np.abs(self.wrapToPi(self.wrapToPi(avg_orig_ang)
-                                            - self.wrapToPi(avg_safe_ang)))
-        safety_avoid = (ang_diff > self.ANG_DIFF_THR)
-
-        # a vehicle is in collision avoidance mode if it is safety stopped
-        # or if is safety avoiding
-        # collision_avoidance = np.logical_or(safety_stop, safety_avoid)
-        collision_avoidance = safety_stop
+        avg_active_ca = np.array(buff_active_ca).mean(axis=0).T
 
         # the swarm is gridlocked if there exists a vehicle that is
-        # in collision avoidance mode
-        return collision_avoidance.any()
+        # on average in collision avoidance mode for too long
+        return (avg_active_ca > self.AVG_ACTIVE_CA_THR).any()
 
     def has_left_gridlock(self):
 
@@ -290,7 +276,7 @@ class Supervisor:
         gridlocked = self.has_gridlocked()
 
         # If we don't have enough data, we can't know the answer
-        if len(self.buffers['gridlocked_orig_vel']) < self.BUFFLEN:
+        if len(self.buffers['gridlocked_active_ca']) < self.BUFFLEN:
             return False
 
         return not gridlocked
@@ -336,6 +322,10 @@ class Supervisor:
         return [(np.linalg.norm((msg.vel.x, msg.vel.y, msg.vel.z)),
                     np.arctan2(msg.vel.y, msg.vel.x))
                 for (veh,msg) in self.vsafegoal.items()]
+
+    def sample_collision_avoidance_active(self):
+        return [msg.collision_avoidance_active
+                for (veh,msg) in self.vstatus.items()]
 
     def wrapToPi(self, x):
         return (x + np.pi) % (2 * np.pi) - np.pi
