@@ -57,7 +57,6 @@ class Supervisor:
 
         # General swarm information
         self.vehs = rospy.get_param('/vehs')
-        rospy.loginfo('Using vehicles: {}'.format(self.vehs))
 
         # formation information
         formation_group = rospy.get_param('/operator/formation_group')

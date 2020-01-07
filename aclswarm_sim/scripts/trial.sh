@@ -67,7 +67,7 @@ rosparam set /vehs "[$tmp]"
 
 roslaunch aclswarm_sim headless_operator.launch >/dev/null 2>&1 &
 
-rviz >/dev/null 2>&1 &
+# rviz >/dev/null 2>&1 &
 
 #
 # Start swarm simulations

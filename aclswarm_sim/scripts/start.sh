@@ -112,8 +112,8 @@ make_tmux_session sims $num
 # generate initialization points if needed
 if [ ! -z "$rtxt" ]; then
   draw_nonoverlapping_circles $num $r $w $h
-  echo "X: ${circles_x[@]}"
-  echo "Y: ${circles_y[@]}"
+  # echo "X: ${circles_x[@]}"
+  # echo "Y: ${circles_y[@]}"
 fi
 
 for _sim in $(eval echo {01..$num}); do

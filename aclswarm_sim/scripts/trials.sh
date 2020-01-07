@@ -3,6 +3,14 @@
 # Get path to the directory of this file, no matter where it is sourced from
 MYPATH=$(dirname ${BASH_SOURCE[0]})
 
+_trap() {
+  kill -INT "$trialpid"
+  wait "$trialpid"
+  exit 1
+}
+
+trap _trap INT
+
 usage="$(basename "$0") [-h] -m <#> -f <formation> -n <name> -- perform m simulation trials
 
 where:
@@ -52,7 +60,9 @@ for i in $(seq 1 $m); do
   # zero pad based on total number of trials
   printf -v j "%0${#m}d" $i
 
-  bash $MYPATH/trial.sh $formation_group "${name}$j"
+  rosrun aclswarm_sim trial.sh $formation_group "${name}$j" &
+  trialpid=$!
+  wait $trialpid
 
   sleep 1
 done
