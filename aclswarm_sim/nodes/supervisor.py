@@ -42,7 +42,7 @@ class Supervisor:
 
     # times for state machine---in units of seconds
     SIM_INIT_TIMEOUT = 10
-    TAKE_OFF_TIMEOUT = 5
+    TAKE_OFF_TIMEOUT = 10
     HOVER_WAIT = 5
     CBAA_TIMEOUT = 10
     FORMATION_RECEIVED_WAIT = 5

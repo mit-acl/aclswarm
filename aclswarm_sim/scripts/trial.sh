@@ -11,6 +11,16 @@ r=0.75  # buffer radius btwn initializations
 formparam="$MYPATH/../param/formations.yaml"
 formation=$1
 
+# allow caller to add a trial name, like 'afc0001'
+# otherwise, the datetime will be used
+if [[ -z $2 ]]; then
+  bagflag="-o"
+  trialname=
+else
+  bagflag="-O"
+  trialname="_$2"
+fi
+
 if [ -z "$formation" ]; then
   echo
   echo "A formation group is required"
@@ -63,16 +73,20 @@ rviz >/dev/null 2>&1 &
 # Start swarm simulations
 #
 
-cd $MYPATH
-bash start.sh -n $n -r "${w}x${h}x${r}" -x
+rosrun aclswarm_sim start.sh -n $n -r "${w}x${h}x${r}" -x
 
-sleep 3 # wait for system bring up
+sleep 5 # wait for system bring up
 
 #
 # Simulation trial
 #
 
+rosrun aclswarm_sim bag_record.sh "$bagflag" "$formation$trialname" __name:=bagrecorder >/dev/null 2>&1 &
+
 rosrun aclswarm_sim supervisor.py
+
+rosnode kill /bagrecorder
+sleep 1
 
 #
 # Cleanup
@@ -89,5 +103,6 @@ pkill -x -9 quad_controller
 pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety
+pkill -f -9 static_transform_publisher
 pkill -x -9 rosmaster
 pkill -x -9 rosout
