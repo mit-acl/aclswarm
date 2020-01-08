@@ -51,6 +51,10 @@ if [[ -z $name ]]; then
   name=
 fi
 
+if [ -f aclswarm_trials.csv ]; then
+  mv aclswarm_trials.csv aclswarm_trials.csv.bak
+fi
+
 for i in $(seq 1 $m); do
 
   echo

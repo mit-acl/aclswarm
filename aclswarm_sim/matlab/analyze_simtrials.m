@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Analyze simulation trial data and generate a row of results for aclswarm
+% Analyze simulation trial data and generate results for aclswarm
 %
 %
 % Parker Lusk
@@ -12,41 +12,26 @@ exfig = 0;
 % -------------------------------------------------------------------------
 % Setup
 
-n = 15;                         % number of vehicles simulated
-m = 10;                         % number of sim trials to process (1..m)
-bagpath = './trials/';          % directory of bags
-bagprefix = 'mitacl15_afc_';    % prefix of bags to process
-vehfun = @(n) ['SQ' n 's'];     % how to build a vehname topic
-
-% signal smoothing
-tau = 2;        % time constant [s] for LPF
-
-% initialize variables
-dist = zeros(m,n);
-
+m = 10;                              % total number of sim trials
+file = 'trials/aclswarm_trials.csv'; % data file to process
 
 % -------------------------------------------------------------------------
 % Load and process data
 
-for trial = 1:m
-    % build bag name with zero-padded number
-    zptrial = sprintf(['%0' num2str(length(num2str(65))) 'd'], trial);
-    bagname = [bagpath bagprefix zptrial '.bag'];
-    
-    % Load flight data
-    fprintf('Loading trial %d\n', trial);
-    vehs = readACLBag(vehfun, bagname);
-    
-    vname = fieldnames(vehs);
-    for i = 1:numel(vname)       
-        % calculate how many samples to smooth over
-        k = ceil(tau/mean(abs(diff(vehs.(vname{i}).state.t))));
+data = csvread(file);
 
-        % smooth over translation
-        d = sum(abs(diff(movmean(vehs.(vname{i}).state.pos',k,'Endpoints',0))));
-        dist(trial, i) = norm([d(1) d(2)]);
-    end    
-end
+successful_trials = size(data,1);
+completion = 100 * successful_trials / m;
+dist = data(:,1:end-1);
+time = data(:,end);
 
-% -------------------------------------------------------------------------
-% Calculate statistics
+% average swarm distance traveled
+avgdist = mean(dist,2);
+
+fprintf('Completion: %0.02f %%\n', completion);
+fprintf('Average Time: %0.02f seconds\n', mean(time));
+fprintf('Average Distance\n');
+fprintf('\tmin: %0.02f meters\n', min(avgdist));
+fprintf('\tavg: %0.02f meters\n', mean(avgdist));
+fprintf('\tstd: %0.02f meters\n', std(avgdist));
+fprintf('\tmax: %0.02f meters\n', max(avgdist));

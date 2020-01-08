@@ -81,12 +81,12 @@ sleep 5 # wait for system bring up
 # Simulation trial
 #
 
-rosrun aclswarm_sim bag_record.sh "$bagflag" "$formation$trialname" __name:=bagrecorder >/dev/null 2>&1 &
+# rosrun aclswarm_sim bag_record.sh "$bagflag" "$formation$trialname" __name:=bagrecorder >/dev/null 2>&1 &
 
 rosrun aclswarm_sim supervisor.py
 
-rosnode kill /bagrecorder
-sleep 1
+# rosnode kill /bagrecorder
+# sleep 1
 
 #
 # Cleanup

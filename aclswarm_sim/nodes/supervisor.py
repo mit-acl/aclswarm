@@ -3,6 +3,7 @@
 from __future__ import division
 
 import time
+import csv
 from collections import deque
 
 import rospy
@@ -21,7 +22,8 @@ class State:
     WAITING_ON_ASSIGNMENT = 4
     FLYING = 5
     GRIDLOCK = 6
-    TERMINATE = 7
+    COMPLETE = 7
+    TERMINATE = 8
 
 
 def S(state):
@@ -33,6 +35,7 @@ def S(state):
     if state == State.WAITING_ON_ASSIGNMENT: return "WAITING_ON_ASSIGNMENT"
     if state == State.FLYING: return "FLYING"
     if state == State.GRIDLOCK: return "GRIDLOCK"
+    if state == State.COMPLETE: return "COMPLETE"
     if state == State.TERMINATE: return "TERMINATE"
 
 
@@ -45,8 +48,8 @@ class Supervisor:
     TAKE_OFF_TIMEOUT = 10
     HOVER_WAIT = 5
     CBAA_TIMEOUT = 10
-    FORMATION_RECEIVED_WAIT = 5
-    GRIDLOCK_TIMEOUT = 60
+    FORMATION_RECEIVED_WAIT = 1
+    GRIDLOCK_TIMEOUT = 120
 
     # thresholds
     ZERO_POS_THR = 0.05 # m
@@ -69,10 +72,14 @@ class Supervisor:
         self.takeoff_alt = rospy.get_param('/{}/safety/takeoff_alt'.
                                                 format(self.vehs[0]))
 
+        # for signal smoothing
+        self.alpha =  0.98
+
         # ROS connections
         rospy.wait_for_service('change_mode')
         self.change_mode = rospy.ServiceProxy('change_mode', MissionModeChange)
 
+        self.log = {}
         self.vstates = {}
         self.voriggoal = {}
         self.vsafegoal = {}
@@ -105,6 +112,7 @@ class Supervisor:
         self.curr_formation_idx = -1
         self.received_assignment = False
         self.tick_rate = 50
+        self.is_logging = False
 
         # ring buffers for checking windowed signal averages
         self.BUFFLEN = self.BUFFER_SECONDS * self.tick_rate
@@ -163,13 +171,14 @@ class Supervisor:
         elif self.state is State.HOVERING:
             if self.has_elapsed(self.HOVER_WAIT):
                 if self.has_cycled_through_formations():
-                    self.next_state(State.TERMINATE)
+                    self.next_state(State.COMPLETE)
                 else:
                     self.next_formation()
                     self.next_state(State.WAITING_ON_ASSIGNMENT)
 
         elif self.state is State.WAITING_ON_ASSIGNMENT:
             if self.has_set_assignment():
+                self.start_logging()
                 self.next_state(State.FLYING)
             elif self.has_elapsed(self.CBAA_TIMEOUT):
                 self.next_state(State.TERMINATE)
@@ -177,6 +186,7 @@ class Supervisor:
         elif self.state is State.FLYING:
             if self.has_elapsed(self.FORMATION_RECEIVED_WAIT):
                 if self.has_converged():
+                    self.stop_logging()
                     self.next_state(State.HOVERING)
                 elif self.has_gridlocked():
                     self.next_state(State.GRIDLOCK)
@@ -187,8 +197,18 @@ class Supervisor:
             elif self.has_elapsed(self.GRIDLOCK_TIMEOUT):
                 self.next_state(State.TERMINATE)
 
+        elif self.state is State.COMPLETE:
+            self.complete()
+
         elif self.state is State.TERMINATE:
             self.terminate()
+
+        #
+        # Log signals
+        #
+
+        if self.is_logging:
+            self.log_signals()
 
     def next_state(self, state):
         self.last_state = self.state
@@ -305,6 +325,31 @@ class Supervisor:
         # request operator to send next formation
         self.change_mode(MissionModeChange._request_class.START)
 
+    def start_logging(self):
+        if self.is_logging: return
+        self.is_logging = True
+
+        # initialize time
+        self.log['time_start'] = rospy.Time.now()
+
+    def stop_logging(self):
+        if not self.is_logging: return
+        self.is_logging = False
+
+        # update timing
+        if 'time' not in self.log:
+            self.log['time'] = 0.0
+        self.log['time'] += (rospy.Time.now() - self.log['time_start']).to_sec()
+
+    def complete(self):
+
+        # write logs to file
+        with open(r'aclswarm_trials.csv', 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(self.log['dist'].tolist() + [self.log['time']])
+
+        rospy.signal_shutdown("trial completed successfully")
+
     def terminate(self):
         rospy.signal_shutdown("from state {}".format(S(self.last_state)))
 
@@ -326,12 +371,47 @@ class Supervisor:
         return [msg.collision_avoidance_active
                 for (veh,msg) in self.vstatus.items()]
 
+    def sample_position_x(self):
+        return [msg.pose.position.x
+                for (veh,msg) in self.vstates.items()]
+
+    def sample_position_y(self):
+        return [msg.pose.position.y
+                for (veh,msg) in self.vstates.items()]
+
     def wrapToPi(self, x):
         return (x + np.pi) % (2 * np.pi) - np.pi
 
     def wrapTo2Pi(self, x):
         return x % (2 * np.pi)
 
+    def log_signals(self):
+        # sample the necessary signals
+        x = np.array(self.sample_position_x())
+        y = np.array(self.sample_position_y())
+
+        # initialize filters
+        if 'position_x' not in self.log:
+            self.log['position_x'] = x
+        if 'position_y' not in self.log:
+            self.log['position_y'] = y
+        if 'dist' not in self.log:
+            self.log['dist'] = np.zeros_like(x)
+
+        #
+        # Signal Smoothing
+        #
+
+        lastx = self.log['position_x']
+        self.log['position_x'] = self.alpha*lastx + (1-self.alpha)*x
+        dx = np.abs(self.log['position_x'] - lastx)
+
+        lasty = self.log['position_y']
+        self.log['position_y'] = self.alpha*lasty + (1-self.alpha)*y
+        dy = np.abs(self.log['position_y'] - lasty)
+
+        # accumulate total planar distance traveled
+        self.log['dist'] += np.sqrt(dx**2 + dy**2)
 
 
 if __name__ == '__main__':
