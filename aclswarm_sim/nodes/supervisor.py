@@ -49,7 +49,7 @@ class Supervisor:
     HOVER_WAIT = 5
     CBAA_TIMEOUT = 10
     FORMATION_RECEIVED_WAIT = 1
-    GRIDLOCK_TIMEOUT = 120
+    GRIDLOCK_TIMEOUT = 90
 
     # thresholds
     ZERO_POS_THR = 0.05 # m
@@ -330,23 +330,25 @@ class Supervisor:
         self.is_logging = True
 
         # initialize time
-        self.log['time_start'] = rospy.Time.now()
+        if 'time' not in self.log:
+            self.log['time'] = []
+
+        self.log['time'] += [rospy.Time.now()]
 
     def stop_logging(self):
         if not self.is_logging: return
         self.is_logging = False
 
         # update timing
-        if 'time' not in self.log:
-            self.log['time'] = 0.0
-        self.log['time'] += (rospy.Time.now() - self.log['time_start']).to_sec()
+        self.log['time'][-1] = (rospy.Time.now()-self.log['time'][-1]).to_sec()
+        rospy.loginfo("Convergence time: {:.2f}".format(self.log['time'][-1]))
 
     def complete(self):
 
         # write logs to file
         with open(r'aclswarm_trials.csv', 'a') as f:
             writer = csv.writer(f)
-            writer.writerow(self.log['dist'].tolist() + [self.log['time']])
+            writer.writerow(self.log['dist'].tolist() + self.log['time'])
 
         rospy.signal_shutdown("trial completed successfully")
 
