@@ -2,18 +2,21 @@
 % 
 % Inputs:
 %
-%       - qs :  Desired formation coordinates (vector with 2*n elements)
+%       - Qs :  Desired formation coordinates (2*n matrix, each column representing coordinate of formation point)
 %       - adj:  Graph adjacency matrix (n*n logical matrix)
 %
 % Outputs:
 %
-%       - Lr : Laplacian gain matrix
-%       - Lf : Complex representation of the Laplacian matrix
+%       - Ar : Laplacina gain matrix
+%       - Ac : Complex representation of the Laplacian matrix
 %
 % (C) Tyler Summers and Kaveh Fathian, 2017-2018.
 %  tyler.summers@utdallas.edu, kaveh.fathian@gmail.com
 %
-function [Ar, Ac] = FindGains(qs, adj) 
+function [Ar, Ac] = SDPGainDesign2D(Qs, adj) 
+
+% Make a vector out of formation points
+qs = Qs(:);
 
 % Number of agents
 n = size(adj,1);
@@ -31,25 +34,41 @@ Q = U(:,3:n);
 S = not(adj);
 S = S - diag(diag(S));
 
+m = n - 2;
+
 % Solve via CVX
 % NOTE: CVX must be downloaded and installed. See http://cvxr.com/cvx/
 cvx_begin sdp
-    variable A(n,n) hermitian
-%     minimize( trace_inv( Q'*A*Q ) )
-    maximize( lambda_min( Q'*A*Q ) )
-%     maximize( log_det( Q'*A*Q) )
+    cvx_precision low
+    variable X(n-2,n-2) hermitian
+    maximize( lambda_min( X ) )
     subject to
-        A*[z ones(n,1)] == 0+ 1i*0;
-        norm(A) <= 10;
-        A.*S == 0;
+        (Q*X*Q') .* S == 0; % For agents that are not neighbors
+        trace(X) == m;
 cvx_end
+
+
+A = Q * X * Q';
 
 Ac = -full(A);    % Complex gain matrix
 Ar = A_C2R(Ac);   % Real represnetation of gain matrix
 
-% Normalize A
-Ar = Ar ./ max(abs(Ar(:)));
+
+
+%% Check answer 
+
+% eig(Ar)
+
+% Normalize A 
+% Ar = Ar ./ max(abs(Ar(:)));
+
+% eigVec = abs(eig(Ar));
+% Ar = Ar ./ min(eigVec);
 
 % e = eig(Ac)
 % [Vl,Dl] = eig(Ac)
 % Ac * z
+
+
+
+
