@@ -88,29 +88,50 @@ def align(q, p):
 
     return paligned
 
-def find_optimal_assignment(q, p):
+def find_optimal_assignment(q, p, last=None):
     """
     Finds the optimal assignment between swarm vehicles and the desired formation
 
     in:
-      q   dxn np.array (d is 2D or 3D) - current state
-      p   dxn np.array                 - desired formation
+      q     dxn np.array (d is 2D or 3D) - current state
+      p     dxn np.array                 - desired formation
+      last  length-n list, last assignment (perm vector maps vehid to formpt).
+            If None, assume identity map.
     out:
       P   length-n list, permutation vector that maps vehid to formpt
     """
 
-    # align the desired formation to the swarm
-    paligned = align(q, p)
+    #
+    # Alignment (uses last assignment)
+    #
+
+    # create identity map if there was no last assignment
+    if last is None:
+        last = [i for i in range(q.shape[1])]
+
+    # create a vector so that indices are aligned with assignment
+    qq = np.zeros_like(q)
+    for (vehid,formpt) in enumerate(last):
+        qq[:,formpt] = q[:,vehid]
+
+    # align the desired formation to the swarm (using current assignment)
+    paligned = align(qq, p)
+
+    #
+    # Assignment (maps original vehid to formpt)
+    #
 
     # construct pairwise-distance matrix to use as cost
     # n.b.: vehid changes per row, so col_ind tells us which task for vehid
+    # n.b.: we are creating a cost btwn vehicles and formpts; this will NOT
+    #       create an incremental permutation.
     S = cdist(q.T, paligned.T)
 
     # find the optimal assignment via Hungarian
     # n.b.: P is a rowvec that maps vehid to formpt
     _, P = linear_sum_assignment(S)
 
-    return P.tolist()
+    return P.tolist(), paligned
 
 # -----------------------------------------------------------------------------
 # Test Code
@@ -131,7 +152,7 @@ def test_align(q, p):
 def test_assign(q, p):
     print(find_optimal_assignment(q, p))
 
-def plot_swarm(q, pa, P):
+def plot_swarm(q, pa, P=None):
     # how many agents in swarm
     n = q0.shape[1]
 
@@ -148,11 +169,14 @@ def plot_swarm(q, pa, P):
     for i in range(n):
         plt.annotate(str(i+1), xy=(pa[0,i], pa[1,i]), ha='center', va='center', fontsize=11, weight="bold")
 
-    # Apply the assignment
-    # n.b., the assignment maps vehid to formpt; however, when used to index
-    # into a list, it becomes the inverse perm. Thus, we bring the formpts
-    # into order with the vehicles.
-    paa = pa[:,P]
+    if P is not None:
+        # Apply the assignment
+        # n.b., the assignment maps vehid to formpt; however, when used to index
+        # into a list, it becomes the inverse perm. Thus, we bring the formpts
+        # into order with the vehicles.
+        paa = pa[:,P]
+    else:
+        paa = pa
 
     # plot assignment lines
     for i in range(n):
@@ -257,20 +281,18 @@ if __name__ == '__main__':
     #
 
     pa0 = align(q0, p)
-    Peye = [i for i in range(pa0.shape[1])]
 
     plt.figure(1)
     plt.title('Without Assignment')
     plt.grid(alpha=0.3)
     plt.axis('equal')
-    plot_swarm(q0, pa0, Peye)
+    plot_swarm(q0, pa0)
 
     #
     # Plot the swarm, just after new formation, with assignment
     #
 
-    pa0 = align(q0, p)
-    P0 = find_optimal_assignment(q0, p)
+    P0, pa0 = find_optimal_assignment(q0, p, last=None)
     print(P0)
 
     plt.figure(2)
@@ -279,12 +301,16 @@ if __name__ == '__main__':
     plt.axis('equal')
     plot_swarm(q0, pa0, P0)
 
+    # -------------------------------------------------------------------------
+
     #
     # Plot the swarm, on its way into formation, with new assignment
     #
 
-    pa1 = align(q1, p)
-    P1 = find_optimal_assignment(q1, p)
+    # Note: the following three are from an experiment separate from
+    # the previous two. This is why last=None.
+
+    P1, pa1 = find_optimal_assignment(q1, p, last=None)
     print(P1)
 
     plt.figure(3)
@@ -297,8 +323,7 @@ if __name__ == '__main__':
     # Plot the swarm, on its way into formation, with new assignment
     #
 
-    pa2 = align(q2, p)
-    P2 = find_optimal_assignment(q2, p)
+    P2, pa2 = find_optimal_assignment(q2, p, last=P1)
     print(P2)
 
     plt.figure(4)
@@ -311,8 +336,7 @@ if __name__ == '__main__':
     # Plot the swarm, on its way into formation, with new assignment
     #
 
-    pa3 = align(q3, p)
-    P3 = find_optimal_assignment(q3, p)
+    P3, pa3 = find_optimal_assignment(q3, p, last=P2)
     print(P3)
 
     plt.figure(5)
