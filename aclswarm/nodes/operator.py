@@ -7,13 +7,14 @@ import rospy
 import numpy as np
 
 from std_msgs.msg import UInt8MultiArray, MultiArrayDimension
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
-from acl_msgs.msg import QuadFlightMode
+from acl_msgs.msg import QuadFlightMode, ViconState
 from aclswarm_msgs.msg import Formation
 from behavior_selector.srv import MissionModeChange
 
 from aclswarm.control import createGainMatrix
+from aclswarm.assignment import find_optimal_assignment
 
 NOT_FLYING = 0
 FLYING = 1
@@ -44,7 +45,7 @@ class Operator:
             raise rospy.ROSInitException()
         fnames = ', '.join([f['name'] for f in self.formations['formations']])
         rospy.loginfo('Using formation group \'{}\': {}'.format(formation_group, fnames))
-        self.formidx = 0 # for cycling through formations in the group
+        self.formidx = -1 # for cycling through formations in the group
 
         # Behavior selector and flight status management
         self.status = NOT_FLYING
@@ -57,6 +58,27 @@ class Operator:
             '/formation', Formation, queue_size=10)
         self.pubMarker = rospy.Publisher(
             "/highbay", MarkerArray, queue_size=1, latch=True)
+
+        # Handle centralized assignment --- only for comparison
+        self.central_assignment = rospy.get_param('~central_assignment', False)
+        self.assignment_dt = rospy.get_param('~central_assignment_dt', 0.75)
+        self.new_formation = False # always send assignment on a new formation
+        self.formation_sent = False # we are computing a new formation
+        if self.central_assignment:
+            rospy.logwarn('Generating centralized assignment')
+            # initialize with identity assignment
+            self.last_assignment = [i for i in range(self.n)]
+
+            # ground truth state of each vehicle
+            self.poses = {}
+            for idx,veh in enumerate(self.vehs):
+                rospy.Subscriber('/{}/vicon'.format(veh), ViconState,
+                        lambda msg, i=idx: self.poseCb(msg, i), queue_size=1)
+
+            self.tim_sendassign = rospy.Timer(rospy.Duration(self.assignment_dt),
+                                                self.sendAssignmentCb)
+            self.pub_assignment = rospy.Publisher('/central_assignment',
+                                                UInt8MultiArray, queue_size=1)
 
         # Safety bounds for visualization
         self.xmax = rospy.get_param('/room_bounds/x_max', 0.0)
@@ -94,6 +116,13 @@ class Operator:
         return True
 
     def pubFormation(self):
+        # Cycle through formations (starts at -1)
+        self.formidx += 1
+        self.formidx %= len(self.formations['formations'])
+
+        # only relevant when we are sending assignments
+        self.formation_sent = False
+
         formation = self.formations['formations'][self.formidx]
         rospy.loginfo('\033[34;1mFormation: {}\033[0m'.format(formation['name']))
 
@@ -101,15 +130,18 @@ class Operator:
         msg = self.buildFormationMessage(adjmat, formation)
         self.formationPub.publish(msg)
 
-        # Cycle through formations
-        self.formidx += 1
-        self.formidx %= len(self.formations['formations'])
+        # only relevant when we are sending assignments
+        self.new_formation = True
+        self.formation_sent = True
+
+    def getPoints(self, formation):
+        scale = float(formation['scale']) if 'scale' in formation else 1.0
+        return scale * np.array(formation['points'], dtype=np.float32)
 
     def buildFormationMessage(self, adjmat, formation):
 
         # formation-related matrices
-        scale = float(formation['scale']) if 'scale' in formation else 1.0
-        pts = scale * np.array(formation['points'], dtype=np.float32)
+        pts = self.getPoints(formation)
         adjmat = np.array(adjmat, dtype=np.uint8)
 
         msg = Formation()
@@ -161,6 +193,47 @@ class Operator:
 
         msg.header.stamp = rospy.Time.now()
         return msg
+
+    def poseCb(self, msg, i):
+        # n.b., this is only used when sending centralized assignments
+        # n.b., we are using the index of this vehicle in the /vehs list
+        # so that we create `q` with the correct order.
+        self.poses[i] = msg
+
+    def sendAssignmentCb(self, event=None):
+        """
+        This is only used for comparison to distributed ACLswarm assignment.
+
+        Note: Although this callback has its own period, assignments will
+                note take effect until every `autoauction_dt`.
+                See coordination.launch.
+        """
+
+        # nothing to do if we haven't sent a formation
+        if not self.formation_sent: return
+
+        # construct matrix of swarm positions (3xn)
+        q = np.array([(msg.pose.position.x,
+                        msg.pose.position.y,
+                        msg.pose.position.z)
+                            for (veh,msg) in self.poses.items()]).T
+        p = self.getPoints(self.formations['formations'][self.formidx]).T
+
+        if q.shape[1] != p.shape[1]:
+            # we don't have everyone's pose yet
+            return
+
+        # use global swarm state to find optimal assignment via Hungarian
+        P = find_optimal_assignment(q, p) # for n = 15, takes 5-10 ms
+
+        if P != self.last_assignment or self.new_formation:
+            # Publish to the swarm
+            msg = UInt8MultiArray()
+            msg.data = P
+            self.pub_assignment.publish(msg)
+
+        self.last_assignment = P
+        self.new_formation = False
 
     def genEnvironment(self):
 

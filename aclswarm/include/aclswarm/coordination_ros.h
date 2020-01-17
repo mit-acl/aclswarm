@@ -46,7 +46,7 @@ namespace aclswarm {
     ros::CallbackQueue task_queue_;
     std::unique_ptr<ros::AsyncSpinner> spinner_;
     ros::Timer tim_auctioneer_, tim_autoauction_, tim_control_;
-    ros::Subscriber sub_formation_, sub_tracker_;
+    ros::Subscriber sub_formation_, sub_tracker_, sub_central_assignment_;
     ros::Publisher pub_distcmd_, pub_assignment_, pub_cbaabid_;
 
     uint8_t n_; ///< number of vehicles in swarm
@@ -68,8 +68,11 @@ namespace aclswarm {
     ros::Time formationsent_; ///< timestamp of when formation was sent
     ros::Time startauction_; ///< timestamp of when to start next auction
     bool first_assignment_; ///< indicates first assignment of a new formation
+    bool central_assignment_rcvd_; ///< used with central assignments
+    AssignmentPerm Pcentral_; ///< global assign. from centralized coordinator
 
     /// \brief Parameters
+    bool central_assignment_; ///< rcv global assignment (for sim testing)
     bool use_assignment_; ///< use auctioneer or just set identity assignment?
     double form_settle_time_; ///< time to wait after formation was sent
     double auctioneer_dt_; ///< period at which rcvd bids are processed
@@ -98,6 +101,7 @@ namespace aclswarm {
     void auctioneerCb(const ros::TimerEvent& event);
     void autoauctionCb(const ros::TimerEvent& event);
     void controlCb(const ros::TimerEvent& event);
+    void centralAssignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg);
 
     /// \brief Auctioneer callback handlers
     void newAssignmentCb(const AssignmentPerm& P);

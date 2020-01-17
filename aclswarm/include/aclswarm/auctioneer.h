@@ -99,9 +99,12 @@ namespace aclswarm {
     void tick();
 
     void flush();
-    
+
     AssignmentPerm getAssignment() const { return P_; }
     AssignmentPerm getInvAssignment() const { return Pt_; }
+
+    // only used as a "backdoor" when we want to override the auctioneer
+    void setAssignment(const AssignmentPerm& P) { P_ = P; Pt_ = P.transpose(); }
 
     bool isIdle() const { return !auction_is_open_; }
     bool didConvergeOnInvalidAssignment() const { return invalid_assignment_; }
