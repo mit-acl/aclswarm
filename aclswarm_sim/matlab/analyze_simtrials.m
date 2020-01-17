@@ -14,7 +14,7 @@ exfig = 0;
 
 n = 15;                              % number of agents
 m = 10;                              % total number of sim trials
-file = 'trials/aclswarm_trials.csv'; % data file to process
+file = 'trials/aclswarm_trials_cafc.csv'; % data file to process
 
 % -------------------------------------------------------------------------
 % Load and process data

@@ -13,7 +13,10 @@
 
     <!-- Start operator script -->
     <node name="operator" pkg="aclswarm" type="operator.py" output="screen">
+        <!-- formation group is set by trial.sh -->
         <param name="send_gains" value="$(arg send_gains)" />
+        <param name="central_assignment" value="true" />
+        <param name="central_assignment_dt" value="1" />
     </node>
 
     <!-- Start visualization script -->

@@ -65,9 +65,9 @@ for i in $(seq -f "%02g" 1 $n); do
 done
 rosparam set /vehs "[$tmp]"
 
-roslaunch aclswarm_sim headless_operator.launch >/dev/null 2>&1 &
+roslaunch aclswarm_sim headless_operator.launch & #>/dev/null 2>&1 &
 
-# rviz >/dev/null 2>&1 &
+rviz >/dev/null 2>&1 &
 
 #
 # Start swarm simulations
@@ -95,8 +95,10 @@ rosrun aclswarm_sim supervisor.py
 # be a good computer citizen!!1!
 tmux kill-server
 pkill -x -9 rviz
+pkill -f -9 operator.py
+pkill -f -9 viz_commands.py
+pkill -f -9 supervisor.py
 pkill -x -9 roslaunch
-pkill -x -9 roscore
 pkill -x -9 vicon_relay
 pkill -x -9 quad_sim
 pkill -x -9 quad_controller
@@ -104,5 +106,6 @@ pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety
 pkill -f -9 static_transform_publisher
-pkill -x -9 rosmaster
 pkill -x -9 rosout
+pkill -x -9 roscore
+pkill -x -9 rosmaster

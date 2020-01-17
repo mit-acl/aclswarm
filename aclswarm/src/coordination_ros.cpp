@@ -269,7 +269,9 @@ void CoordinationROS::centralAssignmentCb(const std_msgs::UInt8MultiArrayConstPt
   // unpack permutation vector
   Pcentral_ = AssignmentPerm(Eigen::Map<const AssignmentVec>(msg->data.data(),
                                                           msg->data.size()));
-  central_assignment_rcvd_ = true;
+
+  bool assignment_changed = !(Pcentral_.indices().isApprox(auctioneer_->getAssignment().indices()));
+  if (first_assignment_ || assignment_changed) central_assignment_rcvd_ = true;
 }
 
 // ----------------------------------------------------------------------------

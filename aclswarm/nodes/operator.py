@@ -62,12 +62,8 @@ class Operator:
         # Handle centralized assignment --- only for comparison
         self.central_assignment = rospy.get_param('~central_assignment', False)
         self.assignment_dt = rospy.get_param('~central_assignment_dt', 0.75)
-        self.new_formation = False # always send assignment on a new formation
-        self.formation_sent = False # we are computing a new formation
         if self.central_assignment:
             rospy.logwarn('Generating centralized assignment')
-            # initialize with identity assignment
-            self.last_assignment = [i for i in range(self.n)]
 
             # ground truth state of each vehicle
             self.poses = [None]*self.n
@@ -120,19 +116,12 @@ class Operator:
         self.formidx += 1
         self.formidx %= len(self.formations['formations'])
 
-        # only relevant when we are sending assignments
-        self.formation_sent = False
-
         formation = self.formations['formations'][self.formidx]
         rospy.loginfo('\033[34;1mFormation: {}\033[0m'.format(formation['name']))
 
         adjmat = self.formations['adjmat']
         msg = self.buildFormationMessage(adjmat, formation)
         self.formationPub.publish(msg)
-
-        # only relevant when we are sending assignments
-        self.new_formation = True
-        self.formation_sent = True
 
     def getPoints(self, formation):
         scale = float(formation['scale']) if 'scale' in formation else 1.0
@@ -209,12 +198,8 @@ class Operator:
                 See coordination.launch.
         """
 
-        # nothing to do if we haven't sent a formation
-        if not self.formation_sent: return
-
-        if None in self.poses:
-            # we don't have everyone's pose yet
-            return
+        # do we have all the data we need?
+        if None in self.poses or self.formidx == -1: return
 
         # construct matrix of swarm positions (3xn)
         q = np.array([(msg.pose.position.x,
@@ -226,14 +211,10 @@ class Operator:
         # use global swarm state to find optimal assignment via Hungarian
         P = find_optimal_assignment(q, p) # for n = 15, takes 5-10 ms
 
-        if P != self.last_assignment or self.new_formation:
-            # Publish to the swarm
-            msg = UInt8MultiArray()
-            msg.data = P
-            self.pub_assignment.publish(msg)
-
-        self.last_assignment = P
-        self.new_formation = False
+        # Publish to the swarm
+        msg = UInt8MultiArray()
+        msg.data = P
+        self.pub_assignment.publish(msg)
 
     def genEnvironment(self):
 

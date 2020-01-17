@@ -27,7 +27,7 @@
         <param name="formation_group" value="$(arg formations)" />
         <param name="send_gains" value="$(arg send_gains)" />
         <param name="central_assignment" value="$(arg central_assignment)" />
-        <param name="central_assignment_dt" value="0.75" />
+        <param name="central_assignment_dt" value="1" />
         <rosparam file="$(find aclswarm)/param/formations.yaml" command="load"/>
     </node>
 

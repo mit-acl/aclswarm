@@ -21,9 +21,10 @@ class State:
     HOVERING = 3
     WAITING_ON_ASSIGNMENT = 4
     FLYING = 5
-    GRIDLOCK = 6
-    COMPLETE = 7
-    TERMINATE = 8
+    IN_FORMATION = 6
+    GRIDLOCK = 7
+    COMPLETE = 8
+    TERMINATE = 9
 
 
 def S(state):
@@ -34,6 +35,7 @@ def S(state):
     if state == State.HOVERING: return "HOVERING"
     if state == State.WAITING_ON_ASSIGNMENT: return "WAITING_ON_ASSIGNMENT"
     if state == State.FLYING: return "FLYING"
+    if state == State.IN_FORMATION: return "IN_FORMATION"
     if state == State.GRIDLOCK: return "GRIDLOCK"
     if state == State.COMPLETE: return "COMPLETE"
     if state == State.TERMINATE: return "TERMINATE"
@@ -49,6 +51,7 @@ class Supervisor:
     HOVER_WAIT = 5
     CBAA_TIMEOUT = 10
     FORMATION_RECEIVED_WAIT = 1
+    CONVERGED_WAIT = 1
     GRIDLOCK_TIMEOUT = 90
 
     # thresholds
@@ -186,10 +189,16 @@ class Supervisor:
         elif self.state is State.FLYING:
             if self.has_elapsed(self.FORMATION_RECEIVED_WAIT):
                 if self.has_converged():
-                    self.stop_logging()
-                    self.next_state(State.HOVERING)
+                    self.next_state(State.IN_FORMATION, reset=False)
                 elif self.has_gridlocked():
                     self.next_state(State.GRIDLOCK)
+
+        elif self.state is State.IN_FORMATION:
+            if self.has_elapsed(self.CONVERGED_WAIT):
+                self.stop_logging()
+                self.next_state(State.HOVERING)
+            elif not self.has_converged():
+                self.next_state(State.FLYING)
 
         elif self.state is State.GRIDLOCK:
             if self.has_left_gridlock():
@@ -210,7 +219,7 @@ class Supervisor:
         if self.is_logging:
             self.log_signals()
 
-    def next_state(self, state):
+    def next_state(self, state, reset=True):
         self.last_state = self.state
         self.state = state
 
@@ -221,7 +230,8 @@ class Supervisor:
         self.timer_ticks = -1
 
         # empty buffers
-        self.buffers = {}
+        if reset:
+            self.buffers = {}
 
     #
     # Predicates

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
   <arg name="veh" />
-  <arg name="use_assignment" default="true" />
-  <arg name="form_settle_time" value="2.5" />
 
   <group ns="$(arg veh)">
 
@@ -23,8 +21,8 @@
       <param name="control_dt" value="0.01" />
 
       <!-- auctioneer parameters -->
-      <param name="use_assignment" value="$(arg use_assignment)" />
-      <param name="form_settle_time" value="$(arg form_settle_time)" />
+      <param name="use_assignment" value="true" />
+      <param name="form_settle_time" value="5" />
       <param name="verbose" value="false" />
 
       <param name="cntrl/K" value="8.0" />
