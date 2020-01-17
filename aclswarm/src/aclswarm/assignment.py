@@ -131,40 +131,106 @@ def test_align(q, p):
 def test_assign(q, p):
     print(find_optimal_assignment(q, p))
 
+def plot_swarm(q, pa, P):
+    # how many agents in swarm
+    n = q0.shape[1]
+
+    MATLAB_blue = lambda alpha=1: np.array([[0, 0.4470, 0.7410, alpha]])
+    MATLAB_red = lambda alpha=1: np.array([[0.8500, 0.3250, 0.0980, alpha]])
+
+    # plot current swarm positions (as letters)
+    plt.scatter(q[0,:], q[1,:], s=350, c=MATLAB_blue())
+    for i in range(n):
+        plt.annotate(chr(65+i), xy=(q[0,i], q[1,i]), ha='center', va='center', fontsize=11, weight="bold")
+
+    # plot aligned desired formation (as numbers)
+    plt.scatter(pa[0,:], pa[1,:], s=350, c=MATLAB_red(0.6))
+    for i in range(n):
+        plt.annotate(str(i+1), xy=(pa[0,i], pa[1,i]), ha='center', va='center', fontsize=11, weight="bold")
+
+    # Apply the assignment
+    # n.b., the assignment maps vehid to formpt; however, when used to index
+    # into a list, it becomes the inverse perm. Thus, we bring the formpts
+    # into order with the vehicles.
+    paa = pa[:,P]
+
+    # plot assignment lines
+    for i in range(n):
+        plt.plot([q[0,i], paa[0,i]], [q[1,i], paa[1,i]], c=(0,0,0,0.5))
+
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     # initialized swarm (in grid)
-    q = np.array([[-4.0, 0.0, 1.0],
-                  [-2.5, 0.0, 1.0],
-                  [-1.0, 0.0, 1.0],
-                  [ 0.5, 0.0, 1.0],
-                  [ 2.0, 0.0, 1.0],
-                  [-4.0, 1.5, 1.0],
-                  [-2.5, 1.5, 1.0],
-                  [-1.0, 1.5, 1.0],
-                  [ 0.5, 1.5, 1.0],
-                  [ 2.0, 1.5, 1.0],
-                  [-4.0, 3.0, 1.0],
-                  [-2.5, 3.0, 1.0],
-                  [-1.0, 3.0, 1.0],
-                  [ 0.5, 3.0, 1.0],
-                  [ 2.0, 3.0, 1.0]]).T
+    q0 = np.array([[-4.0, 0.0, 1.0],
+                   [-2.5, 0.0, 1.0],
+                   [-1.0, 0.0, 1.0],
+                   [ 0.5, 0.0, 1.0],
+                   [ 2.0, 0.0, 1.0],
+                   [-4.0, 1.5, 1.0],
+                   [-2.5, 1.5, 1.0],
+                   [-1.0, 1.5, 1.0],
+                   [ 0.5, 1.5, 1.0],
+                   [ 2.0, 1.5, 1.0],
+                   [-4.0, 3.0, 1.0],
+                   [-2.5, 3.0, 1.0],
+                   [-1.0, 3.0, 1.0],
+                   [ 0.5, 3.0, 1.0],
+                   [ 2.0, 3.0, 1.0]]).T
 
- #    q = np.array([[ 0.8849255,  -2.92376476,  0.73174159, -3.11388527, -2.97758062,  0.8363288,  -2.78974444,  0.73955351, -2.87207398, -0.98927611, -0.98635844, -1.10110947, -3.013649,   -1.10744907, -0.99014721,],
- # [-4.52464156,  1.12260881,  3.05401735,  4.78132464, -0.7493385,  -0.64248959, -4.50199145,  0.93375552, -2.7825338,  -2.58273116, -4.15315703, -0.69748816,  3.0429952,   2.78144909,  1.18997211,],
- # [ 0.91963564,  0.90694939,  0.88586988,  0.90138508,  0.91733486,  0.89294487,  0.91049385,  0.91062372,  0.90596049,  0.92314638,  0.88728793,  0.91544618,  0.91140984,  0.89547421,  0.89178089,]])
+    # next swarm state
+    q1 = np.array([[ 0.8849, -4.5246, 0.9196],
+                   [-2.9238,  1.1226, 0.9069],
+                   [ 0.7317,  3.0540, 0.8859],
+                   [-3.1139,  4.7813, 0.9014],
+                   [-2.9776, -0.7493, 0.9173],
+                   [ 0.8363, -0.6425, 0.8929],
+                   [-2.7897, -4.5020, 0.9105],
+                   [ 0.7396,  0.9338, 0.9106],
+                   [-2.8721, -2.7825, 0.9060],
+                   [-0.9893, -2.5827, 0.9231],
+                   [-0.9864, -4.1532, 0.8873],
+                   [-1.1011, -0.6975, 0.9154],
+                   [-3.0136,  3.0430, 0.9114],
+                   [-1.1074,  2.7814, 0.8955],
+                   [-0.9901,  1.1900, 0.8918]]).T
 
- #    q = np.array([[ 0.72282218, -3.59387293,  0.28303255, -3.76095222, -3.14095792,  1.31194908, -2.3583082,   0.74126557, -2.6445731,  -0.23753938, -0.83255272, -0.93697499, -2.35316527, -0.85754163, -1.79977487,],
- # [-3.74005074,  1.60822373,  2.39553131,  4.20752638, -0.24293304, -1.22179599, -3.98149384,  0.83796887, -1.90761189, -2.39766343, -4.71052768, -0.67210226,  2.40651966,  3.46294803,  0.93867799,],
- # [ 0.92017297,  0.90453463,  0.88843723,  0.91200119,  0.91483429,  0.88942081,  0.91101178,  0.90253705,  0.90820505,  0.92570438,  0.89016347,  0.91422378,  0.90954982,  0.9034423,   0.89807187,]])
+    # next swarm state
+    q2 = np.array([[ 0.7228, -3.7401, 0.9202],
+                   [-3.5939,  1.6082, 0.9045],
+                   [ 0.2830,  2.3955, 0.8884],
+                   [-3.7610,  4.2075, 0.9120],
+                   [-3.1410, -0.2429, 0.9148],
+                   [ 1.3119, -1.2218, 0.8894],
+                   [-2.3583, -3.9815, 0.9110],
+                   [ 0.7413,  0.8380, 0.9025],
+                   [-2.6446, -1.9076, 0.9082],
+                   [-0.2375, -2.3977, 0.9257],
+                   [-0.8326, -4.7105, 0.8902],
+                   [-0.9370, -0.6721, 0.9142],
+                   [-2.3532,  2.4065, 0.9095],
+                   [-0.8575,  3.4629, 0.9034],
+                   [-1.7998,  0.9387, 0.8981]]).T
 
- #    q = np.array([[ 0.69770947, -3.02127466,  0.61400982, -3.28914191, -2.9772186,   0.91188472, -2.8530841,   0.72886756, -2.86353718, -1.12733558, -1.08236526, -1.11200595, -2.90748052, -1.08864187, -1.22312968,],
- # [-4.25594845,  1.20836275,  2.87134245,  4.69290206, -0.66424044, -0.79353972, -4.33384937,  1.08689617, -2.24999914, -2.50511557, -4.3188878,  -0.65224058,  3.001728,    3.16426772,  1.22662924,],
- # [ 0.92082692,  0.9103576,   0.8897826,   0.90982926,  0.91902034,  0.89175646,  0.91225095,  0.90861828,  0.90986547,  0.9251766,   0.88201568,  0.90984093,  0.91311857,  0.90623879,  0.89830057,]])
+    # next swarm state
+    q3 = np.array([[ 0.6977, -4.2559, 0.9208],
+                   [-3.0213,  1.2084, 0.9104],
+                   [ 0.6140,  2.8713, 0.8898],
+                   [-3.2891,  4.6929, 0.9098],
+                   [-2.9772, -0.6642, 0.9190],
+                   [ 0.9119, -0.7935, 0.8918],
+                   [-2.8531, -4.3338, 0.9123],
+                   [ 0.7289,  1.0869, 0.9086],
+                   [-2.8635, -2.2500, 0.9099],
+                   [-1.1273, -2.5051, 0.9252],
+                   [-1.0824, -4.3189, 0.8820],
+                   [-1.1120, -0.6522, 0.9098],
+                   [-2.9075,  3.0017, 0.9131],
+                   [-1.0886,  3.1643, 0.9062],
+                   [-1.2231,  1.2266, 0.8983]]).T
 
-    # desired formation - MIT
+       # desired formation - MIT
     p = np.array([[0.0, 0.0, 0.0],
                   [0.0, 1.5, 0.0],
                   [0.0, 3.0, 0.0],
@@ -182,69 +248,77 @@ if __name__ == '__main__':
                   [6.0, 0.0, 0.0]]).T
 
 
-    # test_arun(q)
-    # test_align(q, p)
-    # test_assign(q, p)
-
-    pa = align(q, p)
-    assign = find_optimal_assignment(q, p)
-    print(assign)
-
-    MATLAB_blue = [0, 0.4470, 0.7410]
-    MATLAB_red = [0.8500, 0.3250, 0.0980]
-
-    n = q.shape[1]
+    # test_arun(q0)
+    # test_align(q0, p)
+    # test_assign(q0, p)
 
     #
-    # Plot the alignment
+    # Plot the swarm, just after new formation, without assignment
     #
+
+    pa0 = align(q0, p)
+    Peye = [i for i in range(pa0.shape[1])]
 
     plt.figure(1)
     plt.title('Without Assignment')
     plt.grid(alpha=0.3)
     plt.axis('equal')
-
-    # plot current swarm positions
-    plt.scatter(q[0,:], q[1,:], s=350, c=MATLAB_blue)
-    for i in range(n):
-        plt.annotate(str(i+1), xy=(q[0,i], q[1,i]), ha='center', va='center', fontsize=11, weight="bold")
-
-    # plot aligned desired formation
-    plt.scatter(pa[0,:], pa[1,:], s=350, c=MATLAB_red)
-    for i in range(n):
-        plt.annotate(str(i+1), xy=(pa[0,i], pa[1,i]), ha='center', va='center', fontsize=11, weight="bold")
-
-    # plot assignment lines
-    for i in range(n):
-        plt.plot([q[0,i], pa[0,i]], [q[1,i], pa[1,i]], c=(0,0,0,0.5))
+    plot_swarm(q0, pa0, Peye)
 
     #
-    # Plot the assignment
+    # Plot the swarm, just after new formation, with assignment
     #
+
+    pa0 = align(q0, p)
+    P0 = find_optimal_assignment(q0, p)
+    print(P0)
 
     plt.figure(2)
-    plt.title('With Assignment')
+    plt.title('With Assignment (0)')
     plt.grid(alpha=0.3)
     plt.axis('equal')
+    plot_swarm(q0, pa0, P0)
 
-    # apply the assignment
-    # n.b., the assignment maps vehid to formpt; however, when used to index
-    # into a list, it becomes the inverse perm. Thus, we bring the formpts
-    # into order with the vehicles.
-    pa = pa[:,assign]
+    #
+    # Plot the swarm, on its way into formation, with new assignment
+    #
 
-    # plot current swarm positions
-    plt.scatter(q[0,:], q[1,:], s=350, c=MATLAB_blue)
-    for i in range(n):
-        plt.annotate(str(i+1), xy=(q[0,i], q[1,i]), ha='center', va='center', fontsize=11, weight="bold")
+    pa1 = align(q1, p)
+    P1 = find_optimal_assignment(q1, p)
+    print(P1)
 
-    # plot aligned desired formation
-    plt.scatter(pa[0,:], pa[1,:], s=350, c=MATLAB_red)
-    for i in range(n):
-        plt.annotate(str(i+1), xy=(pa[0,i], pa[1,i]), ha='center', va='center', fontsize=11, weight="bold")
+    plt.figure(3)
+    plt.title('With Assignment (1)')
+    plt.grid(alpha=0.3)
+    plt.axis('equal')
+    plot_swarm(q1, pa1, P1)
 
-    # plot assignment lines
-    for i in range(n):
-        plt.plot([q[0,i], pa[0,i]], [q[1,i], pa[1,i]], c=(0,0,0,0.5))
+    #
+    # Plot the swarm, on its way into formation, with new assignment
+    #
+
+    pa2 = align(q2, p)
+    P2 = find_optimal_assignment(q2, p)
+    print(P2)
+
+    plt.figure(4)
+    plt.title('With Assignment (2)')
+    plt.grid(alpha=0.3)
+    plt.axis('equal')
+    plot_swarm(q2, pa2, P2)
+
+    #
+    # Plot the swarm, on its way into formation, with new assignment
+    #
+
+    pa3 = align(q3, p)
+    P3 = find_optimal_assignment(q3, p)
+    print(P3)
+
+    plt.figure(5)
+    plt.title('With Assignment (3)')
+    plt.grid(alpha=0.3)
+    plt.axis('equal')
+    plot_swarm(q3, pa3, P3)
 
     plt.show()
