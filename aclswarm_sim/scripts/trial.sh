@@ -33,12 +33,15 @@ fi
 #
 
 # check that a roscore is NOT running
-if ! pgrep -x roscore > /dev/null ; then
+if pgrep -x roscore > /dev/null ; then
   echo
-  echo "A roscore is not running. Please start a roscore and try again."
+  echo "A roscore is already running. Shutdown roscore and try again."
   echo
   exit 2
 fi
+
+roscore >/dev/null 2>&1 &
+sleep 1 # wait for roscore to initialize
 
 #
 # Start Operator
@@ -63,6 +66,8 @@ done
 rosparam set /vehs "[$tmp]"
 
 roslaunch aclswarm_sim headless_operator.launch & #>/dev/null 2>&1 &
+
+rviz >/dev/null 2>&1 &
 
 #
 # Start swarm simulations
@@ -89,6 +94,7 @@ rosrun aclswarm_sim supervisor.py
 
 # be a good computer citizen!!1!
 tmux kill-server
+pkill -x -9 rviz
 pkill -f -9 operator.py
 pkill -f -9 viz_commands.py
 pkill -f -9 supervisor.py
@@ -100,6 +106,6 @@ pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety
 pkill -f -9 static_transform_publisher
-
-# wait for everyone to be done
-sleep 2
+pkill -x -9 rosout
+pkill -x -9 roscore
+pkill -x -9 rosmaster

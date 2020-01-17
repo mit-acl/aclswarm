@@ -68,5 +68,5 @@ for i in $(seq 1 $m); do
   trialpid=$!
   wait $trialpid
 
-  sleep 3
+  sleep 1
 done
