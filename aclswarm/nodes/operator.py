@@ -65,6 +65,9 @@ class Operator:
         if self.central_assignment:
             rospy.logwarn('Generating centralized assignment')
 
+            # last assignment
+            self.P = None
+
             # ground truth state of each vehicle
             self.poses = [None]*self.n
             for idx,veh in enumerate(self.vehs):
@@ -122,6 +125,10 @@ class Operator:
         adjmat = self.formations['adjmat']
         msg = self.buildFormationMessage(adjmat, formation)
         self.formationPub.publish(msg)
+
+        # if we are a centralized coordinator, reset the assignment
+        if self.central_assignment:
+            self.P = None
 
     def getPoints(self, formation):
         scale = float(formation['scale']) if 'scale' in formation else 1.0
@@ -209,11 +216,11 @@ class Operator:
         p = self.getPoints(self.formations['formations'][self.formidx]).T
 
         # use global swarm state to find optimal assignment via Hungarian
-        P = find_optimal_assignment(q, p) # for n = 15, takes 5-10 ms
+        self.P, _ = find_optimal_assignment(q, p, last=self.P) # for n = 15, takes 5-10 ms
 
         # Publish to the swarm
         msg = UInt8MultiArray()
-        msg.data = P
+        msg.data = self.P
         self.pub_assignment.publish(msg)
 
     def genEnvironment(self):

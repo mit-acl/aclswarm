@@ -100,3 +100,6 @@ pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety
 pkill -f -9 static_transform_publisher
+
+# wait for everyone to be done
+sleep 2

@@ -2,16 +2,17 @@
 
 from __future__ import division
 
-import time
+import time, array
 import rospy
 import numpy as np
 
 from aclswarm_msgs.msg import Formation
 from acl_msgs.msg import QuadGoal, ViconState
+from std_msgs.msg import UInt8MultiArray
 from geometry_msgs.msg import Point, Pose, Vector3, Vector3Stamped
 from visualization_msgs.msg import Marker, MarkerArray
 
-from aclswarm.assignment import align
+from aclswarm.assignment import find_optimal_assignment
 
 class VizCommands:
 
@@ -67,6 +68,12 @@ class VizCommands:
         self.sub_formation = rospy.Subscriber('/formation', Formation,
                                                 self.formationCb, queue_size=1)
 
+        # so we can visualize the latest assignment. Just use the first agent.
+        self.P = None
+        self.sub_assignment = rospy.Subscriber('/{}/assignment'.
+                                        format(self.vehs[0]), UInt8MultiArray,
+                                        self.assignmentCb, queue_size=1)
+
         # timers
         self.tim_vizaligned = rospy.Timer(rospy.Duration(0.2), self.vizAlignedCb)
 
@@ -94,6 +101,13 @@ class VizCommands:
             pts[:,i] = (pt.x, pt.y, pt.z)
         self.formpts = pts
 
+        # reset the assignment to identity
+        self.P = None
+
+    def assignmentCb(self, msg):
+        # deal with uin8 being weird hex strings
+        self.P = array.array("B", msg.data).tolist()
+
     def vizAlignedCb(self, event=None):
         # do we have formation points yet?
         if self.formpts is None: return
@@ -108,8 +122,8 @@ class VizCommands:
                             for msg in self.poses]).T
         p = self.formpts
 
-        # visualize current alignment
-        pa = align(q, p)
+        # visualize current alignment using current assignment
+        _, pa = find_optimal_assignment(q, p, last=self.P)
         stamp = rospy.Time.now()
         for i in range(self.n):
             self.markers_aligned.markers[i].header.stamp = stamp
