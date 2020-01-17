@@ -70,7 +70,7 @@ class Operator:
             self.last_assignment = [i for i in range(self.n)]
 
             # ground truth state of each vehicle
-            self.poses = {}
+            self.poses = [None]*self.n
             for idx,veh in enumerate(self.vehs):
                 rospy.Subscriber('/{}/vicon'.format(veh), ViconState,
                         lambda msg, i=idx: self.poseCb(msg, i), queue_size=1)
@@ -212,16 +212,16 @@ class Operator:
         # nothing to do if we haven't sent a formation
         if not self.formation_sent: return
 
+        if None in self.poses:
+            # we don't have everyone's pose yet
+            return
+
         # construct matrix of swarm positions (3xn)
         q = np.array([(msg.pose.position.x,
                         msg.pose.position.y,
                         msg.pose.position.z)
-                            for (veh,msg) in self.poses.items()]).T
+                            for msg in self.poses]).T
         p = self.getPoints(self.formations['formations'][self.formidx]).T
-
-        if q.shape[1] != p.shape[1]:
-            # we don't have everyone's pose yet
-            return
 
         # use global swarm state to find optimal assignment via Hungarian
         P = find_optimal_assignment(q, p) # for n = 15, takes 5-10 ms
