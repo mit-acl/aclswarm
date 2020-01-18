@@ -142,6 +142,9 @@ class Supervisor:
     def assignmentCb(self, msg, veh):
         self.received_assignment = True
 
+        if self.is_logging:
+            self.log['assignments'][-1] += 1
+
     def statusCb(self, msg, veh):
         self.vstatus[veh] = msg
 
@@ -337,13 +340,19 @@ class Supervisor:
 
     def start_logging(self):
         if self.is_logging: return
-        self.is_logging = True
+
+        # initialize assignment counter
+        if 'assignments' not in self.log:
+            self.log['assignments'] = []
 
         # initialize time
         if 'time' not in self.log:
             self.log['time'] = []
 
         self.log['time'] += [rospy.Time.now()]
+        self.log['assignments'] += [1]
+
+        self.is_logging = True
 
     def stop_logging(self):
         if not self.is_logging: return
@@ -358,7 +367,9 @@ class Supervisor:
         # write logs to file
         with open(r'aclswarm_trials.csv', 'a') as f:
             writer = csv.writer(f)
-            writer.writerow(self.log['dist'].tolist() + self.log['time'])
+            writer.writerow(self.log['dist'].tolist()
+                                + self.log['time']
+                                + self.log['assignments'])
 
         rospy.signal_shutdown("trial completed successfully")
 
