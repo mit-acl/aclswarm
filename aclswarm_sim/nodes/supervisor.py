@@ -236,6 +236,21 @@ class Supervisor:
         if reset:
             self.buffers = {}
 
+        #
+        # Logging
+        #
+
+        # goint into GRIDLOCK
+        if self.state is State.GRIDLOCK:
+            # log time performing collision avoidance
+            self.log['time_avoidance'][-1] = rospy.Time.now()
+
+        # coming out of GRIDLOCK
+        if self.last_state is State.GRIDLOCK:
+            # update timing
+            self.log['time_avoidance'][-1] = (rospy.Time.now()
+                            - self.log['time_avoidance'][-1]).to_sec()
+
     #
     # Predicates
     #
@@ -349,8 +364,13 @@ class Supervisor:
         if 'time' not in self.log:
             self.log['time'] = []
 
-        self.log['time'] += [rospy.Time.now()]
+        # initialize time in collision avoidance mode
+        if 'time_avoidance' not in self.log:
+            self.log['time_avoidance'] = []
+
         self.log['assignments'] += [1]
+        self.log['time'] += [rospy.Time.now()]
+        self.log['time_avoidance'] += [0]
 
         self.is_logging = True
 
@@ -369,6 +389,7 @@ class Supervisor:
             writer = csv.writer(f)
             writer.writerow(self.log['dist'].tolist()
                                 + self.log['time']
+                                + self.log['time_avoidance']
                                 + self.log['assignments'])
 
         rospy.signal_shutdown("trial completed successfully")
