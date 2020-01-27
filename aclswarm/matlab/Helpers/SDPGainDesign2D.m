@@ -34,17 +34,17 @@ Q = U(:,3:n);
 S = not(adj);
 S = S - diag(diag(S));
 
-m = n - 2;
+m = n - 2; % Reduced dimension
 
 % Solve via CVX
 % NOTE: CVX must be downloaded and installed. See http://cvxr.com/cvx/
-cvx_begin sdp
+cvx_begin sdp quiet
     cvx_precision low
-    variable X(n-2,n-2) hermitian
+    variable X(m,m) hermitian
     maximize( lambda_min( X ) )
     subject to
         (Q*X*Q') .* S == 0; % For agents that are not neighbors
-        trace(X) == m;
+        trace(X) == m; % Fixed trace
 cvx_end
 
 
@@ -68,7 +68,3 @@ Ar = A_C2R(Ac);   % Real represnetation of gain matrix
 % e = eig(Ac)
 % [Vl,Dl] = eig(Ac)
 % Ac * z
-
-
-
-

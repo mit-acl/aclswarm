@@ -54,16 +54,16 @@ tic
 Asdp = SDPGainDesign3D(Qs, adj)
 Tsdp(i) = toc
 
-% Eigenvalues of the gain matrix
-eigSdp = sort( abs(eig(Asdp)) )'
-trace(Asdp)
+% % Eigenvalues of the gain matrix
+% eigSdp = sort( abs(eig(Asdp)) )'
+% trace(Asdp)
 
 
-% % Customized ADMM approach 
-% fprintf('Running ADMM solver for n = %i ...\n', i);
-% tic
-% Aadmm = ADMMGainDesign3D(Qs, adj)
-% Tadmm(i) = toc
+% Customized ADMM approach 
+fprintf('Running ADMM solver for n = %i ...\n', i);
+tic
+Aadmm = ADMMGainDesign3D(Qs, adj)
+Tadmm(i) = toc
 
 % % Eigenvalues of  the gain matrix
 % eigAdmm = sort( abs(eig(Aadmm)) )
@@ -114,119 +114,3 @@ end
 % % Normalized the gain matrix
 % eigAdmm = sort( abs(eig(Aadmm)) )
 % trace(Aadmm)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
