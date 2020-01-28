@@ -14,7 +14,7 @@ rng(0,'twister');
 
 numAgt = [3 10 50 100 150 200];
 % numAgt = [3 5 10];
-numAgt = 10;
+numAgt = 4;
 
 % Number of tests
 numTst = length(numAgt);
@@ -40,7 +40,7 @@ Qs = rand(3,n) * 5;
 adj = ones(n) - diag(ones(n,1));  % Complete graph
 
 % Choose (at most) k edges to remove:
-k = 1;
+k = 0;
 rowIdx = randi(n, 1,k);
 colIdx = randi(n, 1,k);    
 for j = 1 : k
@@ -49,10 +49,10 @@ for j = 1 : k
 end
 
 % SDP approach via CVX
-fprintf('Running SDP solver for n = %i ...\n', i);
-tic
-Asdp = SDPGainDesign3D(Qs, adj)
-Tsdp(i) = toc
+% fprintf('Running SDP solver for n = %i ...\n', i);
+% tic
+% Asdp = SDPGainDesign3D(Qs, adj);
+% Tsdp(i) = toc
 
 % % Eigenvalues of the gain matrix
 % eigSdp = sort( abs(eig(Asdp)) )'
@@ -62,7 +62,7 @@ Tsdp(i) = toc
 % Customized ADMM approach 
 fprintf('Running ADMM solver for n = %i ...\n', i);
 tic
-Aadmm = ADMMGainDesign3D(Qs, adj)
+Aadmm = ADMMGainDesign3D(Qs, adj);
 Tadmm(i) = toc
 
 % % Eigenvalues of  the gain matrix

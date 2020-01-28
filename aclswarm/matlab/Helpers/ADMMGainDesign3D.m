@@ -282,7 +282,7 @@ sizX = 2 * m;
 
 %% ADMM algorithm--full eigendecomposition
 
-As = A'; % Dual operator
+As = A.'; % Dual operator
 AAs = A * As;
 mu = 1; % Penalty    
 epsEig = 1e-5;  % Precision for positive eig vals
@@ -300,20 +300,20 @@ y = sparse(length(b),1);
 for i = 1 : maxItr 
     
     %%%%%%% Update for y
-    y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
+    y = AAs \ (A * vec(C - S - mu * X) + mu * b);
     
     %%%%%%% Update for S
-    W = full(C - reshape(As*y, [sizX,sizX]) - mu * X);
-    W = (W + W')/2;
+    W = C - reshape(As*y, [sizX,sizX]) - mu * X;
+    W = (W + W') ./ 2;
     
-    [V, D] = eig(W);
+    [V, D] = eig(full(W));
     dd = diag(D);
     posEig = dd > epsEig;
-    S = V(:,posEig) * diag(dd(posEig)) * V(:,posEig)';
+    S = sparse(real(V(:,posEig) * diag(dd(posEig)) * V(:,posEig).'));
     
     %%%%%%% Update for X
     Xold = X;
-    X = (S - W) / mu;
+    X = (S - W) ./ mu;
     
     %%%%%%% Stop criteria
     difX = sum(abs(Xold(:) - X(:)));
@@ -321,7 +321,8 @@ for i = 1 : maxItr
         break 
     end
     
-    trPerc = abs(trace( X(m+1:end, m+1:end) ) - trVal) / trVal * 100;
+    % trace of sparse matrix for MATLAB Coder
+    trPerc = abs(full(sum(diag( X(m+1:end, m+1:end) ))) - trVal) / trVal * 100;
     if trPerc < threshTr % trace of X is close to the desired value
         break
     end
@@ -330,10 +331,10 @@ end
 
 % Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix
 S = 0 * S;
-y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
+y = AAs \ (A * vec(C - S - mu * X) + mu * b);
 W = C - reshape(As*y, [sizX,sizX]) - mu * X;
-W = (W + W') / 2;
-X = (S - W) / mu;
+W = (W + W.') ./ 2;
+X = (S - W) ./ mu;
 
 X = full(X); % Transform X from sparse to full representation 
 
