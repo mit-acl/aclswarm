@@ -25,7 +25,7 @@ Tadmm = zeros(1,numTst);
 
 
 %% Benchmark
-
+% spparms('spumoni',2) % print out info about sparse mldivide/mrdivide
 
 for i = 1 : numTst
 

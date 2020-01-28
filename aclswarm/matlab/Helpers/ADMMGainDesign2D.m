@@ -15,12 +15,16 @@
 %
 function Aopt = ADMMGainDesign2D(Qs, adj) 
 
+% print out size information
+verbose = 0;
+
 % Make a vector out of formation points
 qs = Qs(:);
 
 % Number of agents
 n = size(adj,1);
 m = n - 2; % Reduced number
+d = 2; % ambient dimension of problem
 
 % 90-degree rotated desired formation coordinates
 qsbar = zeros(2*n,1);
@@ -42,27 +46,27 @@ Qt = Q'; % Q transpose
 
 %% Preallocate variables
 
-I0 = sparse(eye(2*m));
-Z0 = sparse(2*m, 2*m);
-Z = sparse(4*m, 4*m);
+I0 = speye(d*m);
+Z0 = sparse(d*m, d*m);
+Z = sparse(2*d*m, 2*d*m);
 
 % Cost function's coefficient matrix: f = <C,X>
 C = [I0, Z0;
      Z0, Z0];
 
-% Trace of gain materix must be the specified value in 'trVal'
-trVal = 2*m; % fixed value for trace
+% Trace of gain matrix must be the specified value in 'trVal'
+trVal = d*m; % fixed value for trace
 
 
 %%%%%%%%%%%%%%%%%%%%%% Find total number of nonzero elements in A and b matrices
 
 % Number of elements in block [X]_11
-numElmA1 = 1 + (2*m-1)*2 + m*(2*m-1); 
-numElmB1 = 1;
+numElmA1 = (d*m-1)*2 + (d*m)*(d*m-1)/2;
+numElmB1 = 0;
 
 % Number of elements in block [X]_12
-numElmA2 = 2*m + (2*m)^2 - 2*m;
-numElmB2 = 2*m;
+numElmA2 = d*m + (d*m)*(d*m-1);
+numElmB2 = d*m;
 
 % Zero-gain constraints for the given adjacency graph
 S = not(adj);
@@ -71,21 +75,25 @@ Su = triu(S); % Upper triangular part
 [idxRow, idxCol] = find(Su); % Find location of nonzero entries
 numConAdj = length(idxRow); % Number of constraints
 
-% (upper bound for) Number of elements in block [X]_22
-numElmA3 = 2*m*(m+1) + 2*(8^2)*numConAdj;
+% Number of elements in block [X]_22. Found "-m" empirically.
+numElmA3 = 0.5*m*(m+1)*(2+2) + numConAdj*(2*(d*m)^2) - m;
 numElmB3 = 0;
 
-% Number of elements for symmetry
-numElmA4 = 2* 2*m * (4*m-1);
-numElmB4 = 0;
-
 % Number of elements for trace
-numElmA5 = 2*m;
-numElmB5 = 1;
+numElmA4 = d*m;
+numElmB4 = 1;
+
+% Number of elements for symmetry
+numElmA5 = 2* d*m * (2*d*m-1);
+numElmB5 = 0;
+
+% Number of elements for pinning down the b-vector
+numElmA6 = 0;
+numElmB6 = 1;
 
 % Total number of elements
-numElmAtot = numElmA1 + numElmA2 + numElmA3 + numElmA4 + numElmA5;
-numElmBtot = numElmB1 + numElmB2 + numElmB3 + numElmB4 + numElmB5;
+numElmAtot = numElmA1 + numElmA2 + numElmA3 + numElmA4 + numElmA5 + numElmA6;
+numElmBtot = numElmB1 + numElmB2 + numElmB3 + numElmB4 + numElmB5 + numElmB6;
 
 
 %%%%%%%%%%%%%%%%%%%%%% Preallocate sparse matrices A & b
@@ -116,7 +124,7 @@ itrb = 0; % Counter for entries in b constraint
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_11
 
 % The diagonal entries of X should be equal to the first diagonal entry
-for i = 2 : 2*m
+for i = 2 : d*m
     itrr = itrr + 1;
     
     itra = itra + 1;    
@@ -124,7 +132,7 @@ for i = 2 : 2*m
     idxC = 1;
 
     Ai(itra) = itrr;
-    Aj(itra) = (idxR-1)*(4*m) + idxC;
+    Aj(itra) = (idxR-1)*(2*d*m) + idxC;
     Av(itra) = 1;
     
     itra = itra + 1;
@@ -132,13 +140,13 @@ for i = 2 : 2*m
     idxC = i;
     
     Ai(itra) = itrr;
-    Aj(itra) = (idxR-1)*(4*m) + idxC;
+    Aj(itra) = (idxR-1)*(2*d*m) + idxC;
     Av(itra) = -1;
 end
 
 % Off-diagonal entries should be zero
-for i = 1 : 2*m-1
-    for j = i+1 : 2*m
+for i = 1 : d*m-1
+    for j = i+1 : d*m
         itrr = itrr + 1;
         
         itra = itra + 1;
@@ -146,24 +154,32 @@ for i = 1 : 2*m-1
         idxC = j;
 
         Ai(itra) = itrr;
-        Aj(itra) = (idxR-1)*(4*m) + idxC;
+        Aj(itra) = (idxR-1)*(2*d*m) + idxC;
         Av(itra) = 1;
-    
     end
+end
+
+if verbose
+    fprintf('[X]_11. nnzA = %d (%d). nnzb = %d (%d)\n',...
+            nnz(Av), numElmA1, nnz(bv), numElmB1);
+
+    % for next time
+    tmpA = nnz(Av);
+    tmpb = nnz(bv);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_12
 
 % Diagonal entries should be 1
-for i = 1 : 2*m
+for i = 1 : d*m
     itrr = itrr + 1;
     
     itra = itra + 1;
     idxR = i;
-    idxC = i + 2*m;
+    idxC = i + d*m;
     
     Ai(itra) = itrr;
-    Aj(itra) = (idxR-1)*(4*m) + idxC;
+    Aj(itra) = (idxR-1)*(2*d*m) + idxC;
     Av(itra) = 1;
     
     itrb = itrb + 1;
@@ -172,22 +188,30 @@ for i = 1 : 2*m
 end
 
 % Other entries should be 0
-for i = 1 : 2*m
-    for j = 1 : 2*m
+for i = 1 : d*m
+    for j = 1 : d*m
         if i ~= j
             itrr = itrr + 1;
             
             itra = itra + 1;
             idxR = i;
-            idxC = j + 2*m;
+            idxC = j + d*m;
 
             Ai(itra) = itrr;
-            Aj(itra) = (idxR-1)*(4*m) + idxC;
+            Aj(itra) = (idxR-1)*(2*d*m) + idxC;
             Av(itra) = 1;
         end
     end
 end
 
+if verbose
+    fprintf('[X]_12. nnzA = %d (%d). nnzb = %d (%d)\n',...
+            nnz(Av)-tmpA, numElmA2, nnz(bv)-tmpb, numElmB2);
+
+    % for next time
+    tmpA = nnz(Av);
+    tmpb = nnz(bv);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_22
 
@@ -198,19 +222,19 @@ for i = 1 : m
         itrr = itrr + 1;
         
         itra = itra + 1;
-        idxR = 2*m + 2*i-1;
-        idxC = 2*m + 2*j-1;
+        idxR = d*m + d*(i-1) + 1;
+        idxC = d*m + d*(j-1) + 1;
 
         Ai(itra) = itrr;
-        Aj(itra) = (idxR-1)*(4*m) + idxC;
+        Aj(itra) = (idxR-1)*(2*d*m) + idxC;
         Av(itra) = 1;
         
         itra = itra + 1;
-        idxR = 2*m + 2*i;
-        idxC = 2*m + 2*j;
+        idxR = d*m + d*(i-1) + 2;
+        idxC = d*m + d*(j-1) + 2;
 
         Ai(itra) = itrr;
-        Aj(itra) = (idxR-1)*(4*m) + idxC;
+        Aj(itra) = (idxR-1)*(2*d*m) + idxC;
         Av(itra) = -1;
         
         
@@ -219,29 +243,29 @@ for i = 1 : m
             itrr = itrr + 1;
             
             itra = itra + 1;
-            idxR = 2*m + 2*i-1;
-            idxC = 2*m + 2*j;
+            idxR = d*m + d*(i-1) + 1;
+            idxC = d*m + d*(j-1) + 2;
 
             Ai(itra) = itrr;
-            Aj(itra) = (idxR-1)*(4*m) + idxC;
+            Aj(itra) = (idxR-1)*(2*d*m) + idxC;
             Av(itra) = 1;
         else            
             itrr = itrr + 1;
             
             itra = itra + 1;
-            idxR = 2*m + 2*i-1;
-            idxC = 2*m + 2*j;
+            idxR = d*m + d*(i-1) + 1;
+            idxC = d*m + d*(j-1) + 2;
 
             Ai(itra) = itrr;
-            Aj(itra) = (idxR-1)*(4*m) + idxC;
+            Aj(itra) = (idxR-1)*(2*d*m) + idxC;
             Av(itra) = 1;
             
             itra = itra + 1;
-            idxR = 2*m + 2*i;
-            idxC = 2*m + 2*j-1;
+            idxR = d*m + d*(i-1) + 2;
+            idxC = d*m + d*(j-1) + 1;
 
             Ai(itra) = itrr;
-            Aj(itra) = (idxR-1)*(4*m) + idxC;
+            Aj(itra) = (idxR-1)*(2*d*m) + idxC;
             Av(itra) = 1;
         end
         
@@ -253,52 +277,60 @@ for i = 1 : numConAdj
     ii = idxRow(i);
     jj = idxCol(i);
     
-    % Diagonal terms, just do first column/row since a == a
-    QQ = Qt(:,2*jj-1) * Q(2*ii-1,:);
+    % Diagonal terms of A_iijj, just do first column/row since a == a
+    QQ = Qt(:,d*(jj-1)+1) * Q(d*(ii-1)+1,:);
 
     itrr = itrr + 1;
         
-    for ki = 1 : 2*m
-        for kj = 1 : 2*m
+    for ki = 1 : d*m
+        for kj = 1 : d*m
             itra = itra + 1;
-            idxR = 2*m + ki;
-            idxC = 2*m + kj;
+            idxR = d*m + ki;
+            idxC = d*m + kj;
             
             Ai(itra) = itrr;
-            Aj(itra) = (idxR-1)*(4*m) + idxC;
+            Aj(itra) = (idxR-1)*(2*d*m) + idxC;
             Av(itra) = QQ(ki, kj);
         end        
     end
         
-    % Off-diagonal terms
-    QQ = Qt(:,2*jj-1) * Q(2*ii,:);
+    % Off-diagonal terms of A_iijj
+    QQ = Qt(:,d*(jj-1)+1) * Q(d*(ii-1)+2,:);
     
     itrr = itrr + 1;
     
-    for ki = 1 : 2*m
-        for kj = 1 : 2*m
+    for ki = 1 : d*m
+        for kj = 1 : d*m
             itra = itra + 1;
-            idxR = 2*m + ki;
-            idxC = 2*m + kj;
+            idxR = d*m + ki;
+            idxC = d*m + kj;
             
             Ai(itra) = itrr;
-            Aj(itra) = (idxR-1)*(4*m) + idxC;
+            Aj(itra) = (idxR-1)*(2*d*m) + idxC;
             Av(itra) = QQ(ki, kj);
         end        
     end
 end
 
+if verbose
+    fprintf('[X]_22. nnzA = %d (%d). nnzb = %d (%d)\n',...
+            nnz(Av)-tmpA, numElmA3, nnz(bv)-tmpb, numElmB3);
+
+    % for next time
+    tmpA = nnz(Av);
+    tmpb = nnz(bv);
+end
 
 % Trace of gain materix must be the specified value in 'trVal'
 itrr = itrr + 1;
 
-for i = 1 : 2*m
+for i = 1 : d*m
     itra = itra + 1;
-    idxR = 2*m + i;
+    idxR = d*m + i;
     idxC = idxR;
     
     Ai(itra) = itrr;
-    Aj(itra) = (idxR-1)*(4*m) + idxC;
+    Aj(itra) = (idxR-1)*(2*d*m) + idxC;
     Av(itra) = 1;
 end
 
@@ -306,12 +338,19 @@ itrb = itrb + 1;
 bi(itrb) = itrr;
 bv(itrb) = trVal;
 
+if verbose
+    fprintf('trace. nnzA = %d (%d). nnzb = %d (%d)\n',...
+            nnz(Av)-tmpA, numElmA4, nnz(bv)-tmpb, numElmB4);
 
+    % for next time
+    tmpA = nnz(Av);
+    tmpb = nnz(bv);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Symmetry
 
-for i = 1 : (4*m-1)
-    for j = (i+1) : 4*m 
+for i = 1 : (2*d*m-1)
+    for j = (i+1) : 2*d*m
         % Symmetric entries should be equal
         itrr = itrr + 1;
         
@@ -320,7 +359,7 @@ for i = 1 : (4*m-1)
         idxC = j;
 
         Ai(itra) = itrr;
-        Aj(itra) = (idxR-1)*(4*m) + idxC;
+        Aj(itra) = (idxR-1)*(2*d*m) + idxC;
         Av(itra) = 1;
         
         itra = itra + 1;
@@ -328,9 +367,14 @@ for i = 1 : (4*m-1)
         idxC = i;
 
         Ai(itra) = itrr;
-        Aj(itra) = (idxR-1)*(4*m) + idxC;
+        Aj(itra) = (idxR-1)*(2*d*m) + idxC;
         Av(itra) = -1;        
     end
+end
+
+if verbose
+    fprintf('sym. nnzA = %d (%d). nnzb = %d (%d)\n',...
+            nnz(Av)-tmpA, numElmA5, nnz(bv)-tmpb, numElmB5);
 end
 
 % Last element set to fix the size of b
@@ -338,13 +382,13 @@ itrb = itrb + 1;
 bi(itrb) = itrr; 
 bv(itrb) = 0;
 
-% Remove any additional entries
-Ai(itra+1:end) = [];
-Aj(itra+1:end) = [];
-Av(itra+1:end) = [];
-
-bi(itrb+1:end) = [];
-bv(itrb+1:end) = [];
+% % Remove any additional entries
+% Ai(itra+1:end) = [];
+% Aj(itra+1:end) = [];
+% Av(itra+1:end) = [];
+%
+% bi(itrb+1:end) = [];
+% bv(itrb+1:end) = [];
 
 
 % Make sparse matrices
@@ -352,7 +396,7 @@ A = sparse(Ai, Aj, Av);
 b = sparse(bi, ones(length(bi), 1), bv);
 
 % Size of optimization variable
-sizX = 4 * m;
+sizX = 2 * d*m;
 
 
 
