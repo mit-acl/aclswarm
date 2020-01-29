@@ -30,6 +30,8 @@ find_package(Eigen3 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} (${EIGEN3_DIR})")
 # Note: Eigen 3.2.2 or later is required
 
+## Include MATLAB generated ADMM library
+add_subdirectory(lib/codegen_admm)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
