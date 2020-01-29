@@ -15,6 +15,7 @@
   <url type="website">https:github.com/mit-acl/pgswarm</url>
 
   <depend>message_runtime</depend>
+  <depend>rosunit</depend>
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>eigen_conversions</depend>
