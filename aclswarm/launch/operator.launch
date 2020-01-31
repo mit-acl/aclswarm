@@ -2,7 +2,7 @@
 <!-- Used by the swarm operator to dispatch formation shapes -->
 <launch>
     <arg name="formations" />
-    <arg name="send_gains" default="true" />
+    <arg name="send_gains" default="false" />
     <arg name="central_assignment" default="false" />
     <arg name="room" default="vicon"/>
     <arg name="leader" default=""/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Used by the swarm operator to dispatch formation shapes -->
 <launch>
-    <arg name="send_gains" default="true" />
+    <arg name="send_gains" default="false" />
 
     <!-- Load enlarged room bounds for simulation -->
     <rosparam ns="room_bounds">
