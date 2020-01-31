@@ -30,6 +30,8 @@ find_package(Eigen3 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} (${EIGEN3_DIR})")
 # Note: Eigen 3.2.2 or later is required
 
+## Include MATLAB generated ADMM library
+add_subdirectory(lib/codegen_admm)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -132,9 +134,8 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
 ## Declare a C++ library
-# add_library(aclswarm
-#   src/${PROJECT_NAME}/aclswarm.cpp
-# )
+add_library(admm src/admm.cpp)
+target_link_libraries(admm ${catkin_LIBRARIES} codegen_admm)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -166,7 +167,7 @@ add_dependencies(localization_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(safety_node ${catkin_LIBRARIES})
-target_link_libraries(coordination_node ${catkin_LIBRARIES})
+target_link_libraries(coordination_node ${catkin_LIBRARIES} admm)
 target_link_libraries(localization_node ${catkin_LIBRARIES})
 
 #############
@@ -209,10 +210,10 @@ target_link_libraries(localization_node ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_aclswarm.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+catkin_add_gtest(admm-test test/test_admm.cpp)
+if(TARGET admm-test)
+  target_link_libraries(admm-test admm)
+endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

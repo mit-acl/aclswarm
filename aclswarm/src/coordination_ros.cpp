@@ -100,7 +100,11 @@ void CoordinationROS::spin()
       // We only need to solve gains if they were not already provided
       if (formation_->gains.size() == 0) {
         // solve for gains
-        ROS_ERROR("Online gain design not yet implemented.");
+        auto timestart = ros::Time::now();
+        formation_->gains = admm_->calculateFormationGains(formation_->qdes,
+                                                          formation_->adjmat);
+        ROS_INFO_STREAM("Generated gains in " <<
+                          (ros::Time::now() - timestart).toSec() << " secs.");
       }
 
       // let the controller know about the new formation
@@ -151,6 +155,7 @@ void CoordinationROS::init()
   // Instantiate module objects for tasks
   //
 
+  admm_.reset(new ADMM(n_));
   controller_.reset(new DistCntrl(vehid_, n_));
   auctioneer_.reset(new Auctioneer(vehid_, n_, verbose));
 

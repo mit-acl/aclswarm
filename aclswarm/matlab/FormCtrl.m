@@ -87,7 +87,7 @@ Dd = Dd + Dd';
 cvx_startup
 
 % Find stabilizing control gains (Needs CVX)
-A = FindGains(qs(:), adj);
+A = ADMMGainDesign2D(qs(:), adj);
 
 
 %% Simulate the model
