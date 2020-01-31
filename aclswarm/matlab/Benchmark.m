@@ -6,7 +6,7 @@ addpath('Helpers');
 cvx_startup;
 
 % Reset the random number generator (for repeatability of the results)
-rng(0,'twister'); 
+% rng(0,'twister'); 
 
 
 % Number of agents to test
@@ -34,7 +34,9 @@ fprintf('Iteration %i of %i ...\n', i, numTst);
 n = numAgt(i); % Number of agents   
 
 % Random desired formation cooridnates
-Qs = rand(3,n) * 5; 
+Qs = rand(3,n) * 5;
+
+Qs = [0 2 2 0; 0 0 2 2; 2.5 3.5 4.5 1.5];
 
 % Random adjacency matrix
 adj = ones(n) - diag(ones(n,1));  % Complete graph
@@ -49,10 +51,10 @@ for j = 1 : k
 end
 
 % SDP approach via CVX
-% fprintf('Running SDP solver for n = %i ...\n', i);
-% tic
-% Asdp = SDPGainDesign3D(Qs, adj);
-% Tsdp(i) = toc
+fprintf('Running SDP solver for n = %i ...\n', i);
+tic
+Asdp = SDPGainDesign3D(Qs, adj);
+Tsdp(i) = toc
 
 % % Eigenvalues of the gain matrix
 % eigSdp = sort( abs(eig(Asdp)) )'
@@ -62,7 +64,7 @@ end
 % Customized ADMM approach 
 fprintf('Running ADMM solver for n = %i ...\n', i);
 tic
-Aadmm = ADMMGainDesign3D(Qs, adj);
+Aadmm = ADMMGainDesign3D(Qs, adj)
 Tadmm(i) = toc
 
 % % Eigenvalues of  the gain matrix
