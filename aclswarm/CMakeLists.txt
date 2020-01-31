@@ -167,7 +167,7 @@ add_dependencies(localization_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(safety_node ${catkin_LIBRARIES})
-target_link_libraries(coordination_node ${catkin_LIBRARIES})
+target_link_libraries(coordination_node ${catkin_LIBRARIES} admm)
 target_link_libraries(localization_node ${catkin_LIBRARIES})
 
 #############
