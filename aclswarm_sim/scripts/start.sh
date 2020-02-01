@@ -1,4 +1,12 @@
 #!/bin/bash
+# Starts a simulation trial.
+# 
+# Remember: However long your .bashrc takes will be multiplied by n.
+# For best results, make your .bashrc as lean as possible and source
+# the relevant aclswarm catkin workspace in the .bashrc.
+# 
+# TODO: tmux may not be the best for larger simulations (> 50). Consider
+# managing each process without tmux.
 
 function draw_uniform {
   # generates a random float in [a b)
@@ -53,7 +61,7 @@ function draw_nonoverlapping_circles {
 }
 
 function make_tmux_session {
-  cmd="new-session -d -s $1"
+  cmd="new-session -d -s $1 -x 300 -y 300"
   for ((i=1; i<$2; i++)); do
     cmd="$cmd ; split-window ; select-layout tiled"
   done
@@ -153,3 +161,5 @@ tmux set-window-option -t aclswarm:0 synchronize-panes on
 if [ -z $headless ]; then
   tmux attach-session -t aclswarm
 fi
+
+echo "done"

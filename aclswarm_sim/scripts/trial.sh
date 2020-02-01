@@ -8,18 +8,13 @@ w=20    # width of initialization area
 h=20    # height of initialization area
 r=0.75  # buffer radius btwn initializations
 
-formparam="$MYPATH/../param/formations.yaml"
-formation=$1
+#
+# parse argument
+#
 
-# allow caller to add a trial name, like 'afc0001'
-# otherwise, the datetime will be used
-if [[ -z $2 ]]; then
-  bagflag="-o"
-  trialname=
-else
-  bagflag="-O"
-  trialname="_$2"
-fi
+trialname=$1
+trialnumber=$2
+formation=$3
 
 if [ -z "$formation" ]; then
   echo
@@ -47,8 +42,17 @@ sleep 1 # wait for roscore to initialize
 # Start Operator
 #
 
+if [[ "$formation" == simform* ]]; then
+  numAgents=$(echo "${formation//[!0-9]/}")
+  formation="simform"
+  rosrun aclswarm_sim generate_random_formation.py -l 20 -w 20 -h 5 "$numAgents"
+else
+  # load formations
+  formparam="$MYPATH/../param/formations.yaml"
+  rosparam load "$formparam" operator
+fi
+
 # set formation
-rosparam load "$formparam" operator
 rosparam set /operator/formation_group "$formation"
 
 # retrieve how many agents are needed for this formation
@@ -81,7 +85,7 @@ sleep 5 # wait for system bring up
 # Simulation trial
 #
 
-# rosrun aclswarm_sim bag_record.sh "$bagflag" "$formation$trialname" __name:=bagrecorder >/dev/null 2>&1 &
+# rosrun aclswarm_sim bag_record.sh -O "$formation$trialname$trialnumber" __name:=bagrecorder >/dev/null 2>&1 &
 
 rosrun aclswarm_sim supervisor.py
 

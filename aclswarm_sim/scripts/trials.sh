@@ -64,7 +64,7 @@ for i in $(seq 1 $m); do
   # zero pad based on total number of trials
   printf -v j "%0${#m}d" $i
 
-  rosrun aclswarm_sim trial.sh $formation_group "${name}$j" &
+  rosrun aclswarm_sim trial.sh "$name" "$j" "$formation_group" &
   trialpid=$!
   wait $trialpid
 
