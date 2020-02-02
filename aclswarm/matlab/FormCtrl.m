@@ -1,6 +1,5 @@
-% This script simulates formation control of a group of quadrotors.
-%
-% -------> Scale of the formation is NOT controlled in this demo!
+% This script simulates formation control of a swarm of single-integrator
+% agents.
 %
 % -------> IMPORTANT:  CVX must be installed before running! (see README)
 %
@@ -21,47 +20,47 @@ addpath('CBAA');
 addpath('Hungarian');
 
 
-%% Simulation parameters for triangle formation
+%% Formation design
 
 % Desired formation as regular N-gon
-n = 6;
+n = 4;
 qAng = linspace(0,360,n+1);      % Desired locations of agents on the unit circle given in angle
 qAng(end) = [];
-qs = [cosd(qAng); sind(qAng)] * 3; % Desired locations in x-y coordinates
+r = 3;
+% qs = [r*cosd(qAng); r*sind(qAng); ones(size(qAng))]; % 2d formation
+% qs = [r*cosd(qAng); r*sind(qAng); 1:n]; % 3d formation
 
 % Line formation
-qs = [(1:n); zeros(1,n)];
-
-n = size(qs,2);       % Number of agents
+% qs = [(1:n); zeros(1,n); zeros(1,n)]; % 2d formation
+qs = [(1:n); zeros(1,n); 1:n]; % 3d formation
 
 % Random initial positions (can replace with any other value)
 % rng(1)
 rng(2)
-q0 = rand(2,n) * 5;
+q0 = rand(3,n) * 5;
 
+q0(3,:) = 1*ones(1,n);
+q0(3,1) = 0;
 
 % Graph adjacency matrix
-adj = [ 0     1     1     0     0     0
-        1     0     1     1     1     0
-        1     1     0     0     1     1
-        0     1     0     0     1     0
-        0     1     1     1     0     1
-        0     0     1     0     1     0];
+adj = ones(n) - diag(ones(n,1));  % Complete graph
 
-% adj = ones(n) - diag(ones(n,1));  % Complete graph
 
-     
 %% Parameters
 
 Tassign     = 1e-0;              % Reassignment period
-runAssign   = true;              % Boolean to run assignment
+runAssign   = false;              % Boolean to run assignment
 method      = 'cbaa';            % CBAA assignment
 % method      = 'hungarian';       % Hungarian assignment
 runColAvoid = false;             % Boolean to run collision avoidance
 
-T           = [0, 20];           % Simulation time interval 
-numT        = 1000;              % Number of time samples in the simulation
-vSat        = 3;                 % Max speed
+% n.b.: when colAvoid is on, ode45 may not progress if in gridlock.
+% Gridlock is likely when initial conditions are random (i.e., agents start
+% within each other's keep out regions).
+
+T           = [0, 30];           % Simulation time interval 
+numT        = diff(T)/0.01;      % Number of time samples in the simulation
+vSat        = 6;                 % Max speed
 dcoll       = 2;                 % Collision avoidance distance
 rcoll       = 1;                 % Collision avoidance circle radius
 
@@ -71,14 +70,7 @@ rcoll       = 1;                 % Collision avoidance circle radius
 
 % Element (i,j) in matrix Dd describes the distance between agents i and j 
 % in the formation. The diagonals are zero by definition.
-Dd = zeros(n,n); % inter-agent distances in desired formation
-for i = 1 : n
-    for j = i+1 : n
-        Dd(i,j) = norm(qs(:,i)-qs(:,j), 2);
-    end
-end
-Dd = Dd + Dd';
-
+Dd = squareform(pdist(qs')); % inter-agent distances in desired formation
 
 %% Computing formation control gains
 
@@ -87,7 +79,8 @@ Dd = Dd + Dd';
 cvx_startup
 
 % Find stabilizing control gains (Needs CVX)
-A = ADMMGainDesign2D(qs(:), adj);
+A = ADMMGainDesign3D(qs, adj);
+% A = SDPGainDesign3D(qs, adj);
 
 
 %% Simulate the model
@@ -96,7 +89,6 @@ Tvec = linspace(T(1), T(2), numT);
 
 % Initial state
 state0 = q0(:);                % Initial condition
-
 
 % Parameters passed down to the ODE solver
 par.n = n;                      % Number of agents
@@ -119,18 +111,22 @@ opt = odeset('AbsTol', 1.0e-6, 'RelTol', 1.0e-6);
 clear sys
 [t,stateMat] = ode45(@Sys, Tvec, state0, opt, par);
 
-
-
-
 %% Show results
+
+qf = zeros(size(q0));
 
 % A rough plot of the trajectories
 figure;
 hold on
 for i = 1 : n
-    state = stateMat(:,2*i-1:2*i);
-    scatter(state(:,1), state(:,2), 20, 'filled');
+    state = stateMat(:, 3*(i-1)+1 : 3*(i-1)+3);
+    scatter3(state(:,1), state(:,2), state(:,3), 20, 'filled');
+    scatter3(state(1,1), state(1,2), state(1,3), 50, 'rx');
+    
+    % extract final position
+    qf(:,i) = state(end,:);
 end
+xlabel('X'); ylabel('Y'); zlabel('Z');
 grid on
 hold off
 axis equal
@@ -142,10 +138,26 @@ title('Trajectories')
 figure;
 hold on
 for i = 1 : n
-    state = stateMat(:,2*i-1:2*i);
-    scatter(state(end,1), state(end,2),50, 'filled');
+    scatter3(qf(1,i), qf(2,i), qf(3,i), 50, 'filled');
 end
+xlabel('X'); ylabel('Y'); zlabel('Z');
 grid on 
 hold off
 axis equal
 title('Final position')
+
+if ~runAssign
+    % The following scale control analysis may not be as clear when agents
+    % are reordered due to reassignment.
+    disp('-------------- xy --------------')
+    Df = pdist(qf(1:2,:)')
+    Ds = pdist(qs(1:2,:)')
+    ratf = Df(1) ./ Df
+    rats = Ds(1) ./ Ds
+
+    disp('-------------- z --------------')
+    Df = pdist(qf(3,:)')
+    Ds = pdist(qs(3,:)')
+    ratf = Df(1) ./ Df
+    rats = Ds(1) ./ Ds
+end
