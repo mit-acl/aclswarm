@@ -4,56 +4,17 @@
 // government, commercial, or other organizational use.
 // File: ADMMGainDesign3D_rtwutil.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
 #include "ADMMGainDesign3D_rtwutil.h"
+#include "ADMMGainDesign3D.h"
+#include "rt_nonfinite.h"
+#include <cmath>
 
 // Function Definitions
-
-//
-// Arguments    : int numerator
-//                int denominator
-// Return Type  : int
-//
-int div_nzp_s32_floor(int numerator, int denominator)
-{
-  int quotient;
-  unsigned int absNumerator;
-  unsigned int absDenominator;
-  bool quotientNeedsNegation;
-  unsigned int tempAbsQuotient;
-  if (numerator < 0) {
-    absNumerator = ~(unsigned int)numerator + 1U;
-  } else {
-    absNumerator = (unsigned int)numerator;
-  }
-
-  if (denominator < 0) {
-    absDenominator = ~(unsigned int)denominator + 1U;
-  } else {
-    absDenominator = (unsigned int)denominator;
-  }
-
-  quotientNeedsNegation = ((numerator < 0) != (denominator < 0));
-  tempAbsQuotient = absNumerator / absDenominator;
-  if (quotientNeedsNegation) {
-    absNumerator %= absDenominator;
-    if (absNumerator > 0U) {
-      tempAbsQuotient++;
-    }
-
-    quotient = -(int)tempAbsQuotient;
-  } else {
-    quotient = (int)tempAbsQuotient;
-  }
-
-  return quotient;
-}
 
 //
 // Arguments    : int numerator
@@ -65,7 +26,6 @@ int div_s32(int numerator, int denominator)
   int quotient;
   unsigned int b_numerator;
   unsigned int b_denominator;
-  unsigned int tempAbsQuotient;
   if (denominator == 0) {
     if (numerator >= 0) {
       quotient = MAX_int32_T;
@@ -74,22 +34,22 @@ int div_s32(int numerator, int denominator)
     }
   } else {
     if (numerator < 0) {
-      b_numerator = ~(unsigned int)numerator + 1U;
+      b_numerator = ~static_cast<unsigned int>(numerator) + 1U;
     } else {
-      b_numerator = (unsigned int)numerator;
+      b_numerator = static_cast<unsigned int>(numerator);
     }
 
     if (denominator < 0) {
-      b_denominator = ~(unsigned int)denominator + 1U;
+      b_denominator = ~static_cast<unsigned int>(denominator) + 1U;
     } else {
-      b_denominator = (unsigned int)denominator;
+      b_denominator = static_cast<unsigned int>(denominator);
     }
 
-    tempAbsQuotient = b_numerator / b_denominator;
+    b_numerator /= b_denominator;
     if ((numerator < 0) != (denominator < 0)) {
-      quotient = -(int)tempAbsQuotient;
+      quotient = -static_cast<int>(b_numerator);
     } else {
-      quotient = (int)tempAbsQuotient;
+      quotient = static_cast<int>(b_numerator);
     }
   }
 
@@ -105,19 +65,18 @@ double rt_hypotd_snf(double u0, double u1)
 {
   double y;
   double a;
-  double b;
   a = std::abs(u0);
-  b = std::abs(u1);
-  if (a < b) {
-    a /= b;
-    y = b * std::sqrt(a * a + 1.0);
-  } else if (a > b) {
-    b /= a;
-    y = a * std::sqrt(b * b + 1.0);
-  } else if (rtIsNaN(b)) {
-    y = b;
+  y = std::abs(u1);
+  if (a < y) {
+    a /= y;
+    y *= std::sqrt(a * a + 1.0);
+  } else if (a > y) {
+    y /= a;
+    y = a * std::sqrt(y * y + 1.0);
   } else {
-    y = a * 1.4142135623730951;
+    if (!rtIsNaN(y)) {
+      y = a * 1.4142135623730951;
+    }
   }
 
   return y;

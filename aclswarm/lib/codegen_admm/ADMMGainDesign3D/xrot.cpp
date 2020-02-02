@@ -4,44 +4,16 @@
 // government, commercial, or other organizational use.
 // File: xrot.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "xrot.h"
+#include "ADMMGainDesign3D.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
-
-//
-// Arguments    : int n
-//                emxArray_real_T *x
-//                int ix0
-//                int iy0
-//                double c
-//                double s
-// Return Type  : void
-//
-void b_xrot(int n, emxArray_real_T *x, int ix0, int iy0, double c, double s)
-{
-  int ix;
-  int iy;
-  int k;
-  double temp;
-  if (n >= 1) {
-    ix = ix0 - 1;
-    iy = iy0 - 1;
-    for (k = 0; k < n; k++) {
-      temp = c * x->data[ix] + s * x->data[iy];
-      x->data[iy] = c * x->data[iy] - s * x->data[ix];
-      x->data[ix] = temp;
-      iy++;
-      ix++;
-    }
-  }
-}
 
 //
 // Arguments    : double x[4]
@@ -50,7 +22,7 @@ void b_xrot(int n, emxArray_real_T *x, int ix0, int iy0, double c, double s)
 //                double s
 // Return Type  : void
 //
-void c_xrot(double x[4], int iy0, double c, double s)
+void b_xrot(double x[4], int iy0, double c, double s)
 {
   int iy;
   double temp;

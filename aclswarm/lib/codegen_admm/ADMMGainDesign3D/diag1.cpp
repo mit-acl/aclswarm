@@ -4,15 +4,15 @@
 // government, commercial, or other organizational use.
 // File: diag1.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "diag1.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -24,23 +24,20 @@
 void b_diag(const emxArray_boolean_T *v, emxArray_boolean_T *d)
 {
   int nv;
-  int unnamed_idx_0;
-  int unnamed_idx_1;
-  int i12;
+  int j;
+  int loop_ub;
   nv = v->size[0];
-  unnamed_idx_0 = v->size[0];
-  unnamed_idx_1 = v->size[0];
-  i12 = d->size[0] * d->size[1];
-  d->size[0] = unnamed_idx_0;
-  d->size[1] = unnamed_idx_1;
-  emxEnsureCapacity_boolean_T(d, i12);
-  unnamed_idx_0 *= unnamed_idx_1;
-  for (i12 = 0; i12 < unnamed_idx_0; i12++) {
-    d->data[i12] = false;
+  j = d->size[0] * d->size[1];
+  d->size[0] = v->size[0];
+  d->size[1] = v->size[0];
+  emxEnsureCapacity_boolean_T(d, j);
+  loop_ub = v->size[0] * v->size[0];
+  for (j = 0; j < loop_ub; j++) {
+    d->data[j] = false;
   }
 
-  for (unnamed_idx_0 = 0; unnamed_idx_0 < nv; unnamed_idx_0++) {
-    d->data[unnamed_idx_0 + d->size[0] * unnamed_idx_0] = v->data[unnamed_idx_0];
+  for (j = 0; j < nv; j++) {
+    d->data[j + d->size[0] * j] = v->data[j];
   }
 }
 
@@ -89,24 +86,21 @@ void c_diag(const emxArray_creal_T *v, emxArray_creal_T *d)
 void d_diag(const emxArray_creal_T *v, emxArray_creal_T *d)
 {
   int nv;
-  int unnamed_idx_0;
-  int unnamed_idx_1;
-  int i29;
+  int j;
+  int loop_ub;
   nv = v->size[0];
-  unnamed_idx_0 = v->size[0];
-  unnamed_idx_1 = v->size[0];
-  i29 = d->size[0] * d->size[1];
-  d->size[0] = unnamed_idx_0;
-  d->size[1] = unnamed_idx_1;
-  emxEnsureCapacity_creal_T(d, i29);
-  unnamed_idx_0 *= unnamed_idx_1;
-  for (i29 = 0; i29 < unnamed_idx_0; i29++) {
-    d->data[i29].re = 0.0;
-    d->data[i29].im = 0.0;
+  j = d->size[0] * d->size[1];
+  d->size[0] = v->size[0];
+  d->size[1] = v->size[0];
+  emxEnsureCapacity_creal_T(d, j);
+  loop_ub = v->size[0] * v->size[0];
+  for (j = 0; j < loop_ub; j++) {
+    d->data[j].re = 0.0;
+    d->data[j].im = 0.0;
   }
 
-  for (unnamed_idx_0 = 0; unnamed_idx_0 < nv; unnamed_idx_0++) {
-    d->data[unnamed_idx_0 + d->size[0] * unnamed_idx_0] = v->data[unnamed_idx_0];
+  for (j = 0; j < nv; j++) {
+    d->data[j + d->size[0] * j] = v->data[j];
   }
 }
 

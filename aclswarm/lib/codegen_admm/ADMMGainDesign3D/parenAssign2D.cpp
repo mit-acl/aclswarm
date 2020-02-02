@@ -4,20 +4,15 @@
 // government, commercial, or other organizational use.
 // File: parenAssign2D.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "parenAssign2D.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
-#include "bigProduct.h"
-#include <string.h>
-
-// Type Definitions
-#include <stddef.h>
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -35,8 +30,13 @@ void b_realloc(coder_internal_sparse_1 *b_this, int numAllocRequested, int ub1,
 {
   int numAlloc;
   int overflow;
-  int i51;
-  bigProduct(b_this->m, &numAlloc, &overflow);
+  int i;
+  numAlloc = b_this->m >> 16;
+  overflow = numAlloc >> 16;
+  if ((b_this->m & 65535) > MAX_int32_T - (numAlloc << 16)) {
+    overflow++;
+  }
+
   if (overflow == 0) {
     if (numAllocRequested <= b_this->m) {
       numAlloc = numAllocRequested;
@@ -53,18 +53,18 @@ void b_realloc(coder_internal_sparse_1 *b_this, int numAllocRequested, int ub1,
     numAlloc = numAllocRequested;
   }
 
-  i51 = b_this->rowidx->size[0];
+  i = b_this->rowidx->size[0];
   b_this->rowidx->size[0] = numAlloc;
-  emxEnsureCapacity_int32_T(b_this->rowidx, i51);
-  for (i51 = 0; i51 < numAlloc; i51++) {
-    b_this->rowidx->data[i51] = 0;
+  emxEnsureCapacity_int32_T(b_this->rowidx, i);
+  for (i = 0; i < numAlloc; i++) {
+    b_this->rowidx->data[i] = 0;
   }
 
-  i51 = b_this->d->size[0];
+  i = b_this->d->size[0];
   b_this->d->size[0] = numAlloc;
-  emxEnsureCapacity_real_T(b_this->d, i51);
-  for (i51 = 0; i51 < numAlloc; i51++) {
-    b_this->d->data[i51] = 0.0;
+  emxEnsureCapacity_real_T(b_this->d, i);
+  for (i = 0; i < numAlloc; i++) {
+    b_this->d->data[i] = 0.0;
   }
 
   b_this->maxnz = numAlloc;
@@ -74,57 +74,9 @@ void b_realloc(coder_internal_sparse_1 *b_this, int numAllocRequested, int ub1,
   }
 
   for (overflow = lb2; overflow <= ub2; overflow++) {
-    i51 = (overflow + offs) - 1;
-    b_this->rowidx->data[i51] = 0;
-    b_this->d->data[i51] = 0.0;
-  }
-}
-
-//
-// Arguments    : coder_internal_sparse_1 *b_this
-//                b_struct_T *rhsIter
-//                int outStart
-//                const emxArray_real_T *rhs
-// Return Type  : int
-//
-int copyNonzeroValues(coder_internal_sparse_1 *b_this, b_struct_T *rhsIter, int
-                      outStart, const emxArray_real_T *rhs)
-{
-  int outIdx;
-  int i52;
-  int k;
-  double rhsv;
-  outIdx = outStart;
-  i52 = b_this->m;
-  for (k = 0; k < i52; k++) {
-    rhsv = rhs->data[rhsIter->idx - 1];
-    rhsIter->idx++;
-    rhsIter->row++;
-    if (rhsv != 0.0) {
-      b_this->rowidx->data[outIdx - 1] = 1 + k;
-      b_this->d->data[outIdx - 1] = rhsv;
-      outIdx++;
-    }
-  }
-
-  return outIdx;
-}
-
-//
-// Arguments    : coder_internal_sparse_1 *b_this
-//                int outstart
-//                int instart
-//                int nelem
-// Return Type  : void
-//
-void shiftRowidxAndData(coder_internal_sparse_1 *b_this, int outstart, int
-  instart, int nelem)
-{
-  if (nelem > 0) {
-    memmove((void *)&b_this->rowidx->data[outstart - 1], (void *)&b_this->
-            rowidx->data[instart - 1], (size_t)nelem * sizeof(int));
-    memmove((void *)&b_this->d->data[outstart - 1], (void *)&b_this->d->
-            data[instart - 1], (size_t)nelem * sizeof(double));
+    i = (overflow + offs) - 1;
+    b_this->rowidx->data[i] = 0;
+    b_this->d->data[i] = 0.0;
   }
 }
 

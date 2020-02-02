@@ -4,22 +4,22 @@
 // government, commercial, or other organizational use.
 // File: xzggev.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "xzggev.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
+#include "ADMMGainDesign3D_rtwutil.h"
+#include "rt_nonfinite.h"
+#include "xdlanv2.h"
+#include "xzggbal.h"
+#include "xzhgeqz.h"
 #include "xzlartg.h"
 #include "xztgevc.h"
-#include "xzhgeqz.h"
-#include "xzlascl.h"
-#include "schur.h"
-#include "ADMMGainDesign3D_rtwutil.h"
+#include <cmath>
 
 // Function Definitions
 
@@ -35,74 +35,68 @@ void xzggev(emxArray_creal_T *A, int *info, emxArray_creal_T *alpha1,
             emxArray_creal_T *beta1, emxArray_creal_T *V)
 {
   int n;
-  int jrow;
-  int nzcount;
+  int i;
+  int jcol;
   double anrm;
   bool ilascl;
-  bool found;
-  int ii;
+  bool notdone;
+  int jcolp1;
   bool exitg1;
   double anrmto;
+  bool guard1 = false;
   double absxk;
   emxArray_int32_T *rscale;
+  double ctoc;
+  emxArray_int8_T *b_I;
   int ilo;
   int ihi;
-  int exitg3;
-  int i;
-  emxArray_int8_T *b_I;
-  int j;
   int b_n;
-  bool exitg4;
-  creal_T atmp;
-  int exitg2;
-  bool b_A;
-  creal_T c_A;
-  creal_T d_A;
-  double c;
-  double cto1;
-  double stemp_re;
   double stemp_im;
-  double A_im;
-  double A_re;
+  double cto1;
+  double a;
+  int jrow;
+  int b_i;
+  creal_T tmp;
+  int j;
   *info = 0;
   n = A->size[0] - 1;
-  jrow = alpha1->size[0];
+  i = alpha1->size[0];
   alpha1->size[0] = A->size[0];
-  emxEnsureCapacity_creal_T(alpha1, jrow);
-  nzcount = A->size[0];
-  for (jrow = 0; jrow < nzcount; jrow++) {
-    alpha1->data[jrow].re = 0.0;
-    alpha1->data[jrow].im = 0.0;
+  emxEnsureCapacity_creal_T(alpha1, i);
+  jcol = A->size[0];
+  for (i = 0; i < jcol; i++) {
+    alpha1->data[i].re = 0.0;
+    alpha1->data[i].im = 0.0;
   }
 
-  jrow = beta1->size[0];
+  i = beta1->size[0];
   beta1->size[0] = A->size[0];
-  emxEnsureCapacity_creal_T(beta1, jrow);
-  nzcount = A->size[0];
-  for (jrow = 0; jrow < nzcount; jrow++) {
-    beta1->data[jrow].re = 0.0;
-    beta1->data[jrow].im = 0.0;
+  emxEnsureCapacity_creal_T(beta1, i);
+  jcol = A->size[0];
+  for (i = 0; i < jcol; i++) {
+    beta1->data[i].re = 0.0;
+    beta1->data[i].im = 0.0;
   }
 
-  jrow = V->size[0] * V->size[1];
+  i = V->size[0] * V->size[1];
   V->size[0] = A->size[0];
   V->size[1] = A->size[0];
-  emxEnsureCapacity_creal_T(V, jrow);
-  nzcount = A->size[0] * A->size[0];
-  for (jrow = 0; jrow < nzcount; jrow++) {
-    V->data[jrow].re = 0.0;
-    V->data[jrow].im = 0.0;
+  emxEnsureCapacity_creal_T(V, i);
+  jcol = A->size[0] * A->size[0];
+  for (i = 0; i < jcol; i++) {
+    V->data[i].re = 0.0;
+    V->data[i].im = 0.0;
   }
 
   if ((A->size[0] != 0) && (A->size[1] != 0)) {
     anrm = 0.0;
     ilascl = (A->size[0] == 0);
-    found = (A->size[1] == 0);
-    if ((!ilascl) && (!found)) {
-      ii = 0;
+    notdone = (A->size[1] == 0);
+    if ((!ilascl) && (!notdone)) {
+      jcolp1 = 0;
       exitg1 = false;
-      while ((!exitg1) && (ii <= A->size[0] * A->size[1] - 1)) {
-        absxk = rt_hypotd_snf(A->data[ii].re, A->data[ii].im);
+      while ((!exitg1) && (jcolp1 <= A->size[0] * A->size[1] - 1)) {
+        absxk = rt_hypotd_snf(A->data[jcolp1].re, A->data[jcolp1].im);
         if (rtIsNaN(absxk)) {
           anrm = rtNaN;
           exitg1 = true;
@@ -111,312 +105,181 @@ void xzggev(emxArray_creal_T *A, int *info, emxArray_creal_T *alpha1,
             anrm = absxk;
           }
 
-          ii++;
+          jcolp1++;
         }
       }
     }
 
     if (rtIsInf(anrm) || rtIsNaN(anrm)) {
-      jrow = alpha1->size[0];
+      i = alpha1->size[0];
       alpha1->size[0] = A->size[0];
-      emxEnsureCapacity_creal_T(alpha1, jrow);
-      nzcount = A->size[0];
-      for (jrow = 0; jrow < nzcount; jrow++) {
-        alpha1->data[jrow].re = rtNaN;
-        alpha1->data[jrow].im = 0.0;
+      emxEnsureCapacity_creal_T(alpha1, i);
+      jcol = A->size[0];
+      for (i = 0; i < jcol; i++) {
+        alpha1->data[i].re = rtNaN;
+        alpha1->data[i].im = 0.0;
       }
 
-      jrow = beta1->size[0];
+      i = beta1->size[0];
       beta1->size[0] = A->size[0];
-      emxEnsureCapacity_creal_T(beta1, jrow);
-      nzcount = A->size[0];
-      for (jrow = 0; jrow < nzcount; jrow++) {
-        beta1->data[jrow].re = rtNaN;
-        beta1->data[jrow].im = 0.0;
+      emxEnsureCapacity_creal_T(beta1, i);
+      jcol = A->size[0];
+      for (i = 0; i < jcol; i++) {
+        beta1->data[i].re = rtNaN;
+        beta1->data[i].im = 0.0;
       }
 
-      jrow = V->size[0] * V->size[1];
+      i = V->size[0] * V->size[1];
       V->size[0] = A->size[0];
       V->size[1] = A->size[0];
-      emxEnsureCapacity_creal_T(V, jrow);
-      nzcount = A->size[0] * A->size[0];
-      for (jrow = 0; jrow < nzcount; jrow++) {
-        V->data[jrow].re = rtNaN;
-        V->data[jrow].im = 0.0;
+      emxEnsureCapacity_creal_T(V, i);
+      jcol = A->size[0] * A->size[0];
+      for (i = 0; i < jcol; i++) {
+        V->data[i].re = rtNaN;
+        V->data[i].im = 0.0;
       }
     } else {
       ilascl = false;
       anrmto = anrm;
+      guard1 = false;
       if ((anrm > 0.0) && (anrm < 6.7178761075670888E-139)) {
         anrmto = 6.7178761075670888E-139;
         ilascl = true;
+        guard1 = true;
       } else {
         if (anrm > 1.4885657073574029E+138) {
           anrmto = 1.4885657073574029E+138;
           ilascl = true;
+          guard1 = true;
         }
       }
 
-      if (ilascl) {
-        xzlascl(anrm, anrmto, A);
+      if (guard1) {
+        absxk = anrm;
+        ctoc = anrmto;
+        notdone = true;
+        while (notdone) {
+          stemp_im = absxk * 2.0041683600089728E-292;
+          cto1 = ctoc / 4.9896007738368E+291;
+          if ((stemp_im > ctoc) && (ctoc != 0.0)) {
+            a = 2.0041683600089728E-292;
+            absxk = stemp_im;
+          } else if (cto1 > absxk) {
+            a = 4.9896007738368E+291;
+            ctoc = cto1;
+          } else {
+            a = ctoc / absxk;
+            notdone = false;
+          }
+
+          jcol = A->size[1];
+          for (i = 0; i < jcol; i++) {
+            jcolp1 = A->size[0];
+            for (jrow = 0; jrow < jcolp1; jrow++) {
+              A->data[jrow + A->size[0] * i].re *= a;
+              A->data[jrow + A->size[0] * i].im *= a;
+            }
+          }
+        }
       }
 
       emxInit_int32_T(&rscale, 1);
-      jrow = rscale->size[0];
-      rscale->size[0] = A->size[0];
-      emxEnsureCapacity_int32_T(rscale, jrow);
-      nzcount = A->size[0];
-      for (jrow = 0; jrow < nzcount; jrow++) {
-        rscale->data[jrow] = 1;
-      }
-
-      ilo = 1;
-      ihi = A->size[0];
-      if (A->size[0] <= 1) {
-        ihi = 1;
-      } else {
-        do {
-          exitg3 = 0;
-          i = 0;
-          j = -1;
-          found = false;
-          ii = ihi;
-          exitg1 = false;
-          while ((!exitg1) && (ii > 0)) {
-            nzcount = 0;
-            i = ii;
-            j = ihi - 1;
-            jrow = 0;
-            exitg4 = false;
-            while ((!exitg4) && (jrow <= ihi - 1)) {
-              b_A = ((A->data[(ii + A->size[0] * jrow) - 1].re != 0.0) ||
-                     (A->data[(ii + A->size[0] * jrow) - 1].im != 0.0));
-              if (b_A || (ii == jrow + 1)) {
-                if (nzcount == 0) {
-                  j = jrow;
-                  nzcount = 1;
-                  jrow++;
-                } else {
-                  nzcount = 2;
-                  exitg4 = true;
-                }
-              } else {
-                jrow++;
-              }
-            }
-
-            if (nzcount < 2) {
-              found = true;
-              exitg1 = true;
-            } else {
-              ii--;
-            }
-          }
-
-          if (!found) {
-            exitg3 = 2;
-          } else {
-            b_n = A->size[0];
-            if (i != ihi) {
-              for (ii = 1; ii <= b_n; ii++) {
-                atmp = A->data[(i + A->size[0] * (ii - 1)) - 1];
-                A->data[(i + A->size[0] * (ii - 1)) - 1] = A->data[(ihi +
-                  A->size[0] * (ii - 1)) - 1];
-                A->data[(ihi + A->size[0] * (ii - 1)) - 1] = atmp;
-              }
-            }
-
-            if (j + 1 != ihi) {
-              for (ii = 0; ii < ihi; ii++) {
-                atmp = A->data[ii + A->size[0] * j];
-                A->data[ii + A->size[0] * j] = A->data[ii + A->size[0] * (ihi -
-                  1)];
-                A->data[ii + A->size[0] * (ihi - 1)] = atmp;
-              }
-            }
-
-            rscale->data[ihi - 1] = j + 1;
-            ihi--;
-            if (ihi == 1) {
-              rscale->data[0] = 1;
-              exitg3 = 1;
-            }
-          }
-        } while (exitg3 == 0);
-
-        if (exitg3 == 1) {
-        } else {
-          do {
-            exitg2 = 0;
-            i = 0;
-            j = 0;
-            found = false;
-            jrow = ilo;
-            exitg1 = false;
-            while ((!exitg1) && (jrow <= ihi)) {
-              nzcount = 0;
-              i = ihi;
-              j = jrow;
-              ii = ilo;
-              exitg4 = false;
-              while ((!exitg4) && (ii <= ihi)) {
-                b_A = ((A->data[(ii + A->size[0] * (jrow - 1)) - 1].re != 0.0) ||
-                       (A->data[(ii + A->size[0] * (jrow - 1)) - 1].im != 0.0));
-                if (b_A || (ii == jrow)) {
-                  if (nzcount == 0) {
-                    i = ii;
-                    nzcount = 1;
-                    ii++;
-                  } else {
-                    nzcount = 2;
-                    exitg4 = true;
-                  }
-                } else {
-                  ii++;
-                }
-              }
-
-              if (nzcount < 2) {
-                found = true;
-                exitg1 = true;
-              } else {
-                jrow++;
-              }
-            }
-
-            if (!found) {
-              exitg2 = 1;
-            } else {
-              b_n = A->size[0];
-              if (i != ilo) {
-                for (ii = ilo; ii <= b_n; ii++) {
-                  atmp = A->data[(i + A->size[0] * (ii - 1)) - 1];
-                  A->data[(i + A->size[0] * (ii - 1)) - 1] = A->data[(ilo +
-                    A->size[0] * (ii - 1)) - 1];
-                  A->data[(ilo + A->size[0] * (ii - 1)) - 1] = atmp;
-                }
-              }
-
-              if (j != ilo) {
-                for (ii = 0; ii < ihi; ii++) {
-                  atmp = A->data[ii + A->size[0] * (j - 1)];
-                  A->data[ii + A->size[0] * (j - 1)] = A->data[ii + A->size[0] *
-                    (ilo - 1)];
-                  A->data[ii + A->size[0] * (ilo - 1)] = atmp;
-                }
-              }
-
-              rscale->data[ilo - 1] = j;
-              ilo++;
-              if (ilo == ihi) {
-                rscale->data[ilo - 1] = ilo;
-                exitg2 = 1;
-              }
-            }
-          } while (exitg2 == 0);
-        }
-      }
-
       emxInit_int8_T(&b_I, 2);
+      xzggbal(A, &ilo, &ihi, rscale);
       b_n = A->size[0];
-      jrow = b_I->size[0] * b_I->size[1];
+      i = b_I->size[0] * b_I->size[1];
       b_I->size[0] = A->size[0];
       b_I->size[1] = A->size[0];
-      emxEnsureCapacity_int8_T(b_I, jrow);
-      nzcount = A->size[0] * A->size[0];
-      for (jrow = 0; jrow < nzcount; jrow++) {
-        b_I->data[jrow] = 0;
+      emxEnsureCapacity_int8_T(b_I, i);
+      jcol = A->size[0] * A->size[0];
+      for (i = 0; i < jcol; i++) {
+        b_I->data[i] = 0;
       }
 
       if (A->size[0] > 0) {
-        for (ii = 0; ii < b_n; ii++) {
-          b_I->data[ii + b_I->size[0] * ii] = 1;
+        for (jcolp1 = 0; jcolp1 < b_n; jcolp1++) {
+          b_I->data[jcolp1 + b_I->size[0] * jcolp1] = 1;
         }
       }
 
-      jrow = V->size[0] * V->size[1];
+      i = V->size[0] * V->size[1];
       V->size[0] = b_I->size[0];
       V->size[1] = b_I->size[1];
-      emxEnsureCapacity_creal_T(V, jrow);
-      nzcount = b_I->size[0] * b_I->size[1];
-      for (jrow = 0; jrow < nzcount; jrow++) {
-        V->data[jrow].re = b_I->data[jrow];
-        V->data[jrow].im = 0.0;
+      emxEnsureCapacity_creal_T(V, i);
+      jcol = b_I->size[0] * b_I->size[1];
+      for (i = 0; i < jcol; i++) {
+        V->data[i].re = b_I->data[i];
+        V->data[i].im = 0.0;
       }
 
       emxFree_int8_T(&b_I);
       if ((A->size[0] > 1) && (ihi >= ilo + 2)) {
-        for (ii = ilo - 1; ii + 1 < ihi - 1; ii++) {
-          nzcount = ii + 2;
-          for (jrow = ihi - 1; jrow + 1 > ii + 2; jrow--) {
-            c_A = A->data[(jrow + A->size[0] * ii) - 1];
-            d_A = A->data[jrow + A->size[0] * ii];
-            xzlartg(c_A, d_A, &c, &atmp, &A->data[(jrow + A->size[0] * ii) - 1]);
-            A->data[jrow + A->size[0] * ii].re = 0.0;
-            A->data[jrow + A->size[0] * ii].im = 0.0;
-            for (j = nzcount; j <= b_n; j++) {
-              absxk = atmp.re * A->data[jrow + A->size[0] * (j - 1)].re -
-                atmp.im * A->data[jrow + A->size[0] * (j - 1)].im;
-              cto1 = atmp.re * A->data[jrow + A->size[0] * (j - 1)].im + atmp.im
-                * A->data[jrow + A->size[0] * (j - 1)].re;
-              stemp_re = c * A->data[(jrow + A->size[0] * (j - 1)) - 1].re +
-                absxk;
-              stemp_im = c * A->data[(jrow + A->size[0] * (j - 1)) - 1].im +
-                cto1;
-              absxk = A->data[(jrow + A->size[0] * (j - 1)) - 1].re;
+        for (jcol = ilo - 1; jcol + 1 < ihi - 1; jcol++) {
+          jcolp1 = jcol + 2;
+          for (jrow = ihi - 1; jrow + 1 > jcol + 2; jrow--) {
+            xzlartg(A->data[(jrow + A->size[0] * jcol) - 1], A->data[jrow +
+                    A->size[0] * jcol], &absxk, &tmp, &A->data[(jrow + A->size[0]
+                     * jcol) - 1]);
+            A->data[jrow + A->size[0] * jcol].re = 0.0;
+            A->data[jrow + A->size[0] * jcol].im = 0.0;
+            for (j = jcolp1; j <= b_n; j++) {
+              ctoc = absxk * A->data[(jrow + A->size[0] * (j - 1)) - 1].re +
+                (tmp.re * A->data[jrow + A->size[0] * (j - 1)].re - tmp.im *
+                 A->data[jrow + A->size[0] * (j - 1)].im);
+              stemp_im = absxk * A->data[(jrow + A->size[0] * (j - 1)) - 1].im +
+                (tmp.re * A->data[jrow + A->size[0] * (j - 1)].im + tmp.im *
+                 A->data[jrow + A->size[0] * (j - 1)].re);
               cto1 = A->data[(jrow + A->size[0] * (j - 1)) - 1].im;
-              A_im = A->data[(jrow + A->size[0] * (j - 1)) - 1].im;
-              A_re = A->data[(jrow + A->size[0] * (j - 1)) - 1].re;
-              A->data[jrow + A->size[0] * (j - 1)].re = c * A->data[jrow +
-                A->size[0] * (j - 1)].re - (atmp.re * absxk + atmp.im * cto1);
-              A->data[jrow + A->size[0] * (j - 1)].im = c * A->data[jrow +
-                A->size[0] * (j - 1)].im - (atmp.re * A_im - atmp.im * A_re);
-              A->data[(jrow + A->size[0] * (j - 1)) - 1].re = stemp_re;
+              a = A->data[(jrow + A->size[0] * (j - 1)) - 1].re;
+              A->data[jrow + A->size[0] * (j - 1)].re = absxk * A->data[jrow +
+                A->size[0] * (j - 1)].re - (tmp.re * A->data[(jrow + A->size[0] *
+                (j - 1)) - 1].re + tmp.im * A->data[(jrow + A->size[0] * (j - 1))
+                - 1].im);
+              A->data[jrow + A->size[0] * (j - 1)].im = absxk * A->data[jrow +
+                A->size[0] * (j - 1)].im - (tmp.re * cto1 - tmp.im * a);
+              A->data[(jrow + A->size[0] * (j - 1)) - 1].re = ctoc;
               A->data[(jrow + A->size[0] * (j - 1)) - 1].im = stemp_im;
             }
 
-            atmp.re = -atmp.re;
-            atmp.im = -atmp.im;
-            for (i = 1; i <= ihi; i++) {
-              absxk = atmp.re * A->data[(i + A->size[0] * (jrow - 1)) - 1].re -
-                atmp.im * A->data[(i + A->size[0] * (jrow - 1)) - 1].im;
-              cto1 = atmp.re * A->data[(i + A->size[0] * (jrow - 1)) - 1].im +
-                atmp.im * A->data[(i + A->size[0] * (jrow - 1)) - 1].re;
-              stemp_re = c * A->data[(i + A->size[0] * jrow) - 1].re + absxk;
-              stemp_im = c * A->data[(i + A->size[0] * jrow) - 1].im + cto1;
-              absxk = A->data[(i + A->size[0] * jrow) - 1].re;
-              cto1 = A->data[(i + A->size[0] * jrow) - 1].im;
-              A_im = A->data[(i + A->size[0] * jrow) - 1].im;
-              A_re = A->data[(i + A->size[0] * jrow) - 1].re;
-              A->data[(i + A->size[0] * (jrow - 1)) - 1].re = c * A->data[(i +
-                A->size[0] * (jrow - 1)) - 1].re - (atmp.re * absxk + atmp.im *
-                cto1);
-              A->data[(i + A->size[0] * (jrow - 1)) - 1].im = c * A->data[(i +
-                A->size[0] * (jrow - 1)) - 1].im - (atmp.re * A_im - atmp.im *
-                A_re);
-              A->data[(i + A->size[0] * jrow) - 1].re = stemp_re;
-              A->data[(i + A->size[0] * jrow) - 1].im = stemp_im;
+            tmp.re = -tmp.re;
+            tmp.im = -tmp.im;
+            for (b_i = 1; b_i <= ihi; b_i++) {
+              ctoc = absxk * A->data[(b_i + A->size[0] * jrow) - 1].re + (tmp.re
+                * A->data[(b_i + A->size[0] * (jrow - 1)) - 1].re - tmp.im *
+                A->data[(b_i + A->size[0] * (jrow - 1)) - 1].im);
+              stemp_im = absxk * A->data[(b_i + A->size[0] * jrow) - 1].im +
+                (tmp.re * A->data[(b_i + A->size[0] * (jrow - 1)) - 1].im +
+                 tmp.im * A->data[(b_i + A->size[0] * (jrow - 1)) - 1].re);
+              cto1 = A->data[(b_i + A->size[0] * jrow) - 1].im;
+              a = A->data[(b_i + A->size[0] * jrow) - 1].re;
+              A->data[(b_i + A->size[0] * (jrow - 1)) - 1].re = absxk * A->data
+                [(b_i + A->size[0] * (jrow - 1)) - 1].re - (tmp.re * A->data
+                [(b_i + A->size[0] * jrow) - 1].re + tmp.im * A->data[(b_i +
+                A->size[0] * jrow) - 1].im);
+              A->data[(b_i + A->size[0] * (jrow - 1)) - 1].im = absxk * A->data
+                [(b_i + A->size[0] * (jrow - 1)) - 1].im - (tmp.re * cto1 -
+                tmp.im * a);
+              A->data[(b_i + A->size[0] * jrow) - 1].re = ctoc;
+              A->data[(b_i + A->size[0] * jrow) - 1].im = stemp_im;
             }
 
-            for (i = 1; i <= b_n; i++) {
-              absxk = atmp.re * V->data[(i + V->size[0] * (jrow - 1)) - 1].re -
-                atmp.im * V->data[(i + V->size[0] * (jrow - 1)) - 1].im;
-              cto1 = atmp.re * V->data[(i + V->size[0] * (jrow - 1)) - 1].im +
-                atmp.im * V->data[(i + V->size[0] * (jrow - 1)) - 1].re;
-              stemp_re = c * V->data[(i + V->size[0] * jrow) - 1].re + absxk;
-              stemp_im = c * V->data[(i + V->size[0] * jrow) - 1].im + cto1;
-              absxk = V->data[(i + V->size[0] * jrow) - 1].re;
-              cto1 = V->data[(i + V->size[0] * jrow) - 1].im;
-              A_im = V->data[(i + V->size[0] * jrow) - 1].im;
-              A_re = V->data[(i + V->size[0] * jrow) - 1].re;
-              V->data[(i + V->size[0] * (jrow - 1)) - 1].re = c * V->data[(i +
-                V->size[0] * (jrow - 1)) - 1].re - (atmp.re * absxk + atmp.im *
-                cto1);
-              V->data[(i + V->size[0] * (jrow - 1)) - 1].im = c * V->data[(i +
-                V->size[0] * (jrow - 1)) - 1].im - (atmp.re * A_im - atmp.im *
-                A_re);
-              V->data[(i + V->size[0] * jrow) - 1].re = stemp_re;
-              V->data[(i + V->size[0] * jrow) - 1].im = stemp_im;
+            for (b_i = 1; b_i <= b_n; b_i++) {
+              ctoc = absxk * V->data[(b_i + V->size[0] * jrow) - 1].re + (tmp.re
+                * V->data[(b_i + V->size[0] * (jrow - 1)) - 1].re - tmp.im *
+                V->data[(b_i + V->size[0] * (jrow - 1)) - 1].im);
+              stemp_im = absxk * V->data[(b_i + V->size[0] * jrow) - 1].im +
+                (tmp.re * V->data[(b_i + V->size[0] * (jrow - 1)) - 1].im +
+                 tmp.im * V->data[(b_i + V->size[0] * (jrow - 1)) - 1].re);
+              cto1 = V->data[(b_i + V->size[0] * jrow) - 1].re;
+              V->data[(b_i + V->size[0] * (jrow - 1)) - 1].re = absxk * V->data
+                [(b_i + V->size[0] * (jrow - 1)) - 1].re - (tmp.re * V->data
+                [(b_i + V->size[0] * jrow) - 1].re + tmp.im * V->data[(b_i +
+                V->size[0] * jrow) - 1].im);
+              V->data[(b_i + V->size[0] * (jrow - 1)) - 1].im = absxk * V->data
+                [(b_i + V->size[0] * (jrow - 1)) - 1].im - (tmp.re * V->data
+                [(b_i + V->size[0] * jrow) - 1].im - tmp.im * cto1);
+              V->data[(b_i + V->size[0] * jrow) - 1].re = ctoc;
+              V->data[(b_i + V->size[0] * jrow) - 1].im = stemp_im;
             }
           }
         }
@@ -426,78 +289,77 @@ void xzggev(emxArray_creal_T *A, int *info, emxArray_creal_T *alpha1,
       if (*info == 0) {
         xztgevc(A, V);
         b_n = V->size[0];
-        nzcount = V->size[1] - 1;
+        jcol = V->size[1] - 1;
         if (ilo > 1) {
-          for (i = ilo - 2; i + 1 >= 1; i--) {
-            ii = rscale->data[i] - 1;
-            if (rscale->data[i] != i + 1) {
-              for (j = 0; j <= nzcount; j++) {
-                atmp = V->data[i + V->size[0] * j];
-                V->data[i + V->size[0] * j] = V->data[ii + V->size[0] * j];
-                V->data[ii + V->size[0] * j] = atmp;
+          for (b_i = ilo - 2; b_i + 1 >= 1; b_i--) {
+            jcolp1 = rscale->data[b_i] - 1;
+            if (rscale->data[b_i] != b_i + 1) {
+              for (j = 0; j <= jcol; j++) {
+                tmp = V->data[b_i + V->size[0] * j];
+                V->data[b_i + V->size[0] * j] = V->data[jcolp1 + V->size[0] * j];
+                V->data[jcolp1 + V->size[0] * j] = tmp;
               }
             }
           }
         }
 
         if (ihi < b_n) {
-          jrow = ihi + 1;
-          for (i = jrow; i <= b_n; i++) {
-            ii = rscale->data[i - 1] - 1;
-            if (rscale->data[i - 1] != i) {
-              for (j = 0; j <= nzcount; j++) {
-                atmp = V->data[(i + V->size[0] * j) - 1];
-                V->data[(i + V->size[0] * j) - 1] = V->data[ii + V->size[0] * j];
-                V->data[ii + V->size[0] * j] = atmp;
+          i = ihi + 1;
+          for (b_i = i; b_i <= b_n; b_i++) {
+            jrow = rscale->data[b_i - 1];
+            if (jrow != b_i) {
+              for (j = 0; j <= jcol; j++) {
+                tmp = V->data[(b_i + V->size[0] * j) - 1];
+                V->data[(b_i + V->size[0] * j) - 1] = V->data[(jrow + V->size[0]
+                  * j) - 1];
+                V->data[(jrow + V->size[0] * j) - 1] = tmp;
               }
             }
           }
         }
 
-        for (nzcount = 0; nzcount <= n; nzcount++) {
-          absxk = std::abs(V->data[V->size[0] * nzcount].re) + std::abs(V->
-            data[V->size[0] * nzcount].im);
+        for (jcolp1 = 0; jcolp1 <= n; jcolp1++) {
+          absxk = std::abs(V->data[V->size[0] * jcolp1].re) + std::abs(V->data
+            [V->size[0] * jcolp1].im);
           if (n + 1 > 1) {
-            for (ii = 0; ii < n; ii++) {
-              cto1 = std::abs(V->data[(ii + V->size[0] * nzcount) + 1].re) + std::
-                abs(V->data[(ii + V->size[0] * nzcount) + 1].im);
-              if (cto1 > absxk) {
-                absxk = cto1;
+            for (jcol = 0; jcol < n; jcol++) {
+              ctoc = std::abs(V->data[(jcol + V->size[0] * jcolp1) + 1].re) +
+                std::abs(V->data[(jcol + V->size[0] * jcolp1) + 1].im);
+              if (ctoc > absxk) {
+                absxk = ctoc;
               }
             }
           }
 
           if (absxk >= 6.7178761075670888E-139) {
             absxk = 1.0 / absxk;
-            for (ii = 0; ii <= n; ii++) {
-              V->data[ii + V->size[0] * nzcount].re *= absxk;
-              V->data[ii + V->size[0] * nzcount].im *= absxk;
+            for (jcol = 0; jcol <= n; jcol++) {
+              V->data[jcol + V->size[0] * jcolp1].re *= absxk;
+              V->data[jcol + V->size[0] * jcolp1].im *= absxk;
             }
           }
         }
 
         if (ilascl) {
-          ilascl = true;
-          while (ilascl) {
-            absxk = anrmto * 2.0041683600089728E-292;
+          notdone = true;
+          while (notdone) {
+            stemp_im = anrmto * 2.0041683600089728E-292;
             cto1 = anrm / 4.9896007738368E+291;
-            if ((absxk > anrm) && (anrm != 0.0)) {
-              A_im = 2.0041683600089728E-292;
-              anrmto = absxk;
+            if ((stemp_im > anrm) && (anrm != 0.0)) {
+              a = 2.0041683600089728E-292;
+              anrmto = stemp_im;
             } else if (cto1 > anrmto) {
-              A_im = 4.9896007738368E+291;
+              a = 4.9896007738368E+291;
               anrm = cto1;
             } else {
-              A_im = anrm / anrmto;
-              ilascl = false;
+              a = anrm / anrmto;
+              notdone = false;
             }
 
-            jrow = alpha1->size[0];
-            emxEnsureCapacity_creal_T(alpha1, jrow);
-            nzcount = alpha1->size[0];
-            for (jrow = 0; jrow < nzcount; jrow++) {
-              alpha1->data[jrow].re *= A_im;
-              alpha1->data[jrow].im *= A_im;
+            jcol = alpha1->size[0];
+            for (i = 0; i < jcol; i++) {
+              alpha1->data[i].re *= a;
+              alpha1->data[i].im *= a;
             }
           }
         }

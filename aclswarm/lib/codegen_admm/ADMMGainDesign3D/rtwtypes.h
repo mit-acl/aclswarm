@@ -4,8 +4,8 @@
  * government, commercial, or other organizational use.
  * File: rtwtypes.h
  *
- * MATLAB Coder version            : 4.1
- * C/C++ source code generated on  : 28-Jan-2020 15:30:30
+ * MATLAB Coder version            : 4.3
+ * C/C++ source code generated on  : 02-Feb-2020 11:20:18
  */
 
 #ifndef RTWTYPES_H
@@ -56,8 +56,6 @@ typedef char_T byte_T;
 /*===========================================================================*
  * Complex number type definitions                                           *
  *===========================================================================*/
-#define CREAL_T
-
 typedef struct {
   real32_T re;
   real32_T im;
@@ -131,13 +129,6 @@ static const uint32_T MIN_uint32_T = 0;
 #   define true                        (1U)
 #  endif
 #endif
-
-/*
- * Maximum length of a MATLAB identifier (function/variable)
- * including the null-termination character. Referenced by
- * rt_logging.c and rt_matrx.c.
- */
-#define TMW_NAME_LENGTH_MAX            64
 #endif
 
 /*

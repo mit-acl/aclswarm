@@ -4,23 +4,24 @@
 // government, commercial, or other organizational use.
 // File: introsort.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "introsort.h"
-#include "insertionsort.h"
+#include "ADMMGainDesign3D.h"
 #include "heapsort.h"
+#include "insertionsort.h"
+#include "rt_nonfinite.h"
 
 // Type Definitions
-typedef struct {
+struct struct_T
+{
   int xstart;
   int xend;
   int depth;
-} struct_T;
+};
 
 // Function Definitions
 
@@ -40,7 +41,7 @@ void b_introsort(emxArray_int32_T *x, int xstart, int xend)
   int pivot;
   struct_T frame;
   int pow2p;
-  int i47;
+  int i;
   struct_T st_d_data[120];
   int exitg2;
   if (xstart < xend) {
@@ -69,8 +70,8 @@ void b_introsort(emxArray_int32_T *x, int xstart, int xend)
       frame.xend = xend;
       frame.depth = 0;
       nsort = MAXDEPTH << 1;
-      for (i47 = 0; i47 < nsort; i47++) {
-        st_d_data[i47] = frame;
+      for (i = 0; i < nsort; i++) {
+        st_d_data[i] = frame;
       }
 
       st_d_data[0] = frame;
@@ -78,13 +79,13 @@ void b_introsort(emxArray_int32_T *x, int xstart, int xend)
       while (pmax > 0) {
         frame = st_d_data[pmax - 1];
         pmax--;
-        i47 = frame.xend - frame.xstart;
-        if (i47 + 1 <= 32) {
+        i = frame.xend - frame.xstart;
+        if (i + 1 <= 32) {
           b_insertionsort(x, frame.xstart, frame.xend);
         } else if (frame.depth == MAXDEPTH) {
           c_heapsort(x, frame.xstart, frame.xend);
         } else {
-          nsort = (frame.xstart + ((i47 + (i47 < 0)) >> 1)) - 1;
+          nsort = (frame.xstart + ((i + (i < 0)) >> 1)) - 1;
           pow2p = frame.xstart - 1;
           if (x->data[nsort] < x->data[pow2p]) {
             pmin = x->data[pow2p];
@@ -92,24 +93,24 @@ void b_introsort(emxArray_int32_T *x, int xstart, int xend)
             x->data[nsort] = pmin;
           }
 
-          i47 = frame.xend - 1;
-          if (x->data[i47] < x->data[pow2p]) {
+          i = frame.xend - 1;
+          if (x->data[i] < x->data[pow2p]) {
             pmin = x->data[pow2p];
-            x->data[pow2p] = x->data[i47];
-            x->data[i47] = pmin;
+            x->data[pow2p] = x->data[i];
+            x->data[i] = pmin;
           }
 
-          if (x->data[i47] < x->data[nsort]) {
+          if (x->data[i] < x->data[nsort]) {
             pmin = x->data[nsort];
-            x->data[nsort] = x->data[i47];
-            x->data[i47] = pmin;
+            x->data[nsort] = x->data[i];
+            x->data[i] = pmin;
           }
 
           pivot = x->data[nsort];
-          i47 = frame.xend - 2;
-          x->data[nsort] = x->data[i47];
-          x->data[i47] = pivot;
-          nsort = i47;
+          i = frame.xend - 2;
+          x->data[nsort] = x->data[i];
+          x->data[i] = pivot;
+          nsort = i;
           do {
             exitg2 = 0;
             for (pow2p++; x->data[pow2p] < pivot; pow2p++) {
@@ -127,7 +128,7 @@ void b_introsort(emxArray_int32_T *x, int xstart, int xend)
             }
           } while (exitg2 == 0);
 
-          x->data[i47] = x->data[pow2p];
+          x->data[i] = x->data[pow2p];
           x->data[pow2p] = pivot;
           if (pow2p + 2 < frame.xend) {
             st_d_data[pmax].xstart = pow2p + 2;
@@ -161,14 +162,14 @@ void introsort(emxArray_int32_T *x, int xend, const cell_wrap_3
   int pmin;
   bool exitg1;
   int MAXDEPTH;
-  int pivot;
+  int j;
   struct_T frame;
   int pow2p;
-  struct_T st_d_data[120];
-  int st_n;
   int i;
+  struct_T st_d_data[120];
+  int b_i;
   bool varargout_1;
-  int t;
+  int pivot;
   int exitg2;
   int exitg3;
   if (1 < xend) {
@@ -179,15 +180,15 @@ void introsort(emxArray_int32_T *x, int xend, const cell_wrap_3
       pmin = 0;
       exitg1 = false;
       while ((!exitg1) && (pmax - pmin > 1)) {
-        pivot = (pmin + pmax) >> 1;
-        pow2p = 1 << pivot;
+        j = (pmin + pmax) >> 1;
+        pow2p = 1 << j;
         if (pow2p == xend) {
-          pmax = pivot;
+          pmax = j;
           exitg1 = true;
         } else if (pow2p > xend) {
-          pmax = pivot;
+          pmax = j;
         } else {
-          pmin = pivot;
+          pmin = j;
         }
       }
 
@@ -196,125 +197,125 @@ void introsort(emxArray_int32_T *x, int xend, const cell_wrap_3
       frame.xend = xend;
       frame.depth = 0;
       pmax = MAXDEPTH << 1;
-      for (pow2p = 0; pow2p < pmax; pow2p++) {
-        st_d_data[pow2p] = frame;
+      for (i = 0; i < pmax; i++) {
+        st_d_data[i] = frame;
       }
 
       st_d_data[0] = frame;
-      st_n = 1;
-      while (st_n > 0) {
-        frame = st_d_data[st_n - 1];
-        st_n--;
-        pow2p = frame.xend - frame.xstart;
-        if (pow2p + 1 <= 32) {
+      pow2p = 1;
+      while (pow2p > 0) {
+        frame = st_d_data[pow2p - 1];
+        pow2p--;
+        i = frame.xend - frame.xstart;
+        if (i + 1 <= 32) {
           insertionsort(x, frame.xstart, frame.xend, cmp_tunableEnvironment);
         } else if (frame.depth == MAXDEPTH) {
           b_heapsort(x, frame.xstart, frame.xend, cmp_tunableEnvironment);
         } else {
-          pmin = (frame.xstart + ((pow2p + (pow2p < 0)) >> 1)) - 1;
-          i = frame.xstart - 1;
-          varargout_1 = ((cmp_tunableEnvironment[0].f1->data[x->data[pmin] - 1] <
-                          cmp_tunableEnvironment[0].f1->data[x->data[i] - 1]) ||
-                         ((cmp_tunableEnvironment[0].f1->data[x->data[pmin] - 1]
-                           == cmp_tunableEnvironment[0].f1->data[x->data[i] - 1])
-                          && (cmp_tunableEnvironment[1].f1->data[x->data[pmin] -
-                              1] < cmp_tunableEnvironment[1].f1->data[x->data[i]
-                              - 1])));
-          if (varargout_1) {
-            t = x->data[i];
-            x->data[i] = x->data[pmin];
-            x->data[pmin] = t;
-          }
-
-          pmax = frame.xend - 1;
+          pmax = (frame.xstart + ((i + (i < 0)) >> 1)) - 1;
+          b_i = frame.xstart - 1;
+          i = x->data[b_i] - 1;
           varargout_1 = ((cmp_tunableEnvironment[0].f1->data[x->data[pmax] - 1] <
-                          cmp_tunableEnvironment[0].f1->data[x->data[i] - 1]) ||
+                          cmp_tunableEnvironment[0].f1->data[i]) ||
                          ((cmp_tunableEnvironment[0].f1->data[x->data[pmax] - 1]
-                           == cmp_tunableEnvironment[0].f1->data[x->data[i] - 1])
-                          && (cmp_tunableEnvironment[1].f1->data[x->data[pmax] -
-                              1] < cmp_tunableEnvironment[1].f1->data[x->data[i]
+                           == cmp_tunableEnvironment[0].f1->data[i]) &&
+                          (cmp_tunableEnvironment[1].f1->data[x->data[pmax] - 1]
+                           < cmp_tunableEnvironment[1].f1->data[i])));
+          if (varargout_1) {
+            pmin = x->data[b_i];
+            x->data[b_i] = x->data[pmax];
+            x->data[pmax] = pmin;
+          }
+
+          i = frame.xend - 1;
+          varargout_1 = ((cmp_tunableEnvironment[0].f1->data[x->data[i] - 1] <
+                          cmp_tunableEnvironment[0].f1->data[x->data[b_i] - 1]) ||
+                         ((cmp_tunableEnvironment[0].f1->data[x->data[i] - 1] ==
+                           cmp_tunableEnvironment[0].f1->data[x->data[b_i] - 1])
+                          && (cmp_tunableEnvironment[1].f1->data[x->data[i] - 1]
+                              < cmp_tunableEnvironment[1].f1->data[x->data[b_i]
                               - 1])));
           if (varargout_1) {
-            t = x->data[i];
-            x->data[i] = x->data[pmax];
-            x->data[pmax] = t;
+            pmin = x->data[b_i];
+            x->data[b_i] = x->data[i];
+            x->data[i] = pmin;
           }
 
-          varargout_1 = ((cmp_tunableEnvironment[0].f1->data[x->data[pmax] - 1] <
-                          cmp_tunableEnvironment[0].f1->data[x->data[pmin] - 1])
-                         || ((cmp_tunableEnvironment[0].f1->data[x->data[pmax] -
-                              1] == cmp_tunableEnvironment[0].f1->data[x->
-                              data[pmin] - 1]) && (cmp_tunableEnvironment[1].
-            f1->data[x->data[pmax] - 1] < cmp_tunableEnvironment[1].f1->data
-            [x->data[pmin] - 1])));
+          varargout_1 = ((cmp_tunableEnvironment[0].f1->data[x->data[i] - 1] <
+                          cmp_tunableEnvironment[0].f1->data[x->data[pmax] - 1])
+                         || ((cmp_tunableEnvironment[0].f1->data[x->data[i] - 1]
+                              == cmp_tunableEnvironment[0].f1->data[x->data[pmax]
+                              - 1]) && (cmp_tunableEnvironment[1].f1->data
+            [x->data[i] - 1] < cmp_tunableEnvironment[1].f1->data[x->data[pmax]
+            - 1])));
           if (varargout_1) {
-            t = x->data[pmin];
-            x->data[pmin] = x->data[pmax];
-            x->data[pmax] = t;
+            pmin = x->data[pmax];
+            x->data[pmax] = x->data[i];
+            x->data[i] = pmin;
           }
 
-          pivot = x->data[pmin] - 1;
-          pow2p = frame.xend - 2;
-          x->data[pmin] = x->data[pow2p];
-          x->data[pow2p] = pivot + 1;
-          pmax = pow2p;
+          pivot = x->data[pmax] - 1;
+          i = frame.xend - 2;
+          x->data[pmax] = x->data[i];
+          x->data[i] = pivot + 1;
+          j = i;
           do {
             exitg2 = 0;
-            i++;
+            b_i++;
             do {
               exitg3 = 0;
-              varargout_1 = ((cmp_tunableEnvironment[0].f1->data[x->data[i] - 1]
-                              < cmp_tunableEnvironment[0].f1->data[pivot]) ||
-                             ((cmp_tunableEnvironment[0].f1->data[x->data[i] - 1]
-                               == cmp_tunableEnvironment[0].f1->data[pivot]) &&
-                              (cmp_tunableEnvironment[1].f1->data[x->data[i] - 1]
-                               < cmp_tunableEnvironment[1].f1->data[pivot])));
+              pmax = cmp_tunableEnvironment[0].f1->data[x->data[b_i] - 1];
+              varargout_1 = ((pmax < cmp_tunableEnvironment[0].f1->data[pivot]) ||
+                             ((pmax == cmp_tunableEnvironment[0].f1->data[pivot])
+                              && (cmp_tunableEnvironment[1].f1->data[x->data[b_i]
+                                  - 1] < cmp_tunableEnvironment[1].f1->
+                                  data[pivot])));
               if (varargout_1) {
-                i++;
+                b_i++;
               } else {
                 exitg3 = 1;
               }
             } while (exitg3 == 0);
 
-            pmax--;
+            j--;
             do {
               exitg3 = 0;
-              varargout_1 = ((cmp_tunableEnvironment[0].f1->data[pivot] <
-                              cmp_tunableEnvironment[0].f1->data[x->data[pmax] -
-                              1]) || ((cmp_tunableEnvironment[0].f1->data[pivot]
-                == cmp_tunableEnvironment[0].f1->data[x->data[pmax] - 1]) &&
-                (cmp_tunableEnvironment[1].f1->data[pivot] <
-                 cmp_tunableEnvironment[1].f1->data[x->data[pmax] - 1])));
+              pmax = cmp_tunableEnvironment[0].f1->data[x->data[j] - 1];
+              varargout_1 = ((cmp_tunableEnvironment[0].f1->data[pivot] < pmax) ||
+                             ((cmp_tunableEnvironment[0].f1->data[pivot] == pmax)
+                              && (cmp_tunableEnvironment[1].f1->data[pivot] <
+                                  cmp_tunableEnvironment[1].f1->data[x->data[j]
+                                  - 1])));
               if (varargout_1) {
-                pmax--;
+                j--;
               } else {
                 exitg3 = 1;
               }
             } while (exitg3 == 0);
 
-            if (i + 1 >= pmax + 1) {
+            if (b_i + 1 >= j + 1) {
               exitg2 = 1;
             } else {
-              t = x->data[i];
-              x->data[i] = x->data[pmax];
-              x->data[pmax] = t;
+              pmin = x->data[b_i];
+              x->data[b_i] = x->data[j];
+              x->data[j] = pmin;
             }
           } while (exitg2 == 0);
 
-          x->data[pow2p] = x->data[i];
-          x->data[i] = pivot + 1;
-          if (i + 2 < frame.xend) {
-            st_d_data[st_n].xstart = i + 2;
-            st_d_data[st_n].xend = frame.xend;
-            st_d_data[st_n].depth = frame.depth + 1;
-            st_n++;
+          x->data[i] = x->data[b_i];
+          x->data[b_i] = pivot + 1;
+          if (b_i + 2 < frame.xend) {
+            st_d_data[pow2p].xstart = b_i + 2;
+            st_d_data[pow2p].xend = frame.xend;
+            st_d_data[pow2p].depth = frame.depth + 1;
+            pow2p++;
           }
 
-          if (frame.xstart < i + 1) {
-            st_d_data[st_n].xstart = frame.xstart;
-            st_d_data[st_n].xend = i + 1;
-            st_d_data[st_n].depth = frame.depth + 1;
-            st_n++;
+          if (frame.xstart < b_i + 1) {
+            st_d_data[pow2p].xstart = frame.xstart;
+            st_d_data[pow2p].xend = b_i + 1;
+            st_d_data[pow2p].depth = frame.depth + 1;
+            pow2p++;
           }
         }
       }

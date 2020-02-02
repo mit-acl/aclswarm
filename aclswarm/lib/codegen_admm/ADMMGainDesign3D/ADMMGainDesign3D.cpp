@@ -4,32 +4,35 @@
 // government, commercial, or other organizational use.
 // File: ADMMGainDesign3D.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
 #include "ADMMGainDesign3D.h"
+#include "ADMMGainDesign2D.h"
+#include "ADMMGainDesign3D_data.h"
 #include "ADMMGainDesign3D_emxutil.h"
-#include "sparse.h"
-#include "reshape.h"
-#include "mtimes.h"
-#include "fillIn.h"
-#include "vec.h"
-#include "sum.h"
+#include "ADMMGainDesign3D_initialize.h"
 #include "diag.h"
-#include "sparse1.h"
 #include "diag1.h"
 #include "eig.h"
-#include "vertcat.h"
+#include "find.h"
 #include "horzcat.h"
-#include "triu.h"
+#include "mtimes.h"
+#include "mtimes1.h"
+#include "reshape.h"
+#include "rt_nonfinite.h"
+#include "sparse.h"
+#include "sparse1.h"
 #include "speye.h"
+#include "std.h"
+#include "sum.h"
 #include "svd.h"
-#include "ADMMGainDesign2D.h"
-#include "ADMMGainDesign3D_rtwutil.h"
+#include "triu.h"
+#include "vec.h"
+#include "vertcat.h"
+#include <cmath>
 
 // Function Definitions
 
@@ -44,101 +47,105 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
                       emxArray_real_T *Aopt)
 {
   emxArray_real_T *b_Qs;
-  int idx;
-  int i0;
+  int loop_ub;
+  int i;
   emxArray_real_T *Axy;
-  int i1;
-  emxArray_real_T *c_Qs;
-  int n;
+  emxArray_real_T *qz;
+  emxArray_real_T *b_qz;
+  int dimkerAz;
   int m;
-  int ii;
   emxArray_real_T *U;
   emxArray_real_T *unusedU0;
   double unusedU1[4];
-  emxArray_real_T *Q;
-  int i2;
-  int loop_ub;
   emxArray_real_T *Qt;
-  coder_internal_sparse I0;
-  int nx;
-  coder_internal_sparse Z0;
+  int b_loop_ub;
+  int i1;
+  emxArray_real_T *I0_d;
+  int t7_m;
+  coder_internal_sparse expl_temp;
+  emxArray_int32_T *I0_colidx;
+  emxArray_int32_T *I0_rowidx;
+  emxArray_int32_T *Z0_colidx;
+  emxArray_int32_T *Z0_rowidx;
   emxArray_real_T *Z_d;
   emxArray_int32_T *Z_colidx;
   emxArray_int32_T *Z_rowidx;
-  emxArray_real_T *C_d;
+  emxArray_real_T *Ai;
+  emxArray_real_T *bi;
+  int I0_m;
+  int I0_n;
+  int Z0_m;
+  int Z0_n;
+  int Z_m;
+  int Z_n;
+  emxArray_int32_T *t7_colidx;
+  emxArray_int32_T *t7_rowidx;
   emxArray_real_T *Aj;
-  emxArray_real_T *Av;
+  int t7_n;
   emxArray_int32_T *t8_colidx;
   emxArray_int32_T *t8_rowidx;
-  emxArray_int32_T *t9_colidx;
-  emxArray_int32_T *t9_rowidx;
-  int aoffset;
-  int Z_n;
-  int boffset;
-  int jj;
+  emxArray_real_T *C_d;
   emxArray_int32_T *C_colidx;
   emxArray_int32_T *C_rowidx;
   emxArray_boolean_T *S;
-  emxArray_real_T *Su;
-  emxArray_boolean_T *r0;
-  emxArray_boolean_T *t12_d;
-  emxArray_int32_T *i;
-  emxArray_int32_T *j;
-  emxArray_real_T *tmpd;
-  bool exitg1;
-  emxArray_real_T *Ai;
-  bool guard1 = false;
-  double numElmAtot;
-  emxArray_real_T *bi;
+  emxArray_real_T *QQ;
+  emxArray_boolean_T *r;
+  emxArray_boolean_T *t11_d;
+  emxArray_int32_T *ii;
+  emxArray_int32_T *jj;
+  double idxR;
+  double numElmAtot_tmp;
+  emxArray_real_T *Av;
   emxArray_real_T *bv;
   double itrr;
   unsigned int itra;
   unsigned int itrb;
   int b_i;
-  int b_j;
-  int c_i;
-  emxArray_real_T *b_Qt;
-  emxArray_real_T *b_Q;
+  int kj;
   emxArray_real_T *A_d;
   emxArray_int32_T *A_colidx;
   emxArray_int32_T *A_rowidx;
   int A_m;
+  emxArray_real_T *b_d;
   emxArray_int32_T *b_colidx;
   emxArray_int32_T *b_rowidx;
+  emxArray_real_T *As_d;
+  int b_m;
+  int b_n;
   emxArray_int32_T *As_colidx;
   emxArray_int32_T *As_rowidx;
   emxArray_real_T *AAs_d;
-  int b_m;
-  int b_n;
-  double sizX;
   int As_m;
   emxArray_int32_T *AAs_colidx;
   emxArray_int32_T *AAs_rowidx;
-  coder_internal_sparse X;
   int AAs_m;
   int AAs_n;
+  emxArray_real_T *X_d;
+  emxArray_int32_T *X_colidx;
+  emxArray_int32_T *X_rowidx;
+  int X_m;
+  int X_n;
   emxArray_creal_T *dd;
   emxArray_creal_T *V;
   emxArray_creal_T *D;
   emxArray_int32_T *r1;
+  emxArray_int32_T *r2;
   emxArray_creal_T *y;
   emxArray_creal_T *b;
   emxArray_real_T *b_y;
   emxArray_real_T *c_y;
-  emxArray_int32_T *t10_colidx;
-  emxArray_int32_T *t10_rowidx;
-  coder_internal_sparse_1 expl_temp;
+  emxArray_int32_T *t9_colidx;
+  emxArray_int32_T *t9_rowidx;
+  coder_internal_sparse_1 b_expl_temp;
   emxArray_creal_T *b_dd;
-  coder_internal_sparse b_S;
-  int k;
-  double b_sizX[2];
-  int W_m;
-  int W_n;
-  int c_n;
-  double cdiff;
-  double temp_im;
-  emxArray_real_T *d_y;
-  emxArray_real_T *b_b;
+  emxArray_real_T *b_D;
+  bool exitg1;
+  double sizX[2];
+  double d;
+  if (isInitialized_ADMMGainDesign3D == false) {
+    ADMMGainDesign3D_initialize();
+  }
+
   emxInit_real_T(&b_Qs, 2);
 
   //  ADMM for computing gain matrix.
@@ -158,137 +165,223 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //
   //  Gain design for 2D component of the formation
   //  (2D component is defined as the projection of the 3D formation on the x-y plane) 
-  idx = Qs->size[1];
-  i0 = b_Qs->size[0] * b_Qs->size[1];
+  loop_ub = Qs->size[1];
+  i = b_Qs->size[0] * b_Qs->size[1];
   b_Qs->size[0] = 2;
-  b_Qs->size[1] = idx;
-  emxEnsureCapacity_real_T(b_Qs, i0);
-  for (i0 = 0; i0 < idx; i0++) {
-    i1 = i0 << 1;
-    b_Qs->data[i1] = Qs->data[3 * i0];
-    b_Qs->data[1 + i1] = Qs->data[1 + 3 * i0];
+  b_Qs->size[1] = Qs->size[1];
+  emxEnsureCapacity_real_T(b_Qs, i);
+  for (i = 0; i < loop_ub; i++) {
+    b_Qs->data[2 * i] = Qs->data[3 * i];
+    b_Qs->data[2 * i + 1] = Qs->data[3 * i + 1];
   }
 
   emxInit_real_T(&Axy, 2);
-  emxInit_real_T(&c_Qs, 2);
+  emxInit_real_T(&qz, 1);
   ADMMGainDesign2D(b_Qs, adj, Axy);
 
   //  Gain design for the altitude
   //  Number of agents
-  n = adj->size[0];
-  m = adj->size[0] - 2;
-
-  //  Reduced dimension
   //  Vector of ones
+  loop_ub = Qs->size[1];
+  i = qz->size[0];
+  qz->size[0] = Qs->size[1];
+  emxEnsureCapacity_real_T(qz, i);
+  emxFree_real_T(&b_Qs);
+  for (i = 0; i < loop_ub; i++) {
+    qz->data[i] = Qs->data[3 * i + 2];
+  }
+
+  emxInit_real_T(&b_qz, 2);
+
   //  Vector of z-coordinates
   //  ambient dimension of problem
   //  Kernel of gain matrix
-  //  Get orthogonal complement of N
-  ii = adj->size[0];
-  idx = Qs->size[1];
-  i0 = c_Qs->size[0] * c_Qs->size[1];
-  c_Qs->size[0] = idx;
-  c_Qs->size[1] = 2;
-  emxEnsureCapacity_real_T(c_Qs, i0);
-  emxFree_real_T(&b_Qs);
-  for (i0 = 0; i0 < idx; i0++) {
-    c_Qs->data[i0] = Qs->data[2 + 3 * i0];
+  //  Determine if desired formation is actually 2D
+  //  Reduced problem dimension
+  if (b_std(qz) < 0.01) {
+    dimkerAz = 1;
+  } else {
+    dimkerAz = 2;
   }
 
-  for (i0 = 0; i0 < ii; i0++) {
-    c_Qs->data[i0 + c_Qs->size[0]] = 1.0;
+  m = adj->size[0] - dimkerAz;
+
+  //  Get orthogonal complement of N
+  i = b_qz->size[0] * b_qz->size[1];
+  b_qz->size[0] = qz->size[0];
+  b_qz->size[1] = 2;
+  emxEnsureCapacity_real_T(b_qz, i);
+  loop_ub = qz->size[0];
+  for (i = 0; i < loop_ub; i++) {
+    b_qz->data[i] = qz->data[i];
+  }
+
+  loop_ub = adj->size[0];
+  for (i = 0; i < loop_ub; i++) {
+    b_qz->data[i + b_qz->size[0]] = 1.0;
   }
 
   emxInit_real_T(&U, 2);
   emxInit_real_T(&unusedU0, 2);
-  c_svd(c_Qs, U, unusedU0, unusedU1);
-  emxFree_real_T(&c_Qs);
-  emxFree_real_T(&unusedU0);
-  if (3 > adj->size[0]) {
-    i0 = 0;
-    i1 = 0;
-  } else {
-    i0 = 2;
-    i1 = adj->size[0];
-  }
+  c_svd(b_qz, U, unusedU0, unusedU1);
 
-  emxInit_real_T(&Q, 2);
-  idx = U->size[0];
-  i2 = Q->size[0] * Q->size[1];
-  Q->size[0] = idx;
-  loop_ub = i1 - i0;
-  Q->size[1] = loop_ub;
-  emxEnsureCapacity_real_T(Q, i2);
-  for (i1 = 0; i1 < loop_ub; i1++) {
-    for (i2 = 0; i2 < idx; i2++) {
-      Q->data[i2 + Q->size[0] * i1] = U->data[i2 + U->size[0] * (i0 + i1)];
-    }
+  //  Qbar = U(:,1:dimkerAz);
+  emxFree_real_T(&b_qz);
+  emxFree_real_T(&unusedU0);
+  if (dimkerAz + 1 > adj->size[0]) {
+    dimkerAz = 0;
+    i = -1;
+  } else {
+    i = adj->size[0] - 1;
   }
 
   emxInit_real_T(&Qt, 2);
+  loop_ub = U->size[0];
+  b_loop_ub = i - dimkerAz;
+  i = b_loop_ub + 1;
   i1 = Qt->size[0] * Qt->size[1];
-  Qt->size[0] = Q->size[1];
-  Qt->size[1] = Q->size[0];
+  Qt->size[0] = i;
+  Qt->size[1] = U->size[0];
   emxEnsureCapacity_real_T(Qt, i1);
-  idx = Q->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    nx = Q->size[1];
-    for (i2 = 0; i2 < nx; i2++) {
-      Qt->data[i2 + Qt->size[0] * i1] = Q->data[i1 + Q->size[0] * i2];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    for (t7_m = 0; t7_m <= b_loop_ub; t7_m++) {
+      Qt->data[t7_m + Qt->size[0] * i1] = U->data[i1 + U->size[0] * (dimkerAz +
+        t7_m)];
     }
   }
 
-  c_emxInitStruct_coder_internal_(&I0);
-  c_emxInitStruct_coder_internal_(&Z0);
+  emxInit_real_T(&I0_d, 1);
+  c_emxInitStruct_coder_internal_(&expl_temp);
+
+  //  Preallocate variables
+  speye(static_cast<double>(m), &expl_temp);
+  i1 = I0_d->size[0];
+  I0_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(I0_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_d->data[i1] = expl_temp.d->data[i1];
+  }
+
+  emxInit_int32_T(&I0_colidx, 1);
+  i1 = I0_colidx->size[0];
+  I0_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(I0_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  emxInit_int32_T(&I0_rowidx, 1);
+  i1 = I0_rowidx->size[0];
+  I0_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(I0_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  emxInit_int32_T(&Z0_colidx, 1);
+  emxInit_int32_T(&Z0_rowidx, 1);
   emxInit_real_T(&Z_d, 1);
   emxInit_int32_T(&Z_colidx, 1);
   emxInit_int32_T(&Z_rowidx, 1);
-  emxInit_real_T(&C_d, 1);
-  emxInit_real_T(&Aj, 1);
-  emxInit_real_T(&Av, 1);
-  emxInit_int32_T(&t8_colidx, 1);
-  emxInit_int32_T(&t8_rowidx, 1);
-  emxInit_int32_T(&t9_colidx, 1);
-  emxInit_int32_T(&t9_rowidx, 1);
-
-  //  Preallocate variables
-  speye((double)adj->size[0] - 2.0, &I0);
-  sparse((double)adj->size[0] - 2.0, (double)adj->size[0] - 2.0, Z0.d, Z0.colidx,
-         Z0.rowidx, &Z0.m, &Z0.n);
-  sparse(2.0 * ((double)adj->size[0] - 2.0), 2.0 * ((double)adj->size[0] - 2.0),
-         Z_d, Z_colidx, Z_rowidx, &aoffset, &Z_n);
+  emxInit_real_T(&Ai, 1);
+  emxInit_real_T(&bi, 1);
+  I0_m = expl_temp.m;
+  I0_n = expl_temp.n;
+  sparse(static_cast<double>(m), static_cast<double>(m), bi, Z0_colidx,
+         Z0_rowidx, &Z0_m, &Z0_n);
+  sparse(2.0 * static_cast<double>(m), 2.0 * static_cast<double>(m), Z_d,
+         Z_colidx, Z_rowidx, &Z_m, &Z_n);
 
   //  Cost function's coefficient matrix: f = <C,X>
-  sparse_horzcat(I0.d, I0.colidx, I0.rowidx, I0.m, I0.n, Z0.d, Z0.colidx,
-                 Z0.rowidx, Z0.m, Z0.n, Aj, t8_colidx, t8_rowidx, &idx, &boffset);
-  sparse_horzcat(Z0.d, Z0.colidx, Z0.rowidx, Z0.m, Z0.n, Z0.d, Z0.colidx,
-                 Z0.rowidx, Z0.m, Z0.n, Av, t9_colidx, t9_rowidx, &ii, &jj);
-  sparse_vertcat(Aj, t8_colidx, t8_rowidx, idx, boffset, Av, t9_colidx,
-                 t9_rowidx, ii, jj, &Z0);
+  sparse_horzcat(I0_d, I0_colidx, I0_rowidx, expl_temp.m, expl_temp.n, bi,
+                 Z0_colidx, Z0_rowidx, Z0_m, Z0_n, &expl_temp);
+  i1 = Ai->size[0];
+  Ai->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Ai, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Ai->data[i1] = expl_temp.d->data[i1];
+  }
+
+  emxInit_int32_T(&t7_colidx, 1);
+  i1 = t7_colidx->size[0];
+  t7_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t7_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  emxInit_int32_T(&t7_rowidx, 1);
+  i1 = t7_rowidx->size[0];
+  t7_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t7_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  emxInit_real_T(&Aj, 1);
+  t7_m = expl_temp.m;
+  t7_n = expl_temp.n;
+  sparse_horzcat(bi, Z0_colidx, Z0_rowidx, Z0_m, Z0_n, bi, Z0_colidx, Z0_rowidx,
+                 Z0_m, Z0_n, &expl_temp);
+  i1 = Aj->size[0];
+  Aj->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Aj, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Aj->data[i1] = expl_temp.d->data[i1];
+  }
+
+  emxInit_int32_T(&t8_colidx, 1);
+  i1 = t8_colidx->size[0];
+  t8_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t8_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t8_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  emxInit_int32_T(&t8_rowidx, 1);
+  i1 = t8_rowidx->size[0];
+  t8_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t8_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t8_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  emxInit_real_T(&C_d, 1);
+  sparse_vertcat(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, Aj, t8_colidx, t8_rowidx,
+                 expl_temp.m, expl_temp.n, &expl_temp);
   i1 = C_d->size[0];
-  C_d->size[0] = Z0.d->size[0];
+  C_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(C_d, i1);
-  idx = Z0.d->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    C_d->data[i1] = Z0.d->data[i1];
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    C_d->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&C_colidx, 1);
   i1 = C_colidx->size[0];
-  C_colidx->size[0] = Z0.colidx->size[0];
+  C_colidx->size[0] = expl_temp.colidx->size[0];
   emxEnsureCapacity_int32_T(C_colidx, i1);
-  idx = Z0.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    C_colidx->data[i1] = Z0.colidx->data[i1];
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    C_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
   emxInit_int32_T(&C_rowidx, 1);
   i1 = C_rowidx->size[0];
-  C_rowidx->size[0] = Z0.rowidx->size[0];
+  C_rowidx->size[0] = expl_temp.rowidx->size[0];
   emxEnsureCapacity_int32_T(C_rowidx, i1);
-  idx = Z0.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    C_rowidx->data[i1] = Z0.rowidx->data[i1];
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    C_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
   emxInit_boolean_T(&S, 2);
@@ -303,99 +396,41 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   S->size[0] = adj->size[0];
   S->size[1] = adj->size[1];
   emxEnsureCapacity_boolean_T(S, i1);
-  idx = adj->size[0] * adj->size[1];
-  for (i1 = 0; i1 < idx; i1++) {
+  loop_ub = adj->size[0] * adj->size[1];
+  for (i1 = 0; i1 < loop_ub; i1++) {
     S->data[i1] = !(adj->data[i1] != 0.0);
   }
 
-  emxInit_real_T(&Su, 2);
-  emxInit_boolean_T(&r0, 2);
-  emxInit_boolean_T(&t12_d, 1);
-  diag(S, t12_d);
-  b_diag(t12_d, r0);
-  i1 = Su->size[0] * Su->size[1];
-  Su->size[0] = S->size[0];
-  Su->size[1] = S->size[1];
-  emxEnsureCapacity_real_T(Su, i1);
-  idx = S->size[0] * S->size[1];
-  for (i1 = 0; i1 < idx; i1++) {
-    Su->data[i1] = (double)S->data[i1] - (double)r0->data[i1];
-  }
-
-  emxFree_boolean_T(&r0);
-  emxFree_boolean_T(&S);
-  triu(Su);
+  emxInit_real_T(&QQ, 2);
+  emxInit_boolean_T(&r, 2);
+  emxInit_boolean_T(&t11_d, 1);
 
   //  Upper triangular part
-  nx = Su->size[0] * Su->size[1];
-  emxInit_int32_T(&i, 1);
-  emxInit_int32_T(&j, 1);
-  if (nx == 0) {
-    i->size[0] = 0;
-    j->size[0] = 0;
-  } else {
-    idx = 0;
-    i1 = i->size[0];
-    i->size[0] = nx;
-    emxEnsureCapacity_int32_T(i, i1);
-    i1 = j->size[0];
-    j->size[0] = nx;
-    emxEnsureCapacity_int32_T(j, i1);
-    ii = 1;
-    jj = 1;
-    exitg1 = false;
-    while ((!exitg1) && (jj <= Su->size[1])) {
-      guard1 = false;
-      if (Su->data[(ii + Su->size[0] * (jj - 1)) - 1] != 0.0) {
-        idx++;
-        i->data[idx - 1] = ii;
-        j->data[idx - 1] = jj;
-        if (idx >= nx) {
-          exitg1 = true;
-        } else {
-          guard1 = true;
-        }
-      } else {
-        guard1 = true;
-      }
-
-      if (guard1) {
-        ii++;
-        if (ii > Su->size[0]) {
-          ii = 1;
-          jj++;
-        }
-      }
-    }
-
-    if (nx == 1) {
-      if (idx == 0) {
-        i->size[0] = 0;
-        j->size[0] = 0;
-      }
-    } else if (1 > idx) {
-      i->size[0] = 0;
-      j->size[0] = 0;
-    } else {
-      i1 = i->size[0];
-      i->size[0] = idx;
-      emxEnsureCapacity_int32_T(i, i1);
-      i1 = j->size[0];
-      j->size[0] = idx;
-      emxEnsureCapacity_int32_T(j, i1);
-    }
+  diag(S, t11_d);
+  b_diag(t11_d, r);
+  i1 = QQ->size[0] * QQ->size[1];
+  QQ->size[0] = S->size[0];
+  QQ->size[1] = S->size[1];
+  emxEnsureCapacity_real_T(QQ, i1);
+  loop_ub = S->size[0] * S->size[1];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    QQ->data[i1] = static_cast<double>(S->data[i1]) - static_cast<double>
+      (r->data[i1]);
   }
 
-  emxInit_real_T(&tmpd, 1);
-  i1 = tmpd->size[0];
-  tmpd->size[0] = i->size[0];
-  emxEnsureCapacity_real_T(tmpd, i1);
-  idx = i->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    tmpd->data[i1] = i->data[i1];
+  emxFree_boolean_T(&r);
+  emxFree_boolean_T(&S);
+  emxInit_int32_T(&ii, 1);
+  emxInit_int32_T(&jj, 1);
+  triu(QQ);
+  eml_find(QQ, ii, jj);
+  i1 = qz->size[0];
+  qz->size[0] = ii->size[0];
+  emxEnsureCapacity_real_T(qz, i1);
+  loop_ub = ii->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    qz->data[i1] = ii->data[i1];
   }
-
-  emxInit_real_T(&Ai, 1);
 
   //  Find location of nonzero entries
   //  Number of constraints
@@ -404,13 +439,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //  Number of elements for symmetry
   //  Number of elements for pinning down the b-vector
   //  Total number of elements
-  numElmAtot = (((((((double)adj->size[0] - 2.0) - 1.0) * 2.0 + ((double)
-    adj->size[0] - 2.0) * (((double)adj->size[0] - 2.0) - 1.0) / 2.0) +
-                  (((double)adj->size[0] - 2.0) + ((double)adj->size[0] - 2.0) *
-                   (((double)adj->size[0] - 2.0) - 1.0))) + (double)tmpd->size[0]
-                 * (((double)adj->size[0] - 2.0) * ((double)adj->size[0] - 2.0)))
-                + ((double)adj->size[0] - 2.0)) + 2.0 * ((double)adj->size[0] -
-    2.0) * (2.0 * ((double)adj->size[0] - 2.0) - 1.0);
+  idxR = static_cast<double>(m) * (static_cast<double>(m) - 1.0);
+  numElmAtot_tmp = 2.0 * static_cast<double>(m);
 
   // %%%%%%%%%%%%%%%%%%%%% Preallocate sparse matrices A & b
   //
@@ -418,43 +448,45 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //
   //  Indices of A: entry [Ai(k), Aj(k)] takes value of Av(k)
   //  Each row of matrix A will represent a constraint
+  loop_ub = static_cast<int>(((((((static_cast<double>(m) - 1.0) * 2.0 + idxR /
+    2.0) + (static_cast<double>(m) + idxR)) + static_cast<double>(qz->size[0]) *
+    (static_cast<double>(m) * static_cast<double>(m))) + static_cast<double>(m))
+    + numElmAtot_tmp * (numElmAtot_tmp - 1.0)));
   i1 = Ai->size[0];
-  idx = (int)numElmAtot;
-  Ai->size[0] = idx;
+  Ai->size[0] = loop_ub;
   emxEnsureCapacity_real_T(Ai, i1);
-  for (i1 = 0; i1 < idx; i1++) {
+  for (i1 = 0; i1 < loop_ub; i1++) {
     Ai->data[i1] = 0.0;
   }
 
   i1 = Aj->size[0];
-  Aj->size[0] = idx;
+  Aj->size[0] = loop_ub;
   emxEnsureCapacity_real_T(Aj, i1);
-  for (i1 = 0; i1 < idx; i1++) {
+  for (i1 = 0; i1 < loop_ub; i1++) {
     Aj->data[i1] = 0.0;
   }
 
+  emxInit_real_T(&Av, 1);
   i1 = Av->size[0];
-  Av->size[0] = idx;
+  Av->size[0] = loop_ub;
   emxEnsureCapacity_real_T(Av, i1);
-  for (i1 = 0; i1 < idx; i1++) {
+  for (i1 = 0; i1 < loop_ub; i1++) {
     Av->data[i1] = 0.0;
   }
 
-  emxInit_real_T(&bi, 1);
+  loop_ub = static_cast<int>(((static_cast<double>(m) + 1.0) + 1.0));
   i1 = bi->size[0];
-  bi->size[0] = adj->size[0];
+  bi->size[0] = loop_ub;
   emxEnsureCapacity_real_T(bi, i1);
-  idx = adj->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
+  for (i1 = 0; i1 < loop_ub; i1++) {
     bi->data[i1] = 0.0;
   }
 
   emxInit_real_T(&bv, 1);
   i1 = bv->size[0];
-  bv->size[0] = adj->size[0];
+  bv->size[0] = loop_ub;
   emxEnsureCapacity_real_T(bv, i1);
-  idx = adj->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
+  for (i1 = 0; i1 < loop_ub; i1++) {
     bv->data[i1] = 0.0;
   }
 
@@ -473,159 +505,138 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //  Counter for entries in b constraint
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_11
   //  The diagonal entries of X should be equal to the first diagonal entry
-  i1 = adj->size[0];
-  for (b_i = 0; b_i <= i1 - 4; b_i++) {
+  for (b_i = 0; b_i <= m - 2; b_i++) {
     itrr++;
     itra++;
-    i2 = (int)itra - 1;
-    Ai->data[i2] = itrr;
-    Aj->data[i2] = 1.0;
-    Av->data[i2] = 1.0;
+    Z0_n = static_cast<int>(itra) - 1;
+    Ai->data[Z0_n] = itrr;
+    Aj->data[Z0_n] = 1.0;
+    Av->data[Z0_n] = 1.0;
     itra++;
-    i2 = (int)itra - 1;
-    Ai->data[i2] = itrr;
-    Aj->data[i2] = ((2.0 + (double)b_i) - 1.0) * (2.0 * ((double)n - 2.0)) +
-      (2.0 + (double)b_i);
-    Av->data[i2] = -1.0;
+    Ai->data[static_cast<int>(itra) - 1] = itrr;
+    i1 = static_cast<int>(itra) - 1;
+    Aj->data[i1] = ((static_cast<double>(b_i) + 2.0) - 1.0) * numElmAtot_tmp + (
+      static_cast<double>(b_i) + 2.0);
+    Av->data[i1] = -1.0;
   }
 
   //  Off-diagonal entries should be zero
-  i1 = adj->size[0];
-  for (b_i = 0; b_i <= i1 - 4; b_i++) {
-    i2 = n - b_i;
-    for (b_j = 0; b_j <= i2 - 4; b_j++) {
+  for (b_i = 0; b_i <= m - 2; b_i++) {
+    i1 = m - b_i;
+    for (loop_ub = 0; loop_ub <= i1 - 2; loop_ub++) {
       itrr++;
       itra++;
-      c_i = (int)itra - 1;
-      Ai->data[c_i] = itrr;
-      Aj->data[c_i] = ((1.0 + (double)b_i) - 1.0) * (2.0 * ((double)n - 2.0)) +
-        (double)(((unsigned int)b_i + b_j) + 2U);
-      Av->data[c_i] = 1.0;
+      Z0_n = static_cast<int>(itra) - 1;
+      Ai->data[Z0_n] = itrr;
+      Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) * numElmAtot_tmp
+        + static_cast<double>(((static_cast<unsigned int>(b_i) + loop_ub) + 2U));
+      Av->data[Z0_n] = 1.0;
     }
   }
 
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_12
   //  Diagonal entries should be 1
-  i1 = adj->size[0];
-  for (b_i = 0; b_i <= i1 - 3; b_i++) {
+  for (b_i = 0; b_i < m; b_i++) {
     itrr++;
     itra++;
-    i2 = (int)itra - 1;
-    Ai->data[i2] = itrr;
-    Aj->data[i2] = ((1.0 + (double)b_i) - 1.0) * (2.0 * ((double)n - 2.0)) +
-      ((1.0 + (double)b_i) + (double)m);
-    Av->data[i2] = 1.0;
+    Z0_n = static_cast<int>(itra) - 1;
+    Ai->data[Z0_n] = itrr;
+    Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) * numElmAtot_tmp +
+      ((static_cast<double>(b_i) + 1.0) + static_cast<double>(m));
+    Av->data[Z0_n] = 1.0;
     itrb++;
-    i2 = (int)itrb - 1;
-    bi->data[i2] = itrr;
-    bv->data[i2] = 1.0;
+    Z0_m = static_cast<int>(itrb) - 1;
+    bi->data[Z0_m] = itrr;
+    bv->data[Z0_m] = 1.0;
   }
 
   //  Other entries should be 0
-  i1 = adj->size[0];
-  for (b_i = 0; b_i <= i1 - 3; b_i++) {
-    for (b_j = 0; b_j <= n - 3; b_j++) {
-      if (1 + b_i != 1 + b_j) {
+  for (b_i = 0; b_i < m; b_i++) {
+    for (loop_ub = 0; loop_ub < m; loop_ub++) {
+      if (b_i + 1 != loop_ub + 1) {
         itrr++;
         itra++;
-        i2 = (int)itra - 1;
-        Ai->data[i2] = itrr;
-        Aj->data[i2] = ((1.0 + (double)b_i) - 1.0) * (2.0 * ((double)n - 2.0)) +
-          ((1.0 + (double)b_j) + (double)m);
-        Av->data[i2] = 1.0;
+        Z0_n = static_cast<int>(itra) - 1;
+        Ai->data[Z0_n] = itrr;
+        Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) *
+          numElmAtot_tmp + ((static_cast<double>(loop_ub) + 1.0) + static_cast<
+                            double>(m));
+        Av->data[Z0_n] = 1.0;
       }
     }
   }
 
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_22
   //  Zero constraints due to the adjacency matrix
-  i1 = tmpd->size[0];
-  emxInit_real_T(&b_Qt, 1);
-  emxInit_real_T(&b_Q, 2);
+  i1 = qz->size[0];
   for (b_i = 0; b_i < i1; b_i++) {
     //  Term corresponding to row ii and column jj
-    idx = Qt->size[0];
-    b_j = j->data[b_i];
-    i2 = b_Qt->size[0];
-    b_Qt->size[0] = idx;
-    emxEnsureCapacity_real_T(b_Qt, i2);
-    for (i2 = 0; i2 < idx; i2++) {
-      b_Qt->data[i2] = Qt->data[i2 + Qt->size[0] * (b_j - 1)];
-    }
-
-    ii = (int)((tmpd->data[b_i] - 1.0) + 1.0);
-    i2 = b_Q->size[0] * b_Q->size[1];
-    b_Q->size[0] = 1;
-    b_Q->size[1] = loop_ub;
-    emxEnsureCapacity_real_T(b_Q, i2);
-    for (i2 = 0; i2 < loop_ub; i2++) {
-      b_Q->data[i2] = Q->data[(ii + Q->size[0] * i2) - 1];
-    }
-
-    i2 = Su->size[0] * Su->size[1];
-    Su->size[0] = b_Qt->size[0];
-    Su->size[1] = b_Q->size[1];
-    emxEnsureCapacity_real_T(Su, i2);
-    idx = b_Qt->size[0];
-    for (i2 = 0; i2 < idx; i2++) {
-      nx = b_Q->size[1];
-      for (c_i = 0; c_i < nx; c_i++) {
-        Su->data[i2 + Su->size[0] * c_i] = b_Qt->data[i2] * b_Q->data[c_i];
+    loop_ub = Qt->size[0];
+    t7_m = QQ->size[0] * QQ->size[1];
+    QQ->size[0] = Qt->size[0];
+    QQ->size[1] = b_loop_ub + 1;
+    emxEnsureCapacity_real_T(QQ, t7_m);
+    for (t7_m = 0; t7_m <= b_loop_ub; t7_m++) {
+      for (Z0_n = 0; Z0_n < loop_ub; Z0_n++) {
+        QQ->data[Z0_n + QQ->size[0] * t7_m] = Qt->data[Z0_n + Qt->size[0] * (
+          static_cast<int>(((static_cast<double>(jj->data[b_i]) - 1.0) + 1.0)) -
+          1)] * U->data[(static_cast<int>(((qz->data[b_i] - 1.0) + 1.0)) +
+                         U->size[0] * (dimkerAz + t7_m)) - 1];
       }
     }
 
     itrr++;
-    for (ii = 0; ii <= n - 3; ii++) {
-      for (jj = 0; jj <= n - 3; jj++) {
+    for (Z0_m = 0; Z0_m < m; Z0_m++) {
+      for (kj = 0; kj < m; kj++) {
         itra++;
-        i2 = (int)itra - 1;
-        Ai->data[i2] = itrr;
-        Aj->data[i2] = (((double)m + (1.0 + (double)ii)) - 1.0) * (2.0 *
-          ((double)n - 2.0)) + ((double)m + (1.0 + (double)jj));
-        Av->data[i2] = Su->data[ii + Su->size[0] * jj];
+        Z0_n = static_cast<int>(itra) - 1;
+        Ai->data[Z0_n] = itrr;
+        Aj->data[Z0_n] = ((static_cast<double>(m) + (static_cast<double>(Z0_m) +
+          1.0)) - 1.0) * numElmAtot_tmp + (static_cast<double>(m) + (
+          static_cast<double>(kj) + 1.0));
+        Av->data[Z0_n] = QQ->data[Z0_m + QQ->size[0] * kj];
       }
     }
   }
 
-  emxFree_real_T(&b_Q);
-
   //  Trace of gain matrix must be the specified value in 'trVal'
   itrr++;
-  i1 = adj->size[0];
-  for (b_i = 0; b_i <= i1 - 3; b_i++) {
+  for (b_i = 0; b_i < m; b_i++) {
     itra++;
-    numElmAtot = ((double)n - 2.0) + (1.0 + (double)b_i);
-    i2 = (int)itra - 1;
-    Ai->data[i2] = itrr;
-    Aj->data[i2] = (numElmAtot - 1.0) * (2.0 * ((double)n - 2.0)) + numElmAtot;
-    Av->data[i2] = 1.0;
+    idxR = static_cast<double>(m) + (static_cast<double>(b_i) + 1.0);
+    Z0_n = static_cast<int>(itra) - 1;
+    Ai->data[Z0_n] = itrr;
+    Aj->data[Z0_n] = (idxR - 1.0) * numElmAtot_tmp + idxR;
+    Av->data[Z0_n] = 1.0;
   }
 
   itrb++;
-  bi->data[(int)itrb - 1] = itrr;
-  bv->data[(int)itrb - 1] = (double)adj->size[0] - 2.0;
+  Z0_m = static_cast<int>(itrb) - 1;
+  bi->data[Z0_m] = itrr;
+  bv->data[Z0_m] = m;
 
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%% Symmetry
-  i1 = (adj->size[0] - 2) << 1;
+  i1 = m << 1;
   for (b_i = 0; b_i <= i1 - 2; b_i++) {
-    i2 = (m << 1) - b_i;
-    for (b_j = 0; b_j <= i2 - 2; b_j++) {
-      numElmAtot = ((1.0 + (double)b_i) + 1.0) + (double)b_j;
+    t7_m = i1 - b_i;
+    for (loop_ub = 0; loop_ub <= t7_m - 2; loop_ub++) {
+      idxR = ((static_cast<double>(b_i) + 1.0) + 1.0) + static_cast<double>
+        (loop_ub);
 
       //  Symmetric entries should be equal
       itrr++;
       itra++;
-      c_i = (int)itra - 1;
-      Ai->data[c_i] = itrr;
-      Aj->data[c_i] = ((1.0 + (double)b_i) - 1.0) * (2.0 * ((double)n - 2.0)) +
-        numElmAtot;
-      Av->data[c_i] = 1.0;
+      Z0_n = static_cast<int>(itra) - 1;
+      Ai->data[Z0_n] = itrr;
+      Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) * numElmAtot_tmp
+        + idxR;
+      Av->data[Z0_n] = 1.0;
       itra++;
-      c_i = (int)itra - 1;
-      Ai->data[c_i] = itrr;
-      Aj->data[c_i] = (numElmAtot - 1.0) * (2.0 * ((double)n - 2.0)) + (1.0 +
-        (double)b_i);
-      Av->data[c_i] = -1.0;
+      Z0_n = static_cast<int>(itra) - 1;
+      Ai->data[Z0_n] = itrr;
+      Aj->data[Z0_n] = (idxR - 1.0) * numElmAtot_tmp + (static_cast<double>(b_i)
+        + 1.0);
+      Av->data[Z0_n] = -1.0;
     }
   }
 
@@ -633,9 +644,9 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   //  Last element set to fix the size of b
   itrb++;
-  i1 = (int)itrb - 1;
-  bi->data[i1] = itrr;
-  bv->data[i1] = 0.0;
+  Z0_m = static_cast<int>(itrb) - 1;
+  bi->data[Z0_m] = itrr;
+  bv->data[Z0_m] = 0.0;
 
   //  % Remove any additional entries
   //  Ai(itra+1:end) = [];
@@ -645,114 +656,138 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //  bi(itrb+1:end) = [];
   //  bv(itrb+1:end) = [];
   //  Make sparse matrices
-  b_sparse(Ai, Aj, Av, &Z0);
+  b_sparse(Ai, Aj, Av, &expl_temp);
   i1 = A_d->size[0];
-  A_d->size[0] = Z0.d->size[0];
+  A_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(A_d, i1);
-  idx = Z0.d->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    A_d->data[i1] = Z0.d->data[i1];
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    A_d->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&A_colidx, 1);
   i1 = A_colidx->size[0];
-  A_colidx->size[0] = Z0.colidx->size[0];
+  A_colidx->size[0] = expl_temp.colidx->size[0];
   emxEnsureCapacity_int32_T(A_colidx, i1);
-  idx = Z0.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    A_colidx->data[i1] = Z0.colidx->data[i1];
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    A_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
   emxInit_int32_T(&A_rowidx, 1);
   i1 = A_rowidx->size[0];
-  A_rowidx->size[0] = Z0.rowidx->size[0];
+  A_rowidx->size[0] = expl_temp.rowidx->size[0];
   emxEnsureCapacity_int32_T(A_rowidx, i1);
-  idx = Z0.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    A_rowidx->data[i1] = Z0.rowidx->data[i1];
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    A_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  A_m = Z0.m;
-  jj = Z0.n;
-  i1 = Aj->size[0];
-  Aj->size[0] = bi->size[0];
-  emxEnsureCapacity_real_T(Aj, i1);
-  idx = bi->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    Aj->data[i1] = 1.0;
+  A_m = expl_temp.m;
+  Z0_m = expl_temp.n;
+  i1 = qz->size[0];
+  qz->size[0] = bi->size[0];
+  emxEnsureCapacity_real_T(qz, i1);
+  loop_ub = bi->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    qz->data[i1] = 1.0;
   }
 
-  b_sparse(bi, Aj, bv, &Z0);
-  i1 = bi->size[0];
-  bi->size[0] = Z0.d->size[0];
-  emxEnsureCapacity_real_T(bi, i1);
-  idx = Z0.d->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    bi->data[i1] = Z0.d->data[i1];
+  emxInit_real_T(&b_d, 1);
+  b_sparse(bi, qz, bv, &expl_temp);
+  i1 = b_d->size[0];
+  b_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(b_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    b_d->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&b_colidx, 1);
   i1 = b_colidx->size[0];
-  b_colidx->size[0] = Z0.colidx->size[0];
+  b_colidx->size[0] = expl_temp.colidx->size[0];
   emxEnsureCapacity_int32_T(b_colidx, i1);
-  idx = Z0.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    b_colidx->data[i1] = Z0.colidx->data[i1];
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    b_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
   emxInit_int32_T(&b_rowidx, 1);
   i1 = b_rowidx->size[0];
-  b_rowidx->size[0] = Z0.rowidx->size[0];
+  b_rowidx->size[0] = expl_temp.rowidx->size[0];
   emxEnsureCapacity_int32_T(b_rowidx, i1);
-  idx = Z0.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    b_rowidx->data[i1] = Z0.rowidx->data[i1];
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    b_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  emxInit_real_T(&As_d, 1);
+  b_m = expl_temp.m;
+  b_n = expl_temp.n;
+
+  //  Size of optimization variable
+  //  ADMM algorithm--full eigendecomposition
+  sparse_transpose(A_d, A_colidx, A_rowidx, A_m, Z0_m, &expl_temp);
+  i1 = As_d->size[0];
+  As_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(As_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    As_d->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&As_colidx, 1);
+  i1 = As_colidx->size[0];
+  As_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(As_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    As_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
   emxInit_int32_T(&As_rowidx, 1);
+  i1 = As_rowidx->size[0];
+  As_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(As_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    As_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
   emxInit_real_T(&AAs_d, 1);
-  b_m = Z0.m;
-  b_n = Z0.n;
-
-  //  Size of optimization variable
-  sizX = 2.0 * ((double)adj->size[0] - 2.0);
-
-  //  ADMM algorithm--full eigendecomposition
-  sparse_transpose(A_d, A_colidx, A_rowidx, A_m, jj, bv, As_colidx, As_rowidx,
-                   &As_m, &ii);
+  As_m = expl_temp.m;
 
   //  Dual operator
-  sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bv, As_colidx, As_rowidx, ii, &Z0);
+  sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, As_d, As_colidx, As_rowidx,
+                expl_temp.n, &expl_temp);
   i1 = AAs_d->size[0];
-  AAs_d->size[0] = Z0.d->size[0];
+  AAs_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(AAs_d, i1);
-  idx = Z0.d->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    AAs_d->data[i1] = Z0.d->data[i1];
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    AAs_d->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&AAs_colidx, 1);
   i1 = AAs_colidx->size[0];
-  AAs_colidx->size[0] = Z0.colidx->size[0];
+  AAs_colidx->size[0] = expl_temp.colidx->size[0];
   emxEnsureCapacity_int32_T(AAs_colidx, i1);
-  idx = Z0.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    AAs_colidx->data[i1] = Z0.colidx->data[i1];
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    AAs_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
   emxInit_int32_T(&AAs_rowidx, 1);
   i1 = AAs_rowidx->size[0];
-  AAs_rowidx->size[0] = Z0.rowidx->size[0];
+  AAs_rowidx->size[0] = expl_temp.rowidx->size[0];
   emxEnsureCapacity_int32_T(AAs_rowidx, i1);
-  idx = Z0.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    AAs_rowidx->data[i1] = Z0.rowidx->data[i1];
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    AAs_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  c_emxInitStruct_coder_internal_(&X);
-  AAs_m = Z0.m;
-  AAs_n = Z0.n;
+  AAs_m = expl_temp.m;
+  AAs_n = expl_temp.n;
 
   //  Penalty
   //  Precision for positive eig vals
@@ -761,325 +796,451 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //  Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. 
   //  Maximum # of iterations
   //  Initialize:
-  sparse_horzcat(I0.d, I0.colidx, I0.rowidx, I0.m, I0.n, I0.d, I0.colidx,
-                 I0.rowidx, I0.m, I0.n, Aj, t8_colidx, t8_rowidx, &idx, &boffset);
-  sparse_horzcat(I0.d, I0.colidx, I0.rowidx, I0.m, I0.n, I0.d, I0.colidx,
-                 I0.rowidx, I0.m, I0.n, Av, t9_colidx, t9_rowidx, &ii, &jj);
-  sparse_vertcat(Aj, t8_colidx, t8_rowidx, idx, boffset, Av, t9_colidx,
-                 t9_rowidx, ii, jj, &X);
+  sparse_horzcat(I0_d, I0_colidx, I0_rowidx, I0_m, I0_n, I0_d, I0_colidx,
+                 I0_rowidx, I0_m, I0_n, &expl_temp);
+  i1 = Ai->size[0];
+  Ai->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Ai, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Ai->data[i1] = expl_temp.d->data[i1];
+  }
+
+  i1 = t7_colidx->size[0];
+  t7_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t7_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  i1 = t7_rowidx->size[0];
+  t7_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t7_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  t7_m = expl_temp.m;
+  t7_n = expl_temp.n;
+  sparse_horzcat(I0_d, I0_colidx, I0_rowidx, I0_m, I0_n, I0_d, I0_colidx,
+                 I0_rowidx, I0_m, I0_n, &expl_temp);
+  i1 = Aj->size[0];
+  Aj->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Aj, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Aj->data[i1] = expl_temp.d->data[i1];
+  }
+
+  i1 = t8_colidx->size[0];
+  t8_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t8_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t8_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  i1 = t8_rowidx->size[0];
+  t8_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t8_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t8_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  emxInit_real_T(&X_d, 1);
+  sparse_vertcat(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, Aj, t8_colidx, t8_rowidx,
+                 expl_temp.m, expl_temp.n, &expl_temp);
+  i1 = X_d->size[0];
+  X_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(X_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    X_d->data[i1] = expl_temp.d->data[i1];
+  }
+
+  emxInit_int32_T(&X_colidx, 1);
+  i1 = X_colidx->size[0];
+  X_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(X_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    X_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  emxInit_int32_T(&X_rowidx, 1);
+  i1 = X_rowidx->size[0];
+  X_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(X_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    X_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  X_m = expl_temp.m;
+  X_n = expl_temp.n;
   b_i = 0;
   emxInit_creal_T(&dd, 1);
   emxInit_creal_T(&V, 2);
   emxInit_creal_T(&D, 2);
   emxInit_int32_T(&r1, 1);
+  emxInit_int32_T(&r2, 1);
   emxInit_creal_T(&y, 2);
   emxInit_creal_T(&b, 2);
   emxInit_real_T(&b_y, 2);
   emxInit_real_T(&c_y, 2);
-  emxInit_int32_T(&t10_colidx, 1);
-  emxInit_int32_T(&t10_rowidx, 1);
-  d_emxInitStruct_coder_internal_(&expl_temp);
+  emxInit_int32_T(&t9_colidx, 1);
+  emxInit_int32_T(&t9_rowidx, 1);
+  d_emxInitStruct_coder_internal_(&b_expl_temp);
   emxInit_creal_T(&b_dd, 1);
+  emxInit_real_T(&b_D, 2);
   exitg1 = false;
   while ((!exitg1) && (b_i < 10)) {
     // %%%%%% Update for y
-    sparse_copy(X.colidx, X.rowidx, X.m, X.n, &I0);
-    jj = X.colidx->data[X.colidx->size[0] - 1];
-    if (X.colidx->data[X.colidx->size[0] - 1] - 1 >= 1) {
-      ii = X.colidx->data[X.colidx->size[0] - 1] - 2;
-    } else {
-      ii = 0;
+    sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
+    i1 = I0_d->size[0];
+    I0_d->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(I0_d, i1);
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      I0_d->data[i1] = expl_temp.d->data[i1];
     }
 
-    i1 = I0.d->size[0];
-    I0.d->size[0] = ii + 1;
-    emxEnsureCapacity_real_T(I0.d, i1);
-    for (i1 = 0; i1 <= ii; i1++) {
-      I0.d->data[i1] = 0.0;
+    i1 = I0_colidx->size[0];
+    I0_colidx->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(I0_colidx, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      I0_colidx->data[i1] = expl_temp.colidx->data[i1];
     }
 
-    for (k = 0; k <= jj - 2; k++) {
-      I0.d->data[k] = X.d->data[k];
+    i1 = I0_rowidx->size[0];
+    I0_rowidx->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(I0_rowidx, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      I0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    b_sparse_fillIn(&I0);
-    sparse_copy(b_colidx, b_rowidx, b_m, b_n, &Z0);
-    jj = b_colidx->data[b_colidx->size[0] - 1];
-    if (b_colidx->data[b_colidx->size[0] - 1] - 1 >= 1) {
-      ii = b_colidx->data[b_colidx->size[0] - 1] - 2;
-    } else {
-      ii = 0;
+    I0_m = expl_temp.m;
+    I0_n = expl_temp.n;
+    sparse_times(b_d, b_colidx, b_rowidx, b_m, b_n, &expl_temp);
+    i1 = bi->size[0];
+    bi->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(bi, i1);
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      bi->data[i1] = expl_temp.d->data[i1];
     }
 
-    i1 = Z0.d->size[0];
-    Z0.d->size[0] = ii + 1;
-    emxEnsureCapacity_real_T(Z0.d, i1);
-    for (i1 = 0; i1 <= ii; i1++) {
-      Z0.d->data[i1] = 0.0;
+    i1 = Z0_colidx->size[0];
+    Z0_colidx->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(Z0_colidx, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Z0_colidx->data[i1] = expl_temp.colidx->data[i1];
     }
 
-    for (k = 0; k <= jj - 2; k++) {
-      Z0.d->data[k] = bi->data[k];
+    i1 = Z0_rowidx->size[0];
+    Z0_rowidx->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(Z0_rowidx, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Z0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    b_sparse_fillIn(&Z0);
-    sparse_minus(C_d, C_colidx, C_rowidx, Z_d, Z_colidx, Z_rowidx, aoffset, Z_n,
-                 Aj, t8_colidx, t8_rowidx, &idx, &boffset);
-    sparse_minus(Aj, t8_colidx, t8_rowidx, I0.d, I0.colidx, I0.rowidx, I0.m,
-                 I0.n, Av, t9_colidx, t9_rowidx, &ii, &jj);
-    vec(Av, t9_colidx, t9_rowidx, ii, jj, b_Qt, t10_colidx, t10_rowidx, &nx);
-    b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, b_Qt, t10_colidx, t10_rowidx,
-                    &expl_temp);
+    sparse_minus(C_d, C_colidx, C_rowidx, Z_d, Z_colidx, Z_rowidx, Z_m, Z_n, Ai,
+                 t7_colidx, t7_rowidx, &t7_m, &t7_n);
+    sparse_minus(Ai, t7_colidx, t7_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
+                 I0_n, Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+    vec(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, bv, t9_colidx, t9_rowidx, &kj);
+    b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bv, t9_colidx, t9_rowidx,
+                    &b_expl_temp);
     i1 = Ai->size[0];
-    Ai->size[0] = expl_temp.d->size[0];
+    Ai->size[0] = b_expl_temp.d->size[0];
     emxEnsureCapacity_real_T(Ai, i1);
-    idx = expl_temp.d->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      Ai->data[i1] = expl_temp.d->data[i1];
+    loop_ub = b_expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Ai->data[i1] = b_expl_temp.d->data[i1];
     }
 
-    i1 = i->size[0];
-    i->size[0] = expl_temp.colidx->size[0];
-    emxEnsureCapacity_int32_T(i, i1);
-    idx = expl_temp.colidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      i->data[i1] = expl_temp.colidx->data[i1];
+    i1 = t7_colidx->size[0];
+    t7_colidx->size[0] = b_expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(t7_colidx, i1);
+    loop_ub = b_expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_colidx->data[i1] = b_expl_temp.colidx->data[i1];
     }
 
-    i1 = j->size[0];
-    j->size[0] = expl_temp.rowidx->size[0];
-    emxEnsureCapacity_int32_T(j, i1);
-    idx = expl_temp.rowidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      j->data[i1] = expl_temp.rowidx->data[i1];
+    i1 = t7_rowidx->size[0];
+    t7_rowidx->size[0] = b_expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(t7_rowidx, i1);
+    loop_ub = b_expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
     }
 
-    sparse_plus(Ai, i, j, Z0.d, Z0.colidx, Z0.rowidx, Z0.m, b_Qt, t10_colidx,
-                t10_rowidx, &nx);
-    sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, b_Qt,
-                    t10_colidx, t10_rowidx, nx, &expl_temp);
+    sparse_plus(Ai, t7_colidx, t7_rowidx, bi, Z0_colidx, Z0_rowidx, expl_temp.m,
+                bv, t9_colidx, t9_rowidx, &kj);
+    sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, bv, t9_colidx,
+                    t9_rowidx, kj, &b_expl_temp);
     i1 = Ai->size[0];
-    Ai->size[0] = expl_temp.d->size[0];
+    Ai->size[0] = b_expl_temp.d->size[0];
     emxEnsureCapacity_real_T(Ai, i1);
-    idx = expl_temp.d->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      Ai->data[i1] = expl_temp.d->data[i1];
+    loop_ub = b_expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Ai->data[i1] = b_expl_temp.d->data[i1];
     }
 
-    i1 = i->size[0];
-    i->size[0] = expl_temp.colidx->size[0];
-    emxEnsureCapacity_int32_T(i, i1);
-    idx = expl_temp.colidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      i->data[i1] = expl_temp.colidx->data[i1];
+    i1 = t7_colidx->size[0];
+    t7_colidx->size[0] = b_expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(t7_colidx, i1);
+    loop_ub = b_expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_colidx->data[i1] = b_expl_temp.colidx->data[i1];
     }
 
-    i1 = j->size[0];
-    j->size[0] = expl_temp.rowidx->size[0];
-    emxEnsureCapacity_int32_T(j, i1);
-    idx = expl_temp.rowidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      j->data[i1] = expl_temp.rowidx->data[i1];
+    i1 = t7_rowidx->size[0];
+    t7_rowidx->size[0] = b_expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(t7_rowidx, i1);
+    loop_ub = b_expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
     }
 
     // %%%%%% Update for S
-    sparse_copy(X.colidx, X.rowidx, X.m, X.n, &I0);
-    jj = X.colidx->data[X.colidx->size[0] - 1];
-    if (X.colidx->data[X.colidx->size[0] - 1] - 1 >= 1) {
-      ii = X.colidx->data[X.colidx->size[0] - 1] - 2;
-    } else {
-      ii = 0;
+    sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
+    i1 = I0_d->size[0];
+    I0_d->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(I0_d, i1);
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      I0_d->data[i1] = expl_temp.d->data[i1];
     }
 
-    i1 = I0.d->size[0];
-    I0.d->size[0] = ii + 1;
-    emxEnsureCapacity_real_T(I0.d, i1);
-    for (i1 = 0; i1 <= ii; i1++) {
-      I0.d->data[i1] = 0.0;
+    i1 = I0_colidx->size[0];
+    I0_colidx->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(I0_colidx, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      I0_colidx->data[i1] = expl_temp.colidx->data[i1];
     }
 
-    for (k = 0; k <= jj - 2; k++) {
-      I0.d->data[k] = X.d->data[k];
+    i1 = I0_rowidx->size[0];
+    I0_rowidx->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(I0_rowidx, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      I0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    b_sparse_fillIn(&I0);
-    b_sparse_mtimes(bv, As_colidx, As_rowidx, As_m, Ai, i, j, &expl_temp);
-    i1 = b_Qt->size[0];
-    b_Qt->size[0] = expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(b_Qt, i1);
-    idx = expl_temp.d->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      b_Qt->data[i1] = expl_temp.d->data[i1];
+    I0_m = expl_temp.m;
+    I0_n = expl_temp.n;
+    b_sparse_mtimes(As_d, As_colidx, As_rowidx, As_m, Ai, t7_colidx, t7_rowidx,
+                    &b_expl_temp);
+    i1 = bv->size[0];
+    bv->size[0] = b_expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(bv, i1);
+    loop_ub = b_expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      bv->data[i1] = b_expl_temp.d->data[i1];
     }
 
-    i1 = t10_colidx->size[0];
-    t10_colidx->size[0] = expl_temp.colidx->size[0];
-    emxEnsureCapacity_int32_T(t10_colidx, i1);
-    idx = expl_temp.colidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      t10_colidx->data[i1] = expl_temp.colidx->data[i1];
+    i1 = t9_colidx->size[0];
+    t9_colidx->size[0] = b_expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(t9_colidx, i1);
+    loop_ub = b_expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t9_colidx->data[i1] = b_expl_temp.colidx->data[i1];
     }
 
-    i1 = t10_rowidx->size[0];
-    t10_rowidx->size[0] = expl_temp.rowidx->size[0];
-    emxEnsureCapacity_int32_T(t10_rowidx, i1);
-    idx = expl_temp.rowidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      t10_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+    i1 = t9_rowidx->size[0];
+    t9_rowidx->size[0] = b_expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(t9_rowidx, i1);
+    loop_ub = b_expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t9_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
     }
 
-    b_sizX[0] = sizX;
-    b_sizX[1] = sizX;
-    sparse_reshape(b_Qt, t10_colidx, t10_rowidx, b_sizX, Aj, t8_colidx,
-                   t8_rowidx, &idx, &boffset);
-    sparse_minus(C_d, C_colidx, C_rowidx, Aj, t8_colidx, t8_rowidx, idx, boffset,
-                 Av, t9_colidx, t9_rowidx, &ii, &jj);
-    sparse_minus(Av, t9_colidx, t9_rowidx, I0.d, I0.colidx, I0.rowidx, I0.m,
-                 I0.n, Ai, i, j, &W_m, &W_n);
-    sparse_transpose(Ai, i, j, W_m, W_n, Aj, t8_colidx, t8_rowidx, &idx,
-                     &boffset);
-    b_sparse_plus(Ai, i, j, Aj, t8_colidx, t8_rowidx, idx, boffset, Av,
-                  t9_colidx, t9_rowidx, &ii, &jj);
-    sparse_rdivide(Av, t9_colidx, t9_rowidx, ii, jj, &Z0);
+    sizX[0] = numElmAtot_tmp;
+    sizX[1] = numElmAtot_tmp;
+    sparse_reshape(bv, t9_colidx, t9_rowidx, sizX, &expl_temp);
     i1 = Ai->size[0];
-    Ai->size[0] = Z0.d->size[0];
+    Ai->size[0] = expl_temp.d->size[0];
     emxEnsureCapacity_real_T(Ai, i1);
-    idx = Z0.d->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      Ai->data[i1] = Z0.d->data[i1];
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Ai->data[i1] = expl_temp.d->data[i1];
     }
 
-    i1 = i->size[0];
-    i->size[0] = Z0.colidx->size[0];
-    emxEnsureCapacity_int32_T(i, i1);
-    idx = Z0.colidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      i->data[i1] = Z0.colidx->data[i1];
+    i1 = t7_colidx->size[0];
+    t7_colidx->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(t7_colidx, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_colidx->data[i1] = expl_temp.colidx->data[i1];
     }
 
-    i1 = j->size[0];
-    j->size[0] = Z0.rowidx->size[0];
-    emxEnsureCapacity_int32_T(j, i1);
-    idx = Z0.rowidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      j->data[i1] = Z0.rowidx->data[i1];
+    i1 = t7_rowidx->size[0];
+    t7_rowidx->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(t7_rowidx, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    W_m = Z0.m;
-    W_n = Z0.n;
-    b_sparse_full(Ai, i, j, Z0.m, Z0.n, Su);
-    eig(Su, V, D);
+    sparse_minus(C_d, C_colidx, C_rowidx, Ai, t7_colidx, t7_rowidx, expl_temp.m,
+                 expl_temp.n, Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+    sparse_minus(Aj, t8_colidx, t8_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
+                 I0_n, qz, ii, jj, &Z0_m, &t7_m);
+    sparse_transpose(qz, ii, jj, Z0_m, t7_m, &expl_temp);
+    i1 = Ai->size[0];
+    Ai->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(Ai, i1);
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Ai->data[i1] = expl_temp.d->data[i1];
+    }
+
+    i1 = t7_colidx->size[0];
+    t7_colidx->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(t7_colidx, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_colidx->data[i1] = expl_temp.colidx->data[i1];
+    }
+
+    i1 = t7_rowidx->size[0];
+    t7_rowidx->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(t7_rowidx, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+    }
+
+    b_sparse_plus(qz, ii, jj, Ai, t7_colidx, t7_rowidx, expl_temp.m, expl_temp.n,
+                  Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+    sparse_rdivide(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, &expl_temp);
+    i1 = qz->size[0];
+    qz->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(qz, i1);
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      qz->data[i1] = expl_temp.d->data[i1];
+    }
+
+    i1 = ii->size[0];
+    ii->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(ii, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      ii->data[i1] = expl_temp.colidx->data[i1];
+    }
+
+    i1 = jj->size[0];
+    jj->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(jj, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      jj->data[i1] = expl_temp.rowidx->data[i1];
+    }
+
+    sparse_full(qz, ii, jj, expl_temp.m, expl_temp.n, b_D);
+    eig(b_D, V, D);
     c_diag(D, dd);
-    jj = dd->size[0] - 1;
-    ii = 0;
-    for (c_i = 0; c_i <= jj; c_i++) {
-      if (dd->data[c_i].re > 1.0E-5) {
-        ii++;
+    Z0_n = dd->size[0] - 1;
+    t7_m = 0;
+    for (Z0_m = 0; Z0_m <= Z0_n; Z0_m++) {
+      if (dd->data[Z0_m].re > 1.0E-5) {
+        t7_m++;
       }
     }
 
     i1 = r1->size[0];
-    r1->size[0] = ii;
+    r1->size[0] = t7_m;
     emxEnsureCapacity_int32_T(r1, i1);
-    ii = 0;
-    for (c_i = 0; c_i <= jj; c_i++) {
-      if (dd->data[c_i].re > 1.0E-5) {
-        r1->data[ii] = c_i + 1;
-        ii++;
+    kj = 0;
+    I0_m = dd->size[0] - 1;
+    t7_m = 0;
+    for (Z0_m = 0; Z0_m <= Z0_n; Z0_m++) {
+      if (dd->data[Z0_m].re > 1.0E-5) {
+        r1->data[kj] = Z0_m + 1;
+        kj++;
+        t7_m++;
       }
     }
 
-    idx = V->size[0];
+    i1 = r2->size[0];
+    r2->size[0] = t7_m;
+    emxEnsureCapacity_int32_T(r2, i1);
+    kj = 0;
+    for (Z0_m = 0; Z0_m <= I0_m; Z0_m++) {
+      if (dd->data[Z0_m].re > 1.0E-5) {
+        r2->data[kj] = Z0_m + 1;
+        kj++;
+      }
+    }
+
+    loop_ub = V->size[0];
     i1 = D->size[0] * D->size[1];
-    D->size[0] = idx;
-    D->size[1] = r1->size[0];
+    D->size[0] = V->size[0];
+    D->size[1] = r2->size[0];
     emxEnsureCapacity_creal_T(D, i1);
-    nx = r1->size[0];
-    for (i1 = 0; i1 < nx; i1++) {
-      for (i2 = 0; i2 < idx; i2++) {
-        D->data[i2 + D->size[0] * i1] = V->data[i2 + V->size[0] * (r1->data[i1]
-          - 1)];
+    Z0_m = r2->size[0];
+    for (i1 = 0; i1 < Z0_m; i1++) {
+      for (t7_m = 0; t7_m < loop_ub; t7_m++) {
+        D->data[t7_m + D->size[0] * i1] = V->data[t7_m + V->size[0] * (r2->
+          data[i1] - 1)];
       }
     }
 
     i1 = b_dd->size[0];
-    b_dd->size[0] = r1->size[0];
+    b_dd->size[0] = r2->size[0];
     emxEnsureCapacity_creal_T(b_dd, i1);
-    idx = r1->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      b_dd->data[i1] = dd->data[r1->data[i1] - 1];
+    loop_ub = r2->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      b_dd->data[i1] = dd->data[r2->data[i1] - 1];
     }
 
     d_diag(b_dd, b);
-    if ((r1->size[0] == 1) || (b->size[0] == 1)) {
+    if ((r2->size[0] == 1) || (b->size[0] == 1)) {
       i1 = y->size[0] * y->size[1];
       y->size[0] = D->size[0];
       y->size[1] = b->size[1];
       emxEnsureCapacity_creal_T(y, i1);
-      idx = D->size[0];
-      for (i1 = 0; i1 < idx; i1++) {
-        nx = b->size[1];
-        for (i2 = 0; i2 < nx; i2++) {
-          y->data[i1 + y->size[0] * i2].re = 0.0;
-          y->data[i1 + y->size[0] * i2].im = 0.0;
-          ii = D->size[1];
-          for (c_i = 0; c_i < ii; c_i++) {
-            numElmAtot = D->data[i1 + D->size[0] * c_i].re * b->data[c_i +
-              b->size[0] * i2].re - D->data[i1 + D->size[0] * c_i].im * b->
-              data[c_i + b->size[0] * i2].im;
-            itrr = D->data[i1 + D->size[0] * c_i].re * b->data[c_i + b->size[0] *
-              i2].im + D->data[i1 + D->size[0] * c_i].im * b->data[c_i + b->
-              size[0] * i2].re;
-            y->data[i1 + y->size[0] * i2].re += numElmAtot;
-            y->data[i1 + y->size[0] * i2].im += itrr;
+      loop_ub = D->size[0];
+      for (i1 = 0; i1 < loop_ub; i1++) {
+        Z0_m = b->size[1];
+        for (t7_m = 0; t7_m < Z0_m; t7_m++) {
+          y->data[i1 + y->size[0] * t7_m].re = 0.0;
+          y->data[i1 + y->size[0] * t7_m].im = 0.0;
+          kj = D->size[1];
+          for (Z0_n = 0; Z0_n < kj; Z0_n++) {
+            y->data[i1 + y->size[0] * t7_m].re += D->data[i1 + D->size[0] * Z0_n]
+              .re * b->data[Z0_n + b->size[0] * t7_m].re - D->data[i1 + D->size
+              [0] * Z0_n].im * b->data[Z0_n + b->size[0] * t7_m].im;
+            y->data[i1 + y->size[0] * t7_m].im += D->data[i1 + D->size[0] * Z0_n]
+              .re * b->data[Z0_n + b->size[0] * t7_m].im + D->data[i1 + D->size
+              [0] * Z0_n].im * b->data[Z0_n + b->size[0] * t7_m].re;
           }
         }
       }
     } else {
-      i1 = V->size[0];
-      nx = r1->size[0];
-      c_n = b->size[1];
-      i2 = V->size[0];
-      c_i = y->size[0] * y->size[1];
-      y->size[0] = i2;
-      y->size[1] = b->size[1];
-      emxEnsureCapacity_creal_T(y, c_i);
-      for (b_j = 0; b_j < c_n; b_j++) {
-        idx = b_j * i1;
-        boffset = b_j * nx;
-        for (c_i = 0; c_i < i1; c_i++) {
-          i2 = idx + c_i;
-          y->data[i2].re = 0.0;
-          y->data[i2].im = 0.0;
-        }
-
-        for (k = 0; k < nx; k++) {
-          aoffset = k * i1;
-          ii = boffset + k;
-          numElmAtot = b->data[ii].re;
-          itrr = b->data[ii].im;
-          for (c_i = 0; c_i < i1; c_i++) {
-            ii = aoffset + c_i;
-            cdiff = numElmAtot * D->data[ii].re - itrr * D->data[ii].im;
-            temp_im = numElmAtot * D->data[ii].im + itrr * D->data[ii].re;
-            i2 = idx + c_i;
-            y->data[i2].re += cdiff;
-            y->data[i2].im += temp_im;
-          }
-        }
-      }
+      mtimes(D, b, y);
     }
 
-    idx = V->size[0];
+    loop_ub = V->size[0];
     i1 = b->size[0] * b->size[1];
     b->size[0] = r1->size[0];
-    b->size[1] = idx;
+    b->size[1] = V->size[0];
     emxEnsureCapacity_creal_T(b, i1);
-    for (i1 = 0; i1 < idx; i1++) {
-      nx = r1->size[0];
-      for (i2 = 0; i2 < nx; i2++) {
-        b->data[i2 + b->size[0] * i1] = V->data[i1 + V->size[0] * (r1->data[i2]
-          - 1)];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Z0_m = r1->size[0];
+      for (t7_m = 0; t7_m < Z0_m; t7_m++) {
+        b->data[t7_m + b->size[0] * i1] = V->data[i1 + V->size[0] * (r1->
+          data[t7_m] - 1)];
       }
     }
 
@@ -1088,236 +1249,161 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       D->size[0] = y->size[0];
       D->size[1] = b->size[1];
       emxEnsureCapacity_creal_T(D, i1);
-      idx = y->size[0];
-      for (i1 = 0; i1 < idx; i1++) {
-        nx = b->size[1];
-        for (i2 = 0; i2 < nx; i2++) {
-          D->data[i1 + D->size[0] * i2].re = 0.0;
-          D->data[i1 + D->size[0] * i2].im = 0.0;
-          ii = y->size[1];
-          for (c_i = 0; c_i < ii; c_i++) {
-            numElmAtot = y->data[i1 + y->size[0] * c_i].re * b->data[c_i +
-              b->size[0] * i2].re - y->data[i1 + y->size[0] * c_i].im * b->
-              data[c_i + b->size[0] * i2].im;
-            itrr = y->data[i1 + y->size[0] * c_i].re * b->data[c_i + b->size[0] *
-              i2].im + y->data[i1 + y->size[0] * c_i].im * b->data[c_i + b->
-              size[0] * i2].re;
-            D->data[i1 + D->size[0] * i2].re += numElmAtot;
-            D->data[i1 + D->size[0] * i2].im += itrr;
+      loop_ub = y->size[0];
+      for (i1 = 0; i1 < loop_ub; i1++) {
+        Z0_m = b->size[1];
+        for (t7_m = 0; t7_m < Z0_m; t7_m++) {
+          D->data[i1 + D->size[0] * t7_m].re = 0.0;
+          D->data[i1 + D->size[0] * t7_m].im = 0.0;
+          kj = y->size[1];
+          for (Z0_n = 0; Z0_n < kj; Z0_n++) {
+            D->data[i1 + D->size[0] * t7_m].re += y->data[i1 + y->size[0] * Z0_n]
+              .re * b->data[Z0_n + b->size[0] * t7_m].re - y->data[i1 + y->size
+              [0] * Z0_n].im * b->data[Z0_n + b->size[0] * t7_m].im;
+            D->data[i1 + D->size[0] * t7_m].im += y->data[i1 + y->size[0] * Z0_n]
+              .re * b->data[Z0_n + b->size[0] * t7_m].im + y->data[i1 + y->size
+              [0] * Z0_n].im * b->data[Z0_n + b->size[0] * t7_m].re;
           }
         }
       }
     } else {
-      jj = y->size[0];
-      nx = y->size[1];
-      c_n = b->size[1];
-      i1 = D->size[0] * D->size[1];
-      D->size[0] = y->size[0];
-      D->size[1] = b->size[1];
-      emxEnsureCapacity_creal_T(D, i1);
-      for (b_j = 0; b_j < c_n; b_j++) {
-        idx = b_j * jj;
-        boffset = b_j * nx;
-        for (c_i = 0; c_i < jj; c_i++) {
-          i1 = idx + c_i;
-          D->data[i1].re = 0.0;
-          D->data[i1].im = 0.0;
-        }
-
-        for (k = 0; k < nx; k++) {
-          aoffset = k * jj;
-          ii = boffset + k;
-          numElmAtot = b->data[ii].re;
-          itrr = b->data[ii].im;
-          for (c_i = 0; c_i < jj; c_i++) {
-            ii = aoffset + c_i;
-            cdiff = numElmAtot * y->data[ii].re - itrr * y->data[ii].im;
-            temp_im = numElmAtot * y->data[ii].im + itrr * y->data[ii].re;
-            i1 = idx + c_i;
-            D->data[i1].re += cdiff;
-            D->data[i1].im += temp_im;
-          }
-        }
-      }
+      mtimes(y, b, D);
     }
 
-    i1 = Su->size[0] * Su->size[1];
-    Su->size[0] = D->size[0];
-    Su->size[1] = D->size[1];
-    emxEnsureCapacity_real_T(Su, i1);
-    idx = D->size[0] * D->size[1];
-    for (i1 = 0; i1 < idx; i1++) {
-      Su->data[i1] = D->data[i1].re;
+    i1 = b_D->size[0] * b_D->size[1];
+    b_D->size[0] = D->size[0];
+    b_D->size[1] = D->size[1];
+    emxEnsureCapacity_real_T(b_D, i1);
+    loop_ub = D->size[0] * D->size[1];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      b_D->data[i1] = D->data[i1].re;
     }
 
-    c_sparse(Su, Z_d, Z_colidx, Z_rowidx, &aoffset, &Z_n);
+    c_sparse(b_D, Z_d, Z_colidx, Z_rowidx, &Z_m, &Z_n);
 
     // %%%%%% Update for X
-    c_emxCopyStruct_coder_internal_(&Z0, &X);
-    sparse_minus(Z_d, Z_colidx, Z_rowidx, Ai, i, j, W_m, W_n, Aj, t8_colidx,
-                 t8_rowidx, &idx, &boffset);
-    b_sparse_rdivide(Aj, t8_colidx, t8_rowidx, idx, boffset, &X);
+    i1 = bi->size[0];
+    bi->size[0] = X_d->size[0];
+    emxEnsureCapacity_real_T(bi, i1);
+    loop_ub = X_d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      bi->data[i1] = X_d->data[i1];
+    }
+
+    i1 = Z0_colidx->size[0];
+    Z0_colidx->size[0] = X_colidx->size[0];
+    emxEnsureCapacity_int32_T(Z0_colidx, i1);
+    loop_ub = X_colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Z0_colidx->data[i1] = X_colidx->data[i1];
+    }
+
+    i1 = Z0_rowidx->size[0];
+    Z0_rowidx->size[0] = X_rowidx->size[0];
+    emxEnsureCapacity_int32_T(Z0_rowidx, i1);
+    loop_ub = X_rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      Z0_rowidx->data[i1] = X_rowidx->data[i1];
+    }
+
+    Z0_m = X_m;
+    Z0_n = X_n;
+    sparse_minus(Z_d, Z_colidx, Z_rowidx, qz, ii, jj, expl_temp.m, expl_temp.n,
+                 Ai, t7_colidx, t7_rowidx, &t7_m, &t7_n);
+    sparse_times(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, &expl_temp);
+    i1 = X_d->size[0];
+    X_d->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(X_d, i1);
+    loop_ub = expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      X_d->data[i1] = expl_temp.d->data[i1];
+    }
+
+    i1 = X_colidx->size[0];
+    X_colidx->size[0] = expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(X_colidx, i1);
+    loop_ub = expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      X_colidx->data[i1] = expl_temp.colidx->data[i1];
+    }
+
+    i1 = X_rowidx->size[0];
+    X_rowidx->size[0] = expl_temp.rowidx->size[0];
+    emxEnsureCapacity_int32_T(X_rowidx, i1);
+    loop_ub = expl_temp.rowidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      X_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+    }
+
+    X_m = expl_temp.m;
+    X_n = expl_temp.n;
 
     // %%%%%% Stop criteria
-    b_sparse_parenReference(Z0.d, Z0.colidx, Z0.rowidx, Z0.m, Z0.n, b_Qt,
-      t10_colidx, t10_rowidx, &nx);
-    b_sparse_parenReference(X.d, X.colidx, X.rowidx, X.m, X.n, Ai, i, j, &ii);
-    b_sparse_minus(b_Qt, t10_colidx, t10_rowidx, Ai, i, j, ii, Aj, t8_colidx,
-                   t8_rowidx, &jj);
-    sparse_abs(Aj, t8_colidx, t8_rowidx, jj, &expl_temp);
-    i1 = b_Qt->size[0];
-    b_Qt->size[0] = expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(b_Qt, i1);
-    idx = expl_temp.d->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      b_Qt->data[i1] = expl_temp.d->data[i1];
+    b_sparse_parenReference(bi, Z0_colidx, Z0_rowidx, Z0_m, Z0_n, bv, t9_colidx,
+      t9_rowidx, &kj);
+    b_sparse_parenReference(X_d, X_colidx, X_rowidx, expl_temp.m, expl_temp.n,
+      Ai, t7_colidx, t7_rowidx, &Z0_m);
+    b_sparse_minus(bv, t9_colidx, t9_rowidx, Ai, t7_colidx, t7_rowidx, Z0_m, qz,
+                   ii, jj, &I0_m);
+    sparse_abs(qz, ii, jj, I0_m, &b_expl_temp);
+    i1 = bv->size[0];
+    bv->size[0] = b_expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(bv, i1);
+    loop_ub = b_expl_temp.d->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      bv->data[i1] = b_expl_temp.d->data[i1];
     }
 
-    i1 = t10_colidx->size[0];
-    t10_colidx->size[0] = expl_temp.colidx->size[0];
-    emxEnsureCapacity_int32_T(t10_colidx, i1);
-    idx = expl_temp.colidx->size[0];
-    for (i1 = 0; i1 < idx; i1++) {
-      t10_colidx->data[i1] = expl_temp.colidx->data[i1];
+    i1 = t9_colidx->size[0];
+    t9_colidx->size[0] = b_expl_temp.colidx->size[0];
+    emxEnsureCapacity_int32_T(t9_colidx, i1);
+    loop_ub = b_expl_temp.colidx->size[0];
+    for (i1 = 0; i1 < loop_ub; i1++) {
+      t9_colidx->data[i1] = b_expl_temp.colidx->data[i1];
     }
 
-    nx = expl_temp.m;
-    sum(b_Qt, t10_colidx, expl_temp.m, Ai, j, t8_colidx);
-    sparse_lt(Ai, j, t12_d, i, t8_colidx);
-    if (c_sparse_full(t12_d, i)) {
+    sum(bv, t9_colidx, b_expl_temp.m, qz, jj, t7_colidx);
+    sparse_lt(qz, jj, t11_d, ii, t7_colidx);
+    if (b_sparse_full(t11_d, ii)) {
       //  change in X is small
       exitg1 = true;
     } else {
       //  trace of sparse matrix for MATLAB Coder
-      if (X.m < m + 1) {
+      if (expl_temp.m < m + 1) {
         b_y->size[0] = 1;
         b_y->size[1] = 0;
-      } else if (n - 1 == m + 1) {
+      } else {
         i1 = b_y->size[0] * b_y->size[1];
         b_y->size[0] = 1;
-        idx = X.m - m;
-        b_y->size[1] = idx;
+        loop_ub = expl_temp.m - m;
+        b_y->size[1] = loop_ub;
         emxEnsureCapacity_real_T(b_y, i1);
-        for (i1 = 0; i1 < idx; i1++) {
+        for (i1 = 0; i1 < loop_ub; i1++) {
           b_y->data[i1] = (m + i1) + 1;
         }
-      } else {
-        numElmAtot = std::floor(((double)X.m - ((double)m + 1.0)) + 0.5);
-        itrr = ((double)m + 1.0) + numElmAtot;
-        cdiff = itrr - (double)X.m;
-        ii = (int)std::abs((double)m + 1.0);
-        jj = (int)std::abs((double)X.m);
-        if (ii > jj) {
-          jj = ii;
-        }
-
-        if (std::abs(cdiff) < 4.4408920985006262E-16 * (double)jj) {
-          numElmAtot++;
-          itrr = X.m;
-        } else if (cdiff > 0.0) {
-          itrr = ((double)m + 1.0) + (numElmAtot - 1.0);
-        } else {
-          numElmAtot++;
-        }
-
-        if (numElmAtot >= 0.0) {
-          c_n = (int)numElmAtot;
-        } else {
-          c_n = 0;
-        }
-
-        i1 = b_y->size[0] * b_y->size[1];
-        b_y->size[0] = 1;
-        b_y->size[1] = c_n;
-        emxEnsureCapacity_real_T(b_y, i1);
-        if (c_n > 0) {
-          b_y->data[0] = (double)m + 1.0;
-          if (c_n > 1) {
-            b_y->data[c_n - 1] = itrr;
-            ii = (c_n - 1) >> 1;
-            for (k = 0; k <= ii - 2; k++) {
-              b_y->data[1 + k] = ((double)m + 1.0) + (1.0 + (double)k);
-              b_y->data[(c_n - k) - 2] = itrr - (1.0 + (double)k);
-            }
-
-            if (ii << 1 == c_n - 1) {
-              b_y->data[ii] = (((double)m + 1.0) + itrr) / 2.0;
-            } else {
-              b_y->data[ii] = ((double)m + 1.0) + (double)ii;
-              b_y->data[ii + 1] = itrr - (double)ii;
-            }
-          }
-        }
       }
 
-      if (X.n < m + 1) {
+      if (expl_temp.n < m + 1) {
         c_y->size[0] = 1;
         c_y->size[1] = 0;
-      } else if (n - 1 == m + 1) {
-        i1 = c_y->size[0] * c_y->size[1];
-        c_y->size[0] = 1;
-        idx = X.n - m;
-        c_y->size[1] = idx;
-        emxEnsureCapacity_real_T(c_y, i1);
-        for (i1 = 0; i1 < idx; i1++) {
-          c_y->data[i1] = (m + i1) + 1;
-        }
       } else {
-        numElmAtot = std::floor(((double)X.n - ((double)m + 1.0)) + 0.5);
-        itrr = ((double)m + 1.0) + numElmAtot;
-        cdiff = itrr - (double)X.n;
-        ii = (int)std::abs((double)m + 1.0);
-        jj = (int)std::abs((double)X.n);
-        if (ii > jj) {
-          jj = ii;
-        }
-
-        if (std::abs(cdiff) < 4.4408920985006262E-16 * (double)jj) {
-          numElmAtot++;
-          itrr = X.n;
-        } else if (cdiff > 0.0) {
-          itrr = ((double)m + 1.0) + (numElmAtot - 1.0);
-        } else {
-          numElmAtot++;
-        }
-
-        if (numElmAtot >= 0.0) {
-          c_n = (int)numElmAtot;
-        } else {
-          c_n = 0;
-        }
-
         i1 = c_y->size[0] * c_y->size[1];
         c_y->size[0] = 1;
-        c_y->size[1] = c_n;
+        loop_ub = expl_temp.n - m;
+        c_y->size[1] = loop_ub;
         emxEnsureCapacity_real_T(c_y, i1);
-        if (c_n > 0) {
-          c_y->data[0] = (double)m + 1.0;
-          if (c_n > 1) {
-            c_y->data[c_n - 1] = itrr;
-            ii = (c_n - 1) >> 1;
-            for (k = 0; k <= ii - 2; k++) {
-              c_y->data[1 + k] = ((double)m + 1.0) + (1.0 + (double)k);
-              c_y->data[(c_n - k) - 2] = itrr - (1.0 + (double)k);
-            }
-
-            if (ii << 1 == c_n - 1) {
-              c_y->data[ii] = (((double)m + 1.0) + itrr) / 2.0;
-            } else {
-              c_y->data[ii] = ((double)m + 1.0) + (double)ii;
-              c_y->data[ii + 1] = itrr - (double)ii;
-            }
-          }
+        for (i1 = 0; i1 < loop_ub; i1++) {
+          c_y->data[i1] = (m + i1) + 1;
         }
       }
 
-      c_sparse_parenReference(X.d, X.colidx, X.rowidx, b_y, c_y, Aj, t8_colidx,
-        t8_rowidx, &idx, &boffset);
-      sparse_diag(Aj, t8_colidx, t8_rowidx, idx, boffset, b_Qt, t10_colidx,
-                  t10_rowidx, &nx);
-      sum(b_Qt, t10_colidx, nx, Ai, j, t8_colidx);
-      numElmAtot = d_sparse_full(Ai, j) - ((double)n - 2.0);
-      if (std::abs(numElmAtot) / (double)m * 100.0 < 10.0) {
+      c_sparse_parenReference(X_d, X_colidx, X_rowidx, b_y, c_y, Ai, t7_colidx,
+        t7_rowidx, &t7_m, &t7_n);
+      sparse_diag(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, bv, t9_colidx, t9_rowidx,
+                  &kj);
+      sum(bv, t9_colidx, kj, qz, jj, t7_colidx);
+      if (std::abs(c_sparse_full(qz, jj) - static_cast<double>(m)) /
+          static_cast<double>(m) * 100.0 < 10.0) {
         //  trace of X is close to the desired value
         exitg1 = true;
       } else {
@@ -1327,400 +1413,469 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   }
 
   emxFree_creal_T(&b_dd);
-  emxFree_boolean_T(&t12_d);
+  emxFree_boolean_T(&t11_d);
   emxFree_real_T(&c_y);
   emxFree_real_T(&b_y);
   emxFree_creal_T(&b);
   emxFree_creal_T(&y);
+  emxFree_int32_T(&r2);
   emxFree_int32_T(&r1);
   emxFree_creal_T(&D);
   emxFree_creal_T(&V);
   emxFree_creal_T(&dd);
-  c_emxInitStruct_coder_internal_(&b_S);
 
   //  Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix 
-  sparse_copy(Z_colidx, Z_rowidx, aoffset, Z_n, &b_S);
-  jj = Z_colidx->data[Z_colidx->size[0] - 1];
-  emxFree_int32_T(&Z_rowidx);
-  if (1 > Z_colidx->data[Z_colidx->size[0] - 1] - 1) {
-    idx = 0;
-  } else {
-    idx = Z_colidx->data[Z_colidx->size[0] - 1] - 1;
-  }
-
-  i1 = tmpd->size[0];
-  tmpd->size[0] = idx;
-  emxEnsureCapacity_real_T(tmpd, i1);
-  for (i1 = 0; i1 < idx; i1++) {
-    tmpd->data[i1] = 0.0 * Z_d->data[i1];
-  }
-
+  b_sparse_times(Z_d, Z_colidx, Z_rowidx, Z_m, Z_n, &expl_temp);
+  i1 = Av->size[0];
+  Av->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Av, i1);
+  loop_ub = expl_temp.d->size[0];
   emxFree_real_T(&Z_d);
-  if (Z_colidx->data[Z_colidx->size[0] - 1] - 1 >= 1) {
-    ii = Z_colidx->data[Z_colidx->size[0] - 1] - 2;
-  } else {
-    ii = 0;
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Av->data[i1] = expl_temp.d->data[i1];
   }
 
-  emxFree_int32_T(&Z_colidx);
-  i1 = b_S.d->size[0];
-  b_S.d->size[0] = ii + 1;
-  emxEnsureCapacity_real_T(b_S.d, i1);
-  for (i1 = 0; i1 <= ii; i1++) {
-    b_S.d->data[i1] = 0.0;
+  i1 = Z_colidx->size[0];
+  Z_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(Z_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Z_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
-  for (k = 0; k <= jj - 2; k++) {
-    b_S.d->data[k] = tmpd->data[k];
+  i1 = Z_rowidx->size[0];
+  Z_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(Z_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Z_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  emxFree_real_T(&tmpd);
-  b_sparse_fillIn(&b_S);
-  sparse_copy(X.colidx, X.rowidx, X.m, X.n, &I0);
-  jj = X.colidx->data[X.colidx->size[0] - 1];
-  if (X.colidx->data[X.colidx->size[0] - 1] - 1 >= 1) {
-    ii = X.colidx->data[X.colidx->size[0] - 1] - 2;
-  } else {
-    ii = 0;
+  Z0_m = expl_temp.m;
+  kj = expl_temp.n;
+  sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
+  i1 = I0_d->size[0];
+  I0_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(I0_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_d->data[i1] = expl_temp.d->data[i1];
   }
 
-  i1 = I0.d->size[0];
-  I0.d->size[0] = ii + 1;
-  emxEnsureCapacity_real_T(I0.d, i1);
-  for (i1 = 0; i1 <= ii; i1++) {
-    I0.d->data[i1] = 0.0;
+  i1 = I0_colidx->size[0];
+  I0_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(I0_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
-  for (k = 0; k <= jj - 2; k++) {
-    I0.d->data[k] = X.d->data[k];
+  i1 = I0_rowidx->size[0];
+  I0_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(I0_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  b_sparse_fillIn(&I0);
-  sparse_copy(b_colidx, b_rowidx, b_m, b_n, &Z0);
-  jj = b_colidx->data[b_colidx->size[0] - 1];
+  I0_m = expl_temp.m;
+  I0_n = expl_temp.n;
+  sparse_times(b_d, b_colidx, b_rowidx, b_m, b_n, &expl_temp);
+  i1 = bi->size[0];
+  bi->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(bi, i1);
+  loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&b_rowidx);
-  if (b_colidx->data[b_colidx->size[0] - 1] - 1 >= 1) {
-    ii = b_colidx->data[b_colidx->size[0] - 1] - 2;
-  } else {
-    ii = 0;
-  }
-
   emxFree_int32_T(&b_colidx);
-  i1 = Z0.d->size[0];
-  Z0.d->size[0] = ii + 1;
-  emxEnsureCapacity_real_T(Z0.d, i1);
-  for (i1 = 0; i1 <= ii; i1++) {
-    Z0.d->data[i1] = 0.0;
+  emxFree_real_T(&b_d);
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    bi->data[i1] = expl_temp.d->data[i1];
   }
 
-  for (k = 0; k <= jj - 2; k++) {
-    Z0.d->data[k] = bi->data[k];
+  i1 = Z0_colidx->size[0];
+  Z0_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(Z0_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Z0_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
-  emxFree_real_T(&bi);
-  b_sparse_fillIn(&Z0);
-  sparse_minus(C_d, C_colidx, C_rowidx, b_S.d, b_S.colidx, b_S.rowidx, b_S.m,
-               b_S.n, Aj, t8_colidx, t8_rowidx, &idx, &boffset);
-  sparse_minus(Aj, t8_colidx, t8_rowidx, I0.d, I0.colidx, I0.rowidx, I0.m, I0.n,
-               Av, t9_colidx, t9_rowidx, &ii, &jj);
-  vec(Av, t9_colidx, t9_rowidx, ii, jj, b_Qt, t10_colidx, t10_rowidx, &nx);
-  b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, b_Qt, t10_colidx, t10_rowidx,
-                  &expl_temp);
+  i1 = Z0_rowidx->size[0];
+  Z0_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(Z0_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Z0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  sparse_minus(C_d, C_colidx, C_rowidx, Av, Z_colidx, Z_rowidx, Z0_m, kj, Ai,
+               t7_colidx, t7_rowidx, &t7_m, &t7_n);
+  sparse_minus(Ai, t7_colidx, t7_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m, I0_n,
+               Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+  vec(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, bv, t9_colidx, t9_rowidx, &kj);
+  b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bv, t9_colidx, t9_rowidx,
+                  &b_expl_temp);
   i1 = Ai->size[0];
-  Ai->size[0] = expl_temp.d->size[0];
+  Ai->size[0] = b_expl_temp.d->size[0];
   emxEnsureCapacity_real_T(Ai, i1);
-  idx = expl_temp.d->size[0];
+  loop_ub = b_expl_temp.d->size[0];
   emxFree_int32_T(&A_rowidx);
   emxFree_int32_T(&A_colidx);
   emxFree_real_T(&A_d);
-  for (i1 = 0; i1 < idx; i1++) {
-    Ai->data[i1] = expl_temp.d->data[i1];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Ai->data[i1] = b_expl_temp.d->data[i1];
   }
 
-  i1 = i->size[0];
-  i->size[0] = expl_temp.colidx->size[0];
-  emxEnsureCapacity_int32_T(i, i1);
-  idx = expl_temp.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    i->data[i1] = expl_temp.colidx->data[i1];
+  i1 = t7_colidx->size[0];
+  t7_colidx->size[0] = b_expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t7_colidx, i1);
+  loop_ub = b_expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_colidx->data[i1] = b_expl_temp.colidx->data[i1];
   }
 
-  i1 = j->size[0];
-  j->size[0] = expl_temp.rowidx->size[0];
-  emxEnsureCapacity_int32_T(j, i1);
-  idx = expl_temp.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    j->data[i1] = expl_temp.rowidx->data[i1];
+  i1 = t7_rowidx->size[0];
+  t7_rowidx->size[0] = b_expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t7_rowidx, i1);
+  loop_ub = b_expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
   }
 
-  sparse_plus(Ai, i, j, Z0.d, Z0.colidx, Z0.rowidx, Z0.m, b_Qt, t10_colidx,
-              t10_rowidx, &nx);
-  sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, b_Qt, t10_colidx,
-                  t10_rowidx, nx, &expl_temp);
+  sparse_plus(Ai, t7_colidx, t7_rowidx, bi, Z0_colidx, Z0_rowidx, expl_temp.m,
+              bv, t9_colidx, t9_rowidx, &kj);
+  sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, bv, t9_colidx,
+                  t9_rowidx, kj, &b_expl_temp);
   i1 = Ai->size[0];
-  Ai->size[0] = expl_temp.d->size[0];
+  Ai->size[0] = b_expl_temp.d->size[0];
   emxEnsureCapacity_real_T(Ai, i1);
-  idx = expl_temp.d->size[0];
+  loop_ub = b_expl_temp.d->size[0];
   emxFree_int32_T(&AAs_rowidx);
   emxFree_int32_T(&AAs_colidx);
   emxFree_real_T(&AAs_d);
-  for (i1 = 0; i1 < idx; i1++) {
+  emxFree_real_T(&bi);
+  emxFree_int32_T(&Z0_rowidx);
+  emxFree_int32_T(&Z0_colidx);
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Ai->data[i1] = b_expl_temp.d->data[i1];
+  }
+
+  i1 = t7_colidx->size[0];
+  t7_colidx->size[0] = b_expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t7_colidx, i1);
+  loop_ub = b_expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_colidx->data[i1] = b_expl_temp.colidx->data[i1];
+  }
+
+  i1 = t7_rowidx->size[0];
+  t7_rowidx->size[0] = b_expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t7_rowidx, i1);
+  loop_ub = b_expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
+  }
+
+  sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
+  i1 = I0_d->size[0];
+  I0_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(I0_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_d->data[i1] = expl_temp.d->data[i1];
+  }
+
+  i1 = I0_colidx->size[0];
+  I0_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(I0_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_colidx->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  i1 = I0_rowidx->size[0];
+  I0_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(I0_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    I0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  I0_m = expl_temp.m;
+  I0_n = expl_temp.n;
+  b_sparse_mtimes(As_d, As_colidx, As_rowidx, As_m, Ai, t7_colidx, t7_rowidx,
+                  &b_expl_temp);
+  i1 = bv->size[0];
+  bv->size[0] = b_expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(bv, i1);
+  loop_ub = b_expl_temp.d->size[0];
+  emxFree_int32_T(&As_rowidx);
+  emxFree_int32_T(&As_colidx);
+  emxFree_real_T(&As_d);
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    bv->data[i1] = b_expl_temp.d->data[i1];
+  }
+
+  i1 = t9_colidx->size[0];
+  t9_colidx->size[0] = b_expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t9_colidx, i1);
+  loop_ub = b_expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t9_colidx->data[i1] = b_expl_temp.colidx->data[i1];
+  }
+
+  i1 = t9_rowidx->size[0];
+  t9_rowidx->size[0] = b_expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t9_rowidx, i1);
+  loop_ub = b_expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t9_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
+  }
+
+  d_emxFreeStruct_coder_internal_(&b_expl_temp);
+  sizX[0] = numElmAtot_tmp;
+  sizX[1] = numElmAtot_tmp;
+  sparse_reshape(bv, t9_colidx, t9_rowidx, sizX, &expl_temp);
+  i1 = Ai->size[0];
+  Ai->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Ai, i1);
+  loop_ub = expl_temp.d->size[0];
+  emxFree_int32_T(&t9_rowidx);
+  emxFree_int32_T(&t9_colidx);
+  emxFree_real_T(&bv);
+  for (i1 = 0; i1 < loop_ub; i1++) {
     Ai->data[i1] = expl_temp.d->data[i1];
   }
 
-  i1 = i->size[0];
-  i->size[0] = expl_temp.colidx->size[0];
-  emxEnsureCapacity_int32_T(i, i1);
-  idx = expl_temp.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    i->data[i1] = expl_temp.colidx->data[i1];
+  i1 = t7_colidx->size[0];
+  t7_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t7_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
-  i1 = j->size[0];
-  j->size[0] = expl_temp.rowidx->size[0];
-  emxEnsureCapacity_int32_T(j, i1);
-  idx = expl_temp.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    j->data[i1] = expl_temp.rowidx->data[i1];
+  i1 = t7_rowidx->size[0];
+  t7_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t7_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  sparse_copy(X.colidx, X.rowidx, X.m, X.n, &I0);
-  jj = X.colidx->data[X.colidx->size[0] - 1];
-  if (X.colidx->data[X.colidx->size[0] - 1] - 1 >= 1) {
-    ii = X.colidx->data[X.colidx->size[0] - 1] - 2;
-  } else {
-    ii = 0;
-  }
-
-  i1 = I0.d->size[0];
-  I0.d->size[0] = ii + 1;
-  emxEnsureCapacity_real_T(I0.d, i1);
-  for (i1 = 0; i1 <= ii; i1++) {
-    I0.d->data[i1] = 0.0;
-  }
-
-  for (k = 0; k <= jj - 2; k++) {
-    I0.d->data[k] = X.d->data[k];
-  }
-
-  b_sparse_fillIn(&I0);
-  b_sparse_mtimes(bv, As_colidx, As_rowidx, As_m, Ai, i, j, &expl_temp);
-  i1 = b_Qt->size[0];
-  b_Qt->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(b_Qt, i1);
-  idx = expl_temp.d->size[0];
-  emxFree_int32_T(&As_rowidx);
-  emxFree_int32_T(&As_colidx);
-  emxFree_real_T(&bv);
-  for (i1 = 0; i1 < idx; i1++) {
-    b_Qt->data[i1] = expl_temp.d->data[i1];
-  }
-
-  i1 = t10_colidx->size[0];
-  t10_colidx->size[0] = expl_temp.colidx->size[0];
-  emxEnsureCapacity_int32_T(t10_colidx, i1);
-  idx = expl_temp.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    t10_colidx->data[i1] = expl_temp.colidx->data[i1];
-  }
-
-  i1 = t10_rowidx->size[0];
-  t10_rowidx->size[0] = expl_temp.rowidx->size[0];
-  emxEnsureCapacity_int32_T(t10_rowidx, i1);
-  idx = expl_temp.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    t10_rowidx->data[i1] = expl_temp.rowidx->data[i1];
-  }
-
-  d_emxFreeStruct_coder_internal_(&expl_temp);
-  b_sizX[0] = sizX;
-  b_sizX[1] = sizX;
-  sparse_reshape(b_Qt, t10_colidx, t10_rowidx, b_sizX, Aj, t8_colidx, t8_rowidx,
-                 &idx, &boffset);
-  sparse_minus(C_d, C_colidx, C_rowidx, Aj, t8_colidx, t8_rowidx, idx, boffset,
-               Av, t9_colidx, t9_rowidx, &ii, &jj);
-  sparse_minus(Av, t9_colidx, t9_rowidx, I0.d, I0.colidx, I0.rowidx, I0.m, I0.n,
-               Ai, i, j, &W_m, &W_n);
-  sparse_transpose(Ai, i, j, W_m, W_n, Aj, t8_colidx, t8_rowidx, &idx, &boffset);
-  b_sparse_plus(Ai, i, j, Aj, t8_colidx, t8_rowidx, idx, boffset, Av, t9_colidx,
-                t9_rowidx, &ii, &jj);
-  sparse_rdivide(Av, t9_colidx, t9_rowidx, ii, jj, &Z0);
+  sparse_minus(C_d, C_colidx, C_rowidx, Ai, t7_colidx, t7_rowidx, expl_temp.m,
+               expl_temp.n, Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+  sparse_minus(Aj, t8_colidx, t8_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m, I0_n,
+               qz, ii, jj, &Z0_m, &t7_m);
+  sparse_transpose(qz, ii, jj, Z0_m, t7_m, &expl_temp);
   i1 = Ai->size[0];
-  Ai->size[0] = Z0.d->size[0];
+  Ai->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(Ai, i1);
-  idx = Z0.d->size[0];
-  emxFree_real_T(&b_Qt);
-  emxFree_int32_T(&t10_rowidx);
-  emxFree_int32_T(&t10_colidx);
-  emxFree_int32_T(&t9_rowidx);
-  emxFree_int32_T(&t9_colidx);
-  emxFree_real_T(&Av);
+  loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&C_rowidx);
   emxFree_int32_T(&C_colidx);
   emxFree_real_T(&C_d);
-  c_emxFreeStruct_coder_internal_(&I0);
-  for (i1 = 0; i1 < idx; i1++) {
-    Ai->data[i1] = Z0.d->data[i1];
+  emxFree_int32_T(&I0_rowidx);
+  emxFree_int32_T(&I0_colidx);
+  emxFree_real_T(&I0_d);
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    Ai->data[i1] = expl_temp.d->data[i1];
   }
 
-  i1 = i->size[0];
-  i->size[0] = Z0.colidx->size[0];
-  emxEnsureCapacity_int32_T(i, i1);
-  idx = Z0.colidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    i->data[i1] = Z0.colidx->data[i1];
+  i1 = t7_colidx->size[0];
+  t7_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(t7_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
-  i1 = j->size[0];
-  j->size[0] = Z0.rowidx->size[0];
-  emxEnsureCapacity_int32_T(j, i1);
-  idx = Z0.rowidx->size[0];
-  for (i1 = 0; i1 < idx; i1++) {
-    j->data[i1] = Z0.rowidx->data[i1];
+  i1 = t7_rowidx->size[0];
+  t7_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(t7_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  sparse_minus(b_S.d, b_S.colidx, b_S.rowidx, Ai, i, j, Z0.m, Z0.n, Aj,
-               t8_colidx, t8_rowidx, &idx, &boffset);
-  b_sparse_rdivide(Aj, t8_colidx, t8_rowidx, idx, boffset, &X);
-  b_sparse_full(X.d, X.colidx, X.rowidx, X.m, X.n, Su);
-
-  //  Transform X from sparse to full representation
+  b_sparse_plus(qz, ii, jj, Ai, t7_colidx, t7_rowidx, expl_temp.m, expl_temp.n,
+                Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+  sparse_rdivide(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, &expl_temp);
+  i1 = qz->size[0];
+  qz->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(qz, i1);
+  loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&t8_rowidx);
   emxFree_int32_T(&t8_colidx);
-  emxFree_int32_T(&j);
-  emxFree_int32_T(&i);
-  c_emxFreeStruct_coder_internal_(&b_S);
-  c_emxFreeStruct_coder_internal_(&X);
   emxFree_real_T(&Aj);
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    qz->data[i1] = expl_temp.d->data[i1];
+  }
+
+  i1 = ii->size[0];
+  ii->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(ii, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    ii->data[i1] = expl_temp.colidx->data[i1];
+  }
+
+  i1 = jj->size[0];
+  jj->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(jj, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    jj->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  sparse_minus(Av, Z_colidx, Z_rowidx, qz, ii, jj, expl_temp.m, expl_temp.n, Ai,
+               t7_colidx, t7_rowidx, &t7_m, &t7_n);
+  sparse_times(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, &expl_temp);
+  i1 = X_d->size[0];
+  X_d->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(X_d, i1);
+  loop_ub = expl_temp.d->size[0];
+  emxFree_int32_T(&t7_rowidx);
+  emxFree_int32_T(&t7_colidx);
+  emxFree_int32_T(&jj);
+  emxFree_int32_T(&ii);
+  emxFree_real_T(&Av);
   emxFree_real_T(&Ai);
-  c_emxFreeStruct_coder_internal_(&Z0);
-  if (adj->size[0] - 1 > Su->size[0]) {
-    i1 = 1;
-    i2 = 0;
-  } else {
-    i1 = adj->size[0] - 1;
-    i2 = Su->size[0];
+  emxFree_int32_T(&Z_rowidx);
+  emxFree_int32_T(&Z_colidx);
+  emxFree_real_T(&qz);
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    X_d->data[i1] = expl_temp.d->data[i1];
   }
 
-  if (adj->size[0] - 1 > Su->size[1]) {
-    c_i = 1;
-    jj = 0;
-  } else {
-    c_i = adj->size[0] - 1;
-    jj = Su->size[1];
+  i1 = X_colidx->size[0];
+  X_colidx->size[0] = expl_temp.colidx->size[0];
+  emxEnsureCapacity_int32_T(X_colidx, i1);
+  loop_ub = expl_temp.colidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    X_colidx->data[i1] = expl_temp.colidx->data[i1];
   }
 
-  emxInit_real_T(&d_y, 2);
-  emxInit_real_T(&b_b, 2);
+  i1 = X_rowidx->size[0];
+  X_rowidx->size[0] = expl_temp.rowidx->size[0];
+  emxEnsureCapacity_int32_T(X_rowidx, i1);
+  loop_ub = expl_temp.rowidx->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    X_rowidx->data[i1] = expl_temp.rowidx->data[i1];
+  }
+
+  sparse_full(X_d, X_colidx, X_rowidx, expl_temp.m, expl_temp.n, QQ);
+
+  //  Transform X from sparse to full representation
+  c_emxFreeStruct_coder_internal_(&expl_temp);
+  emxFree_int32_T(&X_rowidx);
+  emxFree_int32_T(&X_colidx);
+  emxFree_real_T(&X_d);
+  if (m + 1 > QQ->size[0]) {
+    i1 = 0;
+    t7_m = 0;
+  } else {
+    i1 = m;
+    t7_m = QQ->size[0];
+  }
+
+  if (m + 1 > QQ->size[1]) {
+    m = 0;
+    Z0_n = 0;
+  } else {
+    Z0_n = QQ->size[1];
+  }
 
   //  The component of X corresponding to the gain matrix
-  ii = b_b->size[0] * b_b->size[1];
-  idx = (i2 - i1) + 1;
-  b_b->size[0] = idx;
-  nx = (jj - c_i) + 1;
-  b_b->size[1] = nx;
-  emxEnsureCapacity_real_T(b_b, ii);
-  for (i2 = 0; i2 < nx; i2++) {
-    for (jj = 0; jj < idx; jj++) {
-      b_b->data[jj + b_b->size[0] * i2] = -Su->data[((i1 + jj) + Su->size[0] *
-        ((c_i + i2) - 1)) - 1];
+  loop_ub = t7_m - i1;
+  t7_m = b_D->size[0] * b_D->size[1];
+  b_D->size[0] = loop_ub;
+  Z0_m = Z0_n - m;
+  b_D->size[1] = Z0_m;
+  emxEnsureCapacity_real_T(b_D, t7_m);
+  for (t7_m = 0; t7_m < Z0_m; t7_m++) {
+    for (Z0_n = 0; Z0_n < loop_ub; Z0_n++) {
+      b_D->data[Z0_n + b_D->size[0] * t7_m] = -QQ->data[(i1 + Z0_n) + QQ->size[0]
+        * (m + t7_m)];
     }
   }
 
-  if ((loop_ub == 1) || (b_b->size[0] == 1)) {
-    i0 = d_y->size[0] * d_y->size[1];
-    d_y->size[0] = Q->size[0];
-    d_y->size[1] = b_b->size[1];
-    emxEnsureCapacity_real_T(d_y, i0);
-    idx = Q->size[0];
-    for (i0 = 0; i0 < idx; i0++) {
-      loop_ub = b_b->size[1];
-      for (i1 = 0; i1 < loop_ub; i1++) {
-        d_y->data[i0 + d_y->size[0] * i1] = 0.0;
-        nx = Q->size[1];
-        for (i2 = 0; i2 < nx; i2++) {
-          d_y->data[i0 + d_y->size[0] * i1] += Q->data[i0 + Q->size[0] * i2] *
-            b_b->data[i2 + b_b->size[0] * i1];
+  i1 = QQ->size[0] * QQ->size[1];
+  QQ->size[0] = b_D->size[0];
+  QQ->size[1] = b_D->size[1];
+  emxEnsureCapacity_real_T(QQ, i1);
+  loop_ub = b_D->size[0] * b_D->size[1];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    QQ->data[i1] = b_D->data[i1];
+  }
+
+  if ((i == 1) || (QQ->size[0] == 1)) {
+    loop_ub = U->size[0];
+    i = b_D->size[0] * b_D->size[1];
+    b_D->size[0] = U->size[0];
+    b_D->size[1] = QQ->size[1];
+    emxEnsureCapacity_real_T(b_D, i);
+    for (i = 0; i < loop_ub; i++) {
+      Z0_m = QQ->size[1];
+      for (i1 = 0; i1 < Z0_m; i1++) {
+        b_D->data[i + b_D->size[0] * i1] = 0.0;
+        for (t7_m = 0; t7_m <= b_loop_ub; t7_m++) {
+          b_D->data[i + b_D->size[0] * i1] += U->data[i + U->size[0] * (dimkerAz
+            + t7_m)] * QQ->data[t7_m + QQ->size[0] * i1];
         }
       }
     }
   } else {
-    i1 = U->size[0];
-    nx = loop_ub - 1;
-    c_n = b_b->size[1];
-    i2 = U->size[0];
-    c_i = d_y->size[0] * d_y->size[1];
-    d_y->size[0] = i2;
-    d_y->size[1] = b_b->size[1];
-    emxEnsureCapacity_real_T(d_y, c_i);
-    for (b_j = 0; b_j < c_n; b_j++) {
-      idx = b_j * i1;
-      boffset = b_j * (nx + 1);
-      for (b_i = 0; b_i < i1; b_i++) {
-        d_y->data[idx + b_i] = 0.0;
-      }
-
-      for (k = 0; k <= nx; k++) {
-        aoffset = k * i1;
-        numElmAtot = b_b->data[boffset + k];
-        for (b_i = 0; b_i < i1; b_i++) {
-          i2 = U->size[0];
-          c_i = aoffset + b_i;
-          jj = idx + b_i;
-          d_y->data[jj] += numElmAtot * U->data[c_i % i2 + U->size[0] * (i0 +
-            div_nzp_s32_floor(c_i, i2))];
-        }
+    loop_ub = U->size[0] - 1;
+    i1 = b_D->size[0] * b_D->size[1];
+    b_D->size[0] = U->size[0];
+    b_D->size[1] = i;
+    emxEnsureCapacity_real_T(b_D, i1);
+    for (i = 0; i <= b_loop_ub; i++) {
+      for (i1 = 0; i1 <= loop_ub; i1++) {
+        b_D->data[i1 + b_D->size[0] * i] = U->data[i1 + U->size[0] * (dimkerAz +
+          i)];
       }
     }
+
+    i = U->size[0] * U->size[1];
+    U->size[0] = b_D->size[0];
+    U->size[1] = b_D->size[1];
+    emxEnsureCapacity_real_T(U, i);
+    loop_ub = b_D->size[1];
+    for (i = 0; i < loop_ub; i++) {
+      b_loop_ub = b_D->size[0];
+      for (i1 = 0; i1 < b_loop_ub; i1++) {
+        U->data[i1 + U->size[0] * i] = b_D->data[i1 + b_D->size[0] * i];
+      }
+    }
+
+    b_mtimes(U, QQ, b_D);
   }
 
-  emxFree_real_T(&b_b);
   emxFree_real_T(&U);
-  emxFree_real_T(&Q);
-  if ((d_y->size[1] == 1) || (Qt->size[0] == 1)) {
-    i0 = Su->size[0] * Su->size[1];
-    Su->size[0] = d_y->size[0];
-    Su->size[1] = Qt->size[1];
-    emxEnsureCapacity_real_T(Su, i0);
-    idx = d_y->size[0];
-    for (i0 = 0; i0 < idx; i0++) {
-      loop_ub = Qt->size[1];
-      for (i1 = 0; i1 < loop_ub; i1++) {
-        Su->data[i0 + Su->size[0] * i1] = 0.0;
-        nx = d_y->size[1];
-        for (i2 = 0; i2 < nx; i2++) {
-          Su->data[i0 + Su->size[0] * i1] += d_y->data[i0 + d_y->size[0] * i2] *
-            Qt->data[i2 + Qt->size[0] * i1];
+  if ((b_D->size[1] == 1) || (Qt->size[0] == 1)) {
+    i = QQ->size[0] * QQ->size[1];
+    QQ->size[0] = b_D->size[0];
+    QQ->size[1] = Qt->size[1];
+    emxEnsureCapacity_real_T(QQ, i);
+    loop_ub = b_D->size[0];
+    for (i = 0; i < loop_ub; i++) {
+      b_loop_ub = Qt->size[1];
+      for (i1 = 0; i1 < b_loop_ub; i1++) {
+        QQ->data[i + QQ->size[0] * i1] = 0.0;
+        Z0_m = b_D->size[1];
+        for (t7_m = 0; t7_m < Z0_m; t7_m++) {
+          QQ->data[i + QQ->size[0] * i1] += b_D->data[i + b_D->size[0] * t7_m] *
+            Qt->data[t7_m + Qt->size[0] * i1];
         }
       }
     }
   } else {
-    m = d_y->size[0];
-    nx = d_y->size[1];
-    c_n = Qt->size[1];
-    i0 = Su->size[0] * Su->size[1];
-    Su->size[0] = d_y->size[0];
-    Su->size[1] = Qt->size[1];
-    emxEnsureCapacity_real_T(Su, i0);
-    for (b_j = 0; b_j < c_n; b_j++) {
-      idx = b_j * m;
-      boffset = b_j * nx;
-      for (b_i = 0; b_i < m; b_i++) {
-        Su->data[idx + b_i] = 0.0;
-      }
-
-      for (k = 0; k < nx; k++) {
-        aoffset = k * m;
-        numElmAtot = Qt->data[boffset + k];
-        for (b_i = 0; b_i < m; b_i++) {
-          i0 = idx + b_i;
-          Su->data[i0] += numElmAtot * d_y->data[aoffset + b_i];
-        }
-      }
-    }
+    b_mtimes(b_D, Qt, QQ);
   }
 
-  emxFree_real_T(&d_y);
+  emxFree_real_T(&b_D);
   emxFree_real_T(&Qt);
 
   //  The formation gain matrix
@@ -1728,43 +1883,48 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   //  eig(X2)
   //  trace(X2)
   //  3D formation gain matrix
-  i0 = Aopt->size[0] * Aopt->size[1];
+  i = Aopt->size[0] * Aopt->size[1];
   Aopt->size[0] = 3 * adj->size[0];
   Aopt->size[1] = 3 * adj->size[0];
-  emxEnsureCapacity_real_T(Aopt, i0);
-  idx = 3 * adj->size[0] * (3 * adj->size[0]);
-  for (i0 = 0; i0 < idx; i0++) {
-    Aopt->data[i0] = 0.0;
+  emxEnsureCapacity_real_T(Aopt, i);
+  loop_ub = 3 * adj->size[0] * (3 * adj->size[0]);
+  for (i = 0; i < loop_ub; i++) {
+    Aopt->data[i] = 0.0;
   }
 
-  i0 = adj->size[0];
-  for (b_i = 0; b_i < i0; b_i++) {
-    for (b_j = 0; b_j < n; b_j++) {
+  i = adj->size[0];
+  for (b_i = 0; b_i < i; b_i++) {
+    i1 = adj->size[0];
+    for (loop_ub = 0; loop_ub < i1; loop_ub++) {
       //  Component corresponding to 2D formation
-      numElmAtot = 2.0 * (1.0 + (double)b_i);
-      itrr = 2.0 * (1.0 + (double)b_j);
-      cdiff = 3.0 * (1.0 + (double)b_i);
-      temp_im = 3.0 * (1.0 + (double)b_j);
-      i1 = (int)itrr;
-      i2 = (int)numElmAtot;
-      c_i = (int)temp_im;
-      jj = (int)cdiff;
-      Aopt->data[(jj + Aopt->size[0] * (c_i - 3)) - 3] = Axy->data[(i2 +
-        Axy->size[0] * (i1 - 2)) - 2];
-      Aopt->data[((int)cdiff + Aopt->size[0] * ((int)temp_im - 3)) - 2] =
-        Axy->data[((int)numElmAtot + Axy->size[0] * ((int)itrr - 2)) - 1];
-      Aopt->data[(jj + Aopt->size[0] * (c_i - 2)) - 3] = Axy->data[(i2 +
-        Axy->size[0] * (i1 - 1)) - 2];
-      Aopt->data[((int)cdiff + Aopt->size[0] * ((int)temp_im - 2)) - 2] =
-        Axy->data[((int)numElmAtot + Axy->size[0] * ((int)itrr - 1)) - 1];
+      idxR = 2.0 * (static_cast<double>(b_i) + 1.0);
+      itrr = 2.0 * (static_cast<double>(loop_ub) + 1.0);
+      numElmAtot_tmp = 3.0 * (static_cast<double>(b_i) + 1.0);
+      d = 3.0 * (static_cast<double>(loop_ub) + 1.0);
+      Z0_m = static_cast<int>((itrr + -1.0)) - 1;
+      kj = static_cast<int>((d + -2.0)) - 1;
+      Z0_n = static_cast<int>((idxR + -1.0)) - 1;
+      t7_m = static_cast<int>((numElmAtot_tmp + -2.0)) - 1;
+      Aopt->data[t7_m + Aopt->size[0] * kj] = Axy->data[Z0_n + Axy->size[0] *
+        Z0_m];
+      I0_m = static_cast<int>(idxR) - 1;
+      t7_n = static_cast<int>((numElmAtot_tmp + -1.0)) - 1;
+      Aopt->data[t7_n + Aopt->size[0] * kj] = Axy->data[I0_m + Axy->size[0] *
+        Z0_m];
+      Z0_m = static_cast<int>(itrr) - 1;
+      kj = static_cast<int>((d + -1.0)) - 1;
+      Aopt->data[t7_m + Aopt->size[0] * kj] = Axy->data[Z0_n + Axy->size[0] *
+        Z0_m];
+      Aopt->data[t7_n + Aopt->size[0] * kj] = Axy->data[I0_m + Axy->size[0] *
+        Z0_m];
 
       //  Component corresponding to altitude
-      Aopt->data[(3 * (1 + b_i) + Aopt->size[0] * (3 * (1 + b_j) - 1)) - 1] =
-        Su->data[b_i + Su->size[0] * b_j];
+      Aopt->data[(static_cast<int>(numElmAtot_tmp) + Aopt->size[0] * (
+        static_cast<int>(d) - 1)) - 1] = QQ->data[b_i + QQ->size[0] * loop_ub];
     }
   }
 
-  emxFree_real_T(&Su);
+  emxFree_real_T(&QQ);
   emxFree_real_T(&Axy);
 
   //  ADMM algorithm--sparse eigendecomposition (use for very large-size problems n>1000) 

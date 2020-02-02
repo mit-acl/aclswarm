@@ -59,10 +59,6 @@ typedef std::complex<double> cs_complex_t;
 #define cs_long_t_id SuiteSparse_long_id
 #define cs_long_t_max SuiteSparse_long_max
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* -------------------------------------------------------------------------- */
 /* double/int version of CXSparse */
 /* -------------------------------------------------------------------------- */
@@ -755,10 +751,17 @@ double cs_cl_muldc(double lhs, cs_complex_t rhs);
 #endif
 
 #ifdef CS_COMPLEX
+#ifdef __cplusplus
+#define CS_REAL(x) x.real()
+#define CS_IMAG(x) x.imag()
+#define CS_CONJ(x) std::conj(x)
+#define CS_ABS(x) std::abs(x)
+#else
 #define CS_REAL(x) creal(x)
 #define CS_IMAG(x) cimag(x)
 #define CS_CONJ(x) conj(x)
 #define CS_ABS(x) cabs(x)
+#endif
 #else
 #define CS_REAL(x) (x)
 #define CS_IMAG(x) (0.)
@@ -882,9 +885,5 @@ cs_cl* cs_l_complex(cs_dl* A, cs_long_t real);
 
 #ifdef _MSC_VER
 #pragma warning( default : 4190)
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 #endif

@@ -4,21 +4,20 @@
 // government, commercial, or other organizational use.
 // File: sqrt.h
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 #ifndef SQRT_H
 #define SQRT_H
 
 // Include Files
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 
 // Function Declarations
-extern void b_sqrt(double *x);
-extern void c_sqrt(creal_T *x);
+extern void b_sqrt(creal_T *x);
 
 #endif
 

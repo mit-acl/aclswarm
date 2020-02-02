@@ -39,6 +39,7 @@ qs = [(1:n); zeros(1,n); 1:n]; % 3d formation
 rng(2)
 q0 = rand(3,n) * 5;
 
+% if formation starts 2d, it will stay 2d (invariant to scaling along z)
 q0(3,:) = 1*ones(1,n);
 q0(3,1) = 0;
 

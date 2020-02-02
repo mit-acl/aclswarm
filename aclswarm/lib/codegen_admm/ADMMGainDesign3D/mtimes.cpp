@@ -4,17 +4,17 @@
 // government, commercial, or other organizational use.
 // File: mtimes.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "mtimes.h"
-#include "fillIn.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
+#include "fillIn.h"
 #include "introsort.h"
+#include "rt_nonfinite.h"
 #include "sparse.h"
 
 // Function Definitions
@@ -37,43 +37,46 @@ void b_sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T
                      *c)
 {
   emxArray_int32_T *ccolidx;
-  unsigned int unnamed_idx_0;
-  int i17;
-  int bcidx;
+  int i;
+  int pb;
   emxArray_int32_T *flag;
   int cnnz;
-  int paend;
-  int pa;
+  int bcidx;
+  int aend;
+  int i1;
   emxArray_real_T *wd;
   bool needSort;
+  int paend;
+  int pa;
   double bd;
   emxInit_int32_T(&ccolidx, 1);
-  unnamed_idx_0 = (unsigned int)b_colidx->size[0];
-  i17 = ccolidx->size[0];
-  ccolidx->size[0] = (int)unnamed_idx_0;
-  emxEnsureCapacity_int32_T(ccolidx, i17);
-  bcidx = (int)unnamed_idx_0;
-  for (i17 = 0; i17 < bcidx; i17++) {
-    ccolidx->data[i17] = 0;
+  i = ccolidx->size[0];
+  ccolidx->size[0] = b_colidx->size[0];
+  emxEnsureCapacity_int32_T(ccolidx, i);
+  pb = b_colidx->size[0];
+  for (i = 0; i < pb; i++) {
+    ccolidx->data[i] = 0;
   }
 
   emxInit_int32_T(&flag, 1);
-  i17 = flag->size[0];
+  i = flag->size[0];
   flag->size[0] = a_m;
-  emxEnsureCapacity_int32_T(flag, i17);
-  for (i17 = 0; i17 < a_m; i17++) {
-    flag->data[i17] = 0;
+  emxEnsureCapacity_int32_T(flag, i);
+  for (i = 0; i < a_m; i++) {
+    flag->data[i] = 0;
   }
 
   cnnz = 0;
   bcidx = b_colidx->data[0];
   ccolidx->data[0] = 1;
   while ((bcidx < b_colidx->data[1]) && (cnnz <= a_m)) {
-    paend = a_colidx->data[b_rowidx->data[bcidx - 1]] - 1;
-    i17 = a_colidx->data[b_rowidx->data[bcidx - 1] - 1];
-    for (pa = i17; pa <= paend; pa++) {
-      if (flag->data[a_rowidx->data[pa - 1] - 1] != 1) {
-        flag->data[a_rowidx->data[pa - 1] - 1] = 1;
+    pb = b_rowidx->data[bcidx - 1];
+    aend = a_colidx->data[pb] - 1;
+    i = a_colidx->data[pb - 1];
+    for (pb = i; pb <= aend; pb++) {
+      i1 = a_rowidx->data[pb - 1] - 1;
+      if (flag->data[i1] != 1) {
+        flag->data[i1] = 1;
         cnnz++;
       }
     }
@@ -82,24 +85,24 @@ void b_sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T
   }
 
   ccolidx->data[1] = cnnz + 1;
-  b_sparse_sparse(a_m, cnnz, c->d, c->colidx, c->rowidx, &c->m, &c->maxnz);
-  i17 = c->colidx->size[0];
+  sparse_spallocLike(a_m, cnnz, c->d, c->colidx, c->rowidx, &c->m, &c->maxnz);
+  i = c->colidx->size[0];
   c->colidx->size[0] = ccolidx->size[0];
-  emxEnsureCapacity_int32_T(c->colidx, i17);
-  bcidx = ccolidx->size[0];
-  for (i17 = 0; i17 < bcidx; i17++) {
-    c->colidx->data[i17] = ccolidx->data[i17];
+  emxEnsureCapacity_int32_T(c->colidx, i);
+  pb = ccolidx->size[0];
+  for (i = 0; i < pb; i++) {
+    c->colidx->data[i] = ccolidx->data[i];
   }
 
   emxInit_real_T(&wd, 1);
-  i17 = wd->size[0];
+  i = wd->size[0];
   wd->size[0] = a_m;
-  emxEnsureCapacity_real_T(wd, i17);
-  i17 = flag->size[0];
+  emxEnsureCapacity_real_T(wd, i);
+  i = flag->size[0];
   flag->size[0] = a_m;
-  emxEnsureCapacity_int32_T(flag, i17);
-  for (i17 = 0; i17 < a_m; i17++) {
-    flag->data[i17] = 0;
+  emxEnsureCapacity_int32_T(flag, i);
+  for (i = 0; i < a_m; i++) {
+    flag->data[i] = 0;
   }
 
   cnnz = -1;
@@ -107,35 +110,40 @@ void b_sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T
   if (b_colidx->data[1] - 1 != 0) {
     if (b_colidx->data[1] - 1 == 1) {
       paend = a_colidx->data[b_rowidx->data[0]] - 1;
-      i17 = a_colidx->data[b_rowidx->data[0] - 1];
-      for (pa = i17; pa <= paend; pa++) {
+      i = a_colidx->data[b_rowidx->data[0] - 1];
+      for (pa = i; pa <= paend; pa++) {
         cnnz++;
-        c->rowidx->data[cnnz] = a_rowidx->data[pa - 1];
-        wd->data[a_rowidx->data[pa - 1] - 1] = a_d->data[pa - 1] * b_d->data[0];
+        i1 = a_rowidx->data[pa - 1];
+        c->rowidx->data[cnnz] = i1;
+        wd->data[i1 - 1] = a_d->data[pa - 1] * b_d->data[0];
       }
     } else {
       paend = a_colidx->data[b_rowidx->data[0]] - 1;
-      i17 = a_colidx->data[b_rowidx->data[0] - 1];
-      for (pa = i17; pa <= paend; pa++) {
+      i = a_colidx->data[b_rowidx->data[0] - 1];
+      for (pa = i; pa <= paend; pa++) {
         cnnz++;
-        flag->data[a_rowidx->data[pa - 1] - 1] = cnnz + 1;
-        c->rowidx->data[cnnz] = a_rowidx->data[pa - 1];
-        wd->data[a_rowidx->data[pa - 1] - 1] = a_d->data[pa - 1] * b_d->data[0];
+        pb = a_rowidx->data[pa - 1];
+        bcidx = pb - 1;
+        flag->data[bcidx] = cnnz + 1;
+        c->rowidx->data[cnnz] = pb;
+        wd->data[bcidx] = a_d->data[pa - 1] * b_d->data[0];
       }
 
-      for (bcidx = 1; bcidx + 1 < b_colidx->data[1]; bcidx++) {
-        bd = b_d->data[bcidx];
-        paend = a_colidx->data[b_rowidx->data[bcidx]] - 1;
-        i17 = a_colidx->data[b_rowidx->data[bcidx] - 1];
-        for (pa = i17; pa <= paend; pa++) {
-          if (flag->data[a_rowidx->data[pa - 1] - 1] < 1) {
+      for (pb = 1; pb + 1 < b_colidx->data[1]; pb++) {
+        bd = b_d->data[pb];
+        paend = a_colidx->data[b_rowidx->data[pb]] - 1;
+        i = a_colidx->data[b_rowidx->data[pb] - 1];
+        for (pa = i; pa <= paend; pa++) {
+          i1 = a_rowidx->data[pa - 1];
+          aend = i1 - 1;
+          if (flag->data[aend] < 1) {
             cnnz++;
-            flag->data[a_rowidx->data[pa - 1] - 1] = cnnz + 1;
-            c->rowidx->data[cnnz] = a_rowidx->data[pa - 1];
-            wd->data[a_rowidx->data[pa - 1] - 1] = a_d->data[pa - 1] * bd;
+            flag->data[aend] = cnnz + 1;
+            c->rowidx->data[cnnz] = i1;
+            wd->data[aend] = a_d->data[pa - 1] * bd;
             needSort = true;
           } else {
-            wd->data[a_rowidx->data[pa - 1] - 1] += a_d->data[pa - 1] * bd;
+            wd->data[aend] += a_d->data[pa - 1] * bd;
           }
         }
       }
@@ -143,15 +151,15 @@ void b_sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T
   }
 
   emxFree_int32_T(&flag);
-  bcidx = ccolidx->data[1] - 1;
-  paend = ccolidx->data[0];
+  pb = ccolidx->data[1] - 1;
+  bcidx = ccolidx->data[0];
   if (needSort) {
     b_introsort(c->rowidx, ccolidx->data[0], ccolidx->data[1] - 1);
   }
 
   emxFree_int32_T(&ccolidx);
-  for (pa = paend; pa <= bcidx; pa++) {
-    c->d->data[pa - 1] = wd->data[c->rowidx->data[pa - 1] - 1];
+  for (aend = bcidx; aend <= pb; aend++) {
+    c->d->data[aend - 1] = wd->data[c->rowidx->data[aend - 1] - 1];
   }
 
   emxFree_real_T(&wd);
@@ -176,36 +184,37 @@ void sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                    emxArray_int32_T *b_rowidx, int b_n, coder_internal_sparse *c)
 {
   emxArray_int32_T *ccolidx;
-  unsigned int unnamed_idx_0;
-  int i14;
-  int bcidx;
+  int i;
+  int numalloc;
   emxArray_int32_T *flag;
   int cnnz;
   int j;
   int exitg1;
+  int bcidx;
   int cstart;
   int cmax;
-  int pb;
-  int pcstart;
+  int aend;
+  int i1;
   emxArray_real_T *wd;
+  int pb;
   bool needSort;
+  int pcstart;
   double bd;
   emxInit_int32_T(&ccolidx, 1);
-  unnamed_idx_0 = (unsigned int)b_colidx->size[0];
-  i14 = ccolidx->size[0];
-  ccolidx->size[0] = (int)unnamed_idx_0;
-  emxEnsureCapacity_int32_T(ccolidx, i14);
-  bcidx = (int)unnamed_idx_0;
-  for (i14 = 0; i14 < bcidx; i14++) {
-    ccolidx->data[i14] = 0;
+  i = ccolidx->size[0];
+  ccolidx->size[0] = b_colidx->size[0];
+  emxEnsureCapacity_int32_T(ccolidx, i);
+  numalloc = b_colidx->size[0];
+  for (i = 0; i < numalloc; i++) {
+    ccolidx->data[i] = 0;
   }
 
   emxInit_int32_T(&flag, 1);
-  i14 = flag->size[0];
+  i = flag->size[0];
   flag->size[0] = a_m;
-  emxEnsureCapacity_int32_T(flag, i14);
-  for (i14 = 0; i14 < a_m; i14++) {
-    flag->data[i14] = 0;
+  emxEnsureCapacity_int32_T(flag, i);
+  for (i = 0; i < a_m; i++) {
+    flag->data[i] = 0;
   }
 
   cnnz = 0;
@@ -218,11 +227,13 @@ void sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
       cmax = cnnz + a_m;
       ccolidx->data[j] = cnnz + 1;
       while ((bcidx < b_colidx->data[j + 1]) && (cnnz <= cmax)) {
-        pb = a_colidx->data[b_rowidx->data[bcidx - 1]] - 1;
-        i14 = a_colidx->data[b_rowidx->data[bcidx - 1] - 1];
-        for (pcstart = i14; pcstart <= pb; pcstart++) {
-          if (flag->data[a_rowidx->data[pcstart - 1] - 1] != j + 1) {
-            flag->data[a_rowidx->data[pcstart - 1] - 1] = j + 1;
+        numalloc = b_rowidx->data[bcidx - 1];
+        aend = a_colidx->data[numalloc] - 1;
+        i = a_colidx->data[numalloc - 1];
+        for (numalloc = i; numalloc <= aend; numalloc++) {
+          i1 = a_rowidx->data[numalloc - 1] - 1;
+          if (flag->data[i1] != j + 1) {
+            flag->data[i1] = j + 1;
             cnnz++;
           }
         }
@@ -241,85 +252,116 @@ void sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
     }
   } while (exitg1 == 0);
 
-  sparse_sparse(a_m, b_n, cnnz, c);
-  i14 = c->colidx->size[0];
+  c->m = a_m;
+  c->n = b_n;
+  if (cnnz >= 1) {
+    numalloc = cnnz;
+  } else {
+    numalloc = 1;
+  }
+
+  i = c->d->size[0];
+  c->d->size[0] = numalloc;
+  emxEnsureCapacity_real_T(c->d, i);
+  for (i = 0; i < numalloc; i++) {
+    c->d->data[i] = 0.0;
+  }
+
+  i = c->colidx->size[0];
+  c->colidx->size[0] = b_n + 1;
+  emxEnsureCapacity_int32_T(c->colidx, i);
+  c->colidx->data[0] = 1;
+  i = c->rowidx->size[0];
+  c->rowidx->size[0] = numalloc;
+  emxEnsureCapacity_int32_T(c->rowidx, i);
+  for (i = 0; i < numalloc; i++) {
+    c->rowidx->data[i] = 0;
+  }
+
+  for (numalloc = 0; numalloc < b_n; numalloc++) {
+    c->colidx->data[numalloc + 1] = 1;
+  }
+
+  sparse_fillIn(c);
+  i = c->colidx->size[0];
   c->colidx->size[0] = ccolidx->size[0];
-  emxEnsureCapacity_int32_T(c->colidx, i14);
-  bcidx = ccolidx->size[0];
-  for (i14 = 0; i14 < bcidx; i14++) {
-    c->colidx->data[i14] = ccolidx->data[i14];
+  emxEnsureCapacity_int32_T(c->colidx, i);
+  numalloc = ccolidx->size[0];
+  for (i = 0; i < numalloc; i++) {
+    c->colidx->data[i] = ccolidx->data[i];
   }
 
   emxInit_real_T(&wd, 1);
-  i14 = wd->size[0];
+  i = wd->size[0];
   wd->size[0] = a_m;
-  emxEnsureCapacity_real_T(wd, i14);
-  i14 = flag->size[0];
+  emxEnsureCapacity_real_T(wd, i);
+  i = flag->size[0];
   flag->size[0] = a_m;
-  emxEnsureCapacity_int32_T(flag, i14);
-  for (i14 = 0; i14 < a_m; i14++) {
-    flag->data[i14] = 0;
+  emxEnsureCapacity_int32_T(flag, i);
+  for (i = 0; i < a_m; i++) {
+    flag->data[i] = 0;
   }
 
   pb = 0;
   cnnz = -1;
   for (j = 0; j < b_n; j++) {
-    cmax = 1 + j;
+    aend = j + 1;
     needSort = false;
     pcstart = cnnz + 2;
-    bcidx = (b_colidx->data[cmax] - pb) - 1;
-    if (bcidx != 0) {
-      if (bcidx == 1) {
-        bcidx = a_colidx->data[b_rowidx->data[pb]] - 1;
-        i14 = a_colidx->data[b_rowidx->data[pb] - 1];
-        for (cstart = i14; cstart <= bcidx; cstart++) {
+    numalloc = (b_colidx->data[aend] - pb) - 1;
+    if (numalloc != 0) {
+      if (numalloc == 1) {
+        cstart = a_colidx->data[b_rowidx->data[pb]] - 1;
+        i = a_colidx->data[b_rowidx->data[pb] - 1];
+        for (cmax = i; cmax <= cstart; cmax++) {
           cnnz++;
-          c->rowidx->data[cnnz] = a_rowidx->data[cstart - 1];
-          wd->data[a_rowidx->data[cstart - 1] - 1] = a_d->data[cstart - 1] *
-            b_d->data[pb];
+          i1 = a_rowidx->data[cmax - 1];
+          c->rowidx->data[cnnz] = i1;
+          wd->data[i1 - 1] = a_d->data[cmax - 1] * b_d->data[pb];
         }
 
         pb++;
       } else {
-        bcidx = a_colidx->data[b_rowidx->data[pb]] - 1;
-        i14 = a_colidx->data[b_rowidx->data[pb] - 1];
-        for (cstart = i14; cstart <= bcidx; cstart++) {
+        cstart = a_colidx->data[b_rowidx->data[pb]] - 1;
+        i = a_colidx->data[b_rowidx->data[pb] - 1];
+        for (cmax = i; cmax <= cstart; cmax++) {
           cnnz++;
-          flag->data[a_rowidx->data[cstart - 1] - 1] = cnnz + 1;
-          c->rowidx->data[cnnz] = a_rowidx->data[cstart - 1];
-          wd->data[a_rowidx->data[cstart - 1] - 1] = a_d->data[cstart - 1] *
-            b_d->data[pb];
+          numalloc = a_rowidx->data[cmax - 1];
+          bcidx = numalloc - 1;
+          flag->data[bcidx] = cnnz + 1;
+          c->rowidx->data[cnnz] = numalloc;
+          wd->data[bcidx] = a_d->data[cmax - 1] * b_d->data[pb];
         }
 
-        for (pb++; pb + 1 < b_colidx->data[cmax]; pb++) {
+        for (pb++; pb + 1 < b_colidx->data[aend]; pb++) {
           bd = b_d->data[pb];
-          bcidx = a_colidx->data[b_rowidx->data[pb]] - 1;
-          i14 = a_colidx->data[b_rowidx->data[pb] - 1];
-          for (cstart = i14; cstart <= bcidx; cstart++) {
-            if (flag->data[a_rowidx->data[cstart - 1] - 1] < pcstart) {
+          cstart = a_colidx->data[b_rowidx->data[pb]] - 1;
+          i = a_colidx->data[b_rowidx->data[pb] - 1];
+          for (cmax = i; cmax <= cstart; cmax++) {
+            i1 = a_rowidx->data[cmax - 1];
+            numalloc = i1 - 1;
+            if (flag->data[numalloc] < pcstart) {
               cnnz++;
-              flag->data[a_rowidx->data[cstart - 1] - 1] = cnnz + 1;
-              c->rowidx->data[cnnz] = a_rowidx->data[cstart - 1];
-              wd->data[a_rowidx->data[cstart - 1] - 1] = a_d->data[cstart - 1] *
-                bd;
+              flag->data[numalloc] = cnnz + 1;
+              c->rowidx->data[cnnz] = i1;
+              wd->data[numalloc] = a_d->data[cmax - 1] * bd;
               needSort = true;
             } else {
-              wd->data[a_rowidx->data[cstart - 1] - 1] += a_d->data[cstart - 1] *
-                bd;
+              wd->data[numalloc] += a_d->data[cmax - 1] * bd;
             }
           }
         }
       }
     }
 
-    cstart = ccolidx->data[cmax] - 1;
-    pcstart = ccolidx->data[cmax - 1];
+    bcidx = ccolidx->data[aend] - 1;
+    pcstart = ccolidx->data[aend - 1];
     if (needSort) {
-      b_introsort(c->rowidx, ccolidx->data[cmax - 1], ccolidx->data[cmax] - 1);
+      b_introsort(c->rowidx, ccolidx->data[aend - 1], ccolidx->data[aend] - 1);
     }
 
-    for (bcidx = pcstart; bcidx <= cstart; bcidx++) {
-      c->d->data[bcidx - 1] = wd->data[c->rowidx->data[bcidx - 1] - 1];
+    for (numalloc = pcstart; numalloc <= bcidx; numalloc++) {
+      c->d->data[numalloc - 1] = wd->data[c->rowidx->data[numalloc - 1] - 1];
     }
   }
 

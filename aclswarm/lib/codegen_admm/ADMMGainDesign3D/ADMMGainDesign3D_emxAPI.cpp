@@ -4,25 +4,25 @@
 // government, commercial, or other organizational use.
 // File: ADMMGainDesign3D_emxAPI.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <stdlib.h>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxAPI.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
+#include "rt_nonfinite.h"
+#include <cstdlib>
 
 // Function Definitions
 
 //
 // Arguments    : int numDimensions
-//                int *size
+//                const int *size
 // Return Type  : emxArray_real_T *
 //
-emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
+emxArray_real_T *emxCreateND_real_T(int numDimensions, const int *size)
 {
   emxArray_real_T *emx;
   int numEl;
@@ -34,7 +34,8 @@ emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
     emx->size[i] = size[i];
   }
 
-  emx->data = (double *)calloc((unsigned int)numEl, sizeof(double));
+  emx->data = (double *)std::calloc(static_cast<unsigned int>(numEl), sizeof
+    (double));
   emx->numDimensions = numDimensions;
   emx->allocatedSize = numEl;
   return emx;
@@ -43,11 +44,11 @@ emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
 //
 // Arguments    : double *data
 //                int numDimensions
-//                int *size
+//                const int *size
 // Return Type  : emxArray_real_T *
 //
-emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions, int *
-  size)
+emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions,
+  const int *size)
 {
   emxArray_real_T *emx;
   int numEl;
@@ -98,7 +99,8 @@ emxArray_real_T *emxCreate_real_T(int rows, int cols)
   emx->size[0] = rows;
   numEl = rows * cols;
   emx->size[1] = cols;
-  emx->data = (double *)calloc((unsigned int)numEl, sizeof(double));
+  emx->data = (double *)std::calloc(static_cast<unsigned int>(numEl), sizeof
+    (double));
   emx->numDimensions = 2;
   emx->allocatedSize = numEl;
   return emx;
