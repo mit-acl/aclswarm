@@ -15,6 +15,7 @@ r=0.75  # buffer radius btwn initializations
 trialname=$1
 trialnumber=$2
 formation=$3
+interactive=$4
 
 if [ -z "$formation" ]; then
   echo
@@ -69,7 +70,11 @@ for i in $(seq -f "%02g" 1 $n); do
 done
 rosparam set /vehs "[$tmp]"
 
-roslaunch aclswarm_sim headless_operator.launch & #>/dev/null 2>&1 &
+if [ $interactive == "false" ]; then
+  roslaunch aclswarm_sim headless_operator.launch & #>/dev/null 2>&1 &
+else
+  roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false room:=sim & 
+fi
 
 rviz >/dev/null 2>&1 &
 
@@ -87,7 +92,14 @@ sleep 5 # wait for system bring up
 
 # rosrun aclswarm_sim bag_record.sh -O "$formation$trialname$trialnumber" __name:=bagrecorder >/dev/null 2>&1 &
 
-rosrun aclswarm_sim supervisor.py
+if [ $interactive == "false" ]; then
+  rosrun aclswarm_sim supervisor.py
+else
+  # get pid of controls rqt
+  rqtpid=$(pgrep -f controls.perspective)
+  echo "waiting on $rqtpid"
+  tail --pid=$rqtpid -f /dev/null # kind of a hack
+fi
 
 # rosnode kill /bagrecorder
 # sleep 1

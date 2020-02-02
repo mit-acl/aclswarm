@@ -161,5 +161,3 @@ tmux set-window-option -t aclswarm:0 synchronize-panes on
 if [ -z $headless ]; then
   tmux attach-session -t aclswarm
 fi
-
-echo "done"
