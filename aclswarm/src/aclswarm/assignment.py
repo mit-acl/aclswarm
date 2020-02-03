@@ -82,7 +82,7 @@ def align(q, p):
         t[0:2] = T[1]
     else:
         R = T[0]
-        t = [1]
+        t = T[1]
 
     paligned = np.dot(R, p) + np.tile(t, (p.shape[1], 1)).T
 
