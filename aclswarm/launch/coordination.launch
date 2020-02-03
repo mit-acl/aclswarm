@@ -28,11 +28,11 @@
 
       <param name="cntrl/K1_xy" value="0.1" />
       <param name="cntrl/K2_xy" value="0.1" />
-      <param name="cntrl/K1_z" value="0.1" />
+      <param name="cntrl/K1_z" value="0.3" />
       <param name="cntrl/K2_z" value="0.1" />
-      <param name="cntrl/e_xy_thr" value="0.1" />
+      <param name="cntrl/e_xy_thr" value="0.3" />
       <param name="cntrl/e_z_thr" value="0.1" />
-      <param name="cntrl/kp" value="1.0" />
+      <param name="cntrl/kp" value="1.5" />
       <param name="cntrl/kd" value="0.5" />
     </node>
 
