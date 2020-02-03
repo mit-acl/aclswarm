@@ -47,6 +47,7 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("max_accel_z", max_accel_z_, 0.8);
 
   nhp_.param<double>("max_vel_xy", max_vel_xy_, 0.5);
+  nhp_.param<double>("max_vel_z", max_vel_z_, 0.3);
   nhp_.param<double>("d_avoid_thresh", d_avoid_thresh_, 1.5);
   nhp_.param<double>("r_keep_out", r_keep_out_, 1.2);
 
@@ -161,8 +162,11 @@ void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
     goal.vy  = goal.vy/velxy * max_vel_xy_;
   }
 
-  // TODO: kill z vel? fix z alt?
-  goal.vz = 0;
+  // saturate vertical velocity (keeping the same direction)
+  double velz = std::abs(goal.vz);
+  if (velz > max_vel_z_) {
+    goal.vz = goal.vz/velz * max_vel_z_;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -484,6 +488,7 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
   // if we are surrounded, there are no safe edges and we must surrender.
   if (nfzedges.size() == 0) {
     goal.vx = goal.vy = 0;
+    goal.vz = 0;
     return;
   }
 
@@ -505,6 +510,7 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
 
   // otherwise, nothing we do is safe. Just stop.
   goal.vx = goal.vy = 0;
+  goal.vz = 0;
 }
 
 } // ns aclswarm

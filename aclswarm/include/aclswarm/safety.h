@@ -87,6 +87,7 @@ namespace aclswarm {
     double landing_slow_dec_; ///< use smaller decrements for "slow" landing
     double max_accel_xy_, max_accel_z_; ///< maximum translational accels
     double max_vel_xy_; ///< maximum planar translational velocity
+    double max_vel_z_; ///< maximum vertical translational velocity
     double d_avoid_thresh_; ///< do collision avoidance if within this distance
     double r_keep_out_; ///< the radius around obstacles to stay out of
 
