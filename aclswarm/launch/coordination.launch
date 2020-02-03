@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
   <arg name="veh" />
+  <arg name="takeoff_alt" default="1.0" />
 
   <group ns="$(arg veh)">
 
     <!-- safety state machine -->
     <node name="safety" pkg="aclswarm" type="safety" output="screen">
       <param name="takeoff_inc" value="0.0035" />
-      <param name="takeoff_alt" value="1.0" />
+      <param name="takeoff_alt" value="$(arg takeoff_alt)" />
       <param name="takeoff_rel" value="true" />
       <param name="landing_fast_threshold" value="0.4" />
       <param name="landing_fast_dec" value="0.0035" />
@@ -21,13 +22,18 @@
       <param name="control_dt" value="0.01" />
 
       <!-- auctioneer parameters -->
-      <param name="use_assignment" value="true" />
+      <param name="use_assignment" value="false" />
       <param name="form_settle_time" value="5" />
       <param name="verbose" value="false" />
 
-      <param name="cntrl/K" value="8.0" />
+      <param name="cntrl/K1_xy" value="0.1" />
+      <param name="cntrl/K2_xy" value="0.1" />
+      <param name="cntrl/K1_z" value="0.1" />
+      <param name="cntrl/K2_z" value="0.1" />
+      <param name="cntrl/e_xy_thr" value="0.1" />
+      <param name="cntrl/e_z_thr" value="0.1" />
       <param name="cntrl/kp" value="1.0" />
-      <param name="cntrl/kd" value="0.0" />
+      <param name="cntrl/kd" value="0.5" />
     </node>
 
   </group>

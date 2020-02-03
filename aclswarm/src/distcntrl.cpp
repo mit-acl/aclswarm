@@ -18,11 +18,9 @@ DistCntrl::DistCntrl(vehidx_t vehid, uint8_t n)
 
 // ----------------------------------------------------------------------------
 
-void DistCntrl::setGains(double K, double kp, double kd)
+void DistCntrl::setGains(const Gains& gains)
 {
-  K_ = K;
-  kp_ = kp;
-  kd_ = kd;
+  gains_ = gains;
 }
 
 // ----------------------------------------------------------------------------
@@ -32,7 +30,8 @@ void DistCntrl::setFormation(const std::shared_ptr<Formation>& f)
   formation_ = f;
 
   // calculate the distance matrix for desired swarm scale
-  formation_->dstar = utils::pdistmat(formation_->qdes);
+  formation_->dstar_xy = utils::pdistmat(formation_->qdes.leftCols<2>());
+  formation_->dstar_z = utils::pdistmat(formation_->qdes.rightCols<1>());
 }
 
 // ----------------------------------------------------------------------------
@@ -68,21 +67,33 @@ Eigen::Vector3d DistCntrl::compute(const PtsMat& q_veh, const Eigen::Vector3d ve
       const Eigen::Vector3d qij = q.row(j) - q.row(i);
 
       //
-      // Compute the control
+      // Compute the scale (nonlinear) control
       //
 
-      // This term controls the scale
-      const double eps = 1. / (K_ * qij.norm());
-      const double Fij = eps * std::atan(qij.norm() - formation_->dstar(i,j));
+      // for 2d xy component of the formation
+      const double e_xy = qij.head<2>().norm() - formation_->dstar_xy(i,j);
+      const double Fij_xy = gains_.K1_xy * std::atan(gains_.K2_xy * e_xy);
+
+      // for 3d z component of the formation
+      const double e_z = qij.tail<1>().norm() - formation_->dstar_z(i,j);
+      const double Fij_z = gains_.K1_z * std::atan(gains_.K2_z * e_z);
+
+      Eigen::Vector3d Fij = Eigen::Vector3d::Zero();
+      if (std::abs(e_xy) > gains_.e_xy_thr) Fij.x() = Fij.y() = Fij_xy;
+      if (std::abs(e_z) > gains_.e_z_thr) Fij.z() = Fij_z;
+
+      //
+      // Compute the total control
+      //
 
       // proportional control
-      const auto up = Aij * qij + Fij * qij;
+      const auto up = Aij * qij + Fij.asDiagonal() * qij;
 
       // derivative control
       const auto ud = -vel;
 
       // combined control
-      u += kp_ * up + kd_ * ud;
+      u += gains_.kp * up + gains_.kd * ud;
 
     }
   }

@@ -192,12 +192,17 @@ void CoordinationROS::init()
   // Distributed Control
   //
 
-  double K, kp, kd;
-  nhp_.param<double>("cntrl/K", K, 4.0);
-  nhp_.param<double>("cntrl/kp", kp, 1.0);
-  nhp_.param<double>("cntrl/kd", kd, 0.0);
+  DistCntrl::Gains gains;
+  nhp_.param<double>("cntrl/K1_xy", gains.K1_xy, 0.1);
+  nhp_.param<double>("cntrl/K2_xy", gains.K2_xy, 0.1);
+  nhp_.param<double>("cntrl/K1_z", gains.K1_z, 0.1);
+  nhp_.param<double>("cntrl/K2_z", gains.K2_z, 0.1);
+  nhp_.param<double>("cntrl/e_xy_thr", gains.e_xy_thr, 0.1);
+  nhp_.param<double>("cntrl/e_z_thr", gains.e_z_thr, 0.1);
+  nhp_.param<double>("cntrl/kp", gains.kp, 1.0);
+  nhp_.param<double>("cntrl/kd", gains.kd, 0.0);
 
-  controller_->setGains(K, kp, kd);
+  controller_->setGains(gains);
 }
 
 // ----------------------------------------------------------------------------

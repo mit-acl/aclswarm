@@ -3,7 +3,7 @@
 <launch>
     <arg name="formations" />
     <arg name="send_gains" default="false" />
-    <arg name="central_assignment" default="false" />
+    <arg name="central_assignment" default="true" />
     <arg name="load_vehicles" default="true" />
     <arg name="room" default="vicon"/>
     <arg name="leader" default=""/>
@@ -21,7 +21,7 @@
             y_min: -100
             y_max:  100
             z_min:    0
-            z_max:   10
+            z_max:   30
         </rosparam>
     </group>
 
