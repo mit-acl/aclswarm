@@ -1,8 +1,8 @@
 function [assign,aligned_ps] = CBAA_aclswarm(adj, pm, qm)
-%CBAA_HEXSWARM CBAA implementation for swarm assignment
+%CBAA_ACLSWARM CBAA implementation for swarm assignment
 %   adj     nxn adjacency matrix
-%   pm      2xn matrix of desired formation points
-%   qm      2xn matrix of current vehicle positions
+%   pm      3xn matrix of desired formation points
+%   qm      3xn matrix of current vehicle positions
 %
 %   assign  1xn permutation vector. Maps idx of qm to idx of pm (formpt)
 %
@@ -51,7 +51,7 @@ for i = 1:n
     qs = qm(:,nbr); % n.b., this assumes qm is already ordered by formpt
 
     % compute R and t
-    [R, t] = align(qs, ps);
+    [R, t] = arun(qs, ps);
 
     % store R and t
     Rs{i} = R;
@@ -185,23 +185,6 @@ for j = 1:n
     assign(j) = find(tasks(:,j));
 end
 
-end
-
-%% align
-% Use Arun's method to align 2d points with known correspondence
-function [R, t] = align(q, p)
-% q is 2xN current positions
-% p is 2xN given formation points
-% R gives the rotation applied to p to align with q
-p_pr = p - mean(p, 2);
-q_pr = q - mean(q, 2);
-
-H = p_pr*q_pr';
-[U,~,V] = svd(H);
-R = V*diag([1, det(V*U')])*U';
-
-% recover optimal translation
-t = mean(q, 2) - R * mean(p, 2);
 end
 
 %% get_nbr

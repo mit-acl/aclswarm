@@ -1,24 +1,13 @@
-%% Distributed collision avoidacen by rotating the control vectors
-%
-%
-%
+%% Distributed collision avoidance by rotating the control vectors
+% Assumes infinitely tall cylinders
 function u = ColAvoid(ctrl, qm, par)
 
 n           = par.n;                  % Number of agents
 dcoll       = par.dcoll;              % Collision avaoidance distance 
 rcoll       = par.rcoll;              % Collision avaoidance circle radius
 
-
 %% Inter-agent distance matrix
-
-Dc = zeros(n,n);
-for i = 1 : n
-    for j = i+1 : n
-        Dc(i,j) = norm(qm(:,i)-qm(:,j),2);
-    end
-end
-Dc = Dc + Dc';
-
+Dc = squareform(pdist(qm(1:2,:)'));
 
 %% Collision avoidance
 
@@ -38,7 +27,7 @@ for i = 1 : n % Agent
         if colIdx(i,k)  % If collision avoidance is needed
             
             dnb = Dc(i,k);                        % Distance to neighbor
-            vec = qm(:,k) - qm(:,i);              % Vector from agent to its neighbor
+            vec = qm(1:2,k) - qm(1:2,i);              % Vector from agent to its neighbor
             tht = atan2d(vec(2), vec(1));         % Angle of connecting vector             
             
             % 'alp' is the vertex half-angle of the collision cone
@@ -74,7 +63,7 @@ for i = 1 : n % Agent
         % If control vector is inside a cone change its direction 
         if any( and((thtC >= coneAng(:,1)), (thtC <= coneAng(:,2))) ) 
 
-            angs = [-180 : 5 : 180];    % Possible motion directions to test  
+            angs = -180 : 5 : 180;    % Possible motion directions to test  
             angsIdx = true(size(angs)); % Index of angles outside of the collision cones
 
             % Determine which angles are inside the collision cones
@@ -105,9 +94,9 @@ for i = 1 : n % Agent
 
             % Modified control vector
             if stopFlag(i)
-                ctrl(:,i) = zeros(2,1);
+                ctrl(1:2,i) = zeros(2,1);
             else
-                ctrl(:,i) = norm(ctrl(:,i)) * [cosd(thtCnew); sind(thtCnew)]; 
+                ctrl(1:2,i) = norm(ctrl(:,i)) * [cosd(thtCnew); sind(thtCnew)]; 
             end
 
         end

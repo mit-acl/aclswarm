@@ -27,7 +27,6 @@ Axy = ADMMGainDesign2D(Qs(1:2,:), adj);
 
 % Number of agents
 n = size(adj,1);
-m = n - 2; % Reduced dimension
 
 oneZ = ones(n,1); % Vector of ones
 qz = Qs(3,:)'; % Vector of z-coordinates
@@ -36,9 +35,18 @@ d = 1; % ambient dimension of problem
 % Kernel of gain matrix 
 N = [qz, oneZ];
 
+% Determine if desired formation is actually 2D
+xyform = (std(qz) < 1e-2);
+
+% Reduced problem dimension
+if xyform, dimkerAz = 1;
+else, dimkerAz = 2; end
+m = n - dimkerAz;
+
 % Get orthogonal complement of N
 [U,~,~] = svd(N);
-Q = U(:,3:n);
+% Qbar = U(:,1:dimkerAz);
+Q = U(:,(dimkerAz+1):n);
 Qt = Q';
 
 

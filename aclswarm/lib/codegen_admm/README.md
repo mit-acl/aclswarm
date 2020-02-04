@@ -1,12 +1,13 @@
 MATLAB Coder Generated C++ Library for ADMMGainDesign3D
 =======================================================
 
-The source code for this library was generated using MATLAB R2018b with MATLAB Coder 4.1. The test script used was `Benchmark.m`. This source code was generated from [the MATLAB code](https://github.com/mit-acl/aclswarm/tree/813502cd2b343db5e937c0c48eb680b4736d89a5/aclswarm/matlab) of commit 813502cd.
+The source code for this library was generated using MATLAB R2019b with MATLAB Coder 4.3. The test script used was `Benchmark.m`. This source code was generated from [the MATLAB code](https://github.com/mit-acl/aclswarm/tree/191adfac5353cb30ef46bb5c3e53822824d485fe/aclswarm/matlab) of commit 191adfac.
 
 ## MATLAB Coder Settings
 
 The settings used were essentially the defaults. However, for the cause of consistency, the settings are abbreiviated below.
 
+- Numeric conversion: none (i.e., double precision)
 - We used `Benchmark.m` automatically define input types.
     - One output
     - `Qs`: `double (3 x :inf)`
@@ -15,6 +16,11 @@ The settings used were essentially the defaults. However, for the cause of consi
 - Build type: Source code
 - Output file name: ADMMGainDesign3D
 - Language: C++
+- Interface style: Functions
 - Hardware Board: None - Select device below        *(shouldn't matter since not building via MATLAB)*
 - Device: Generic ; 32-bit Embedded Processor       *(shouldn't matter since not building via MATLAB)*
 - Toolchain: GNU gcc/g++ | gmake (64-bit Linux)     *(shouldn't matter since not building via MATLAB)*
+
+## Testing
+
+It is recommended that after updating this library you run the tests associated with `aclswarm`. This can be done by running `catkin run_tests --no-deps aclswarm`.

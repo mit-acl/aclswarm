@@ -14,7 +14,8 @@ namespace aclswarm {
 
 CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
                                   const ros::NodeHandle nhp)
-: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr)
+: nh_(nh), nhp_(nhp), formation_(nullptr), newformation_(nullptr),
+  central_assignment_rcvd_(false)
 {
   if (!utils::loadVehicleInfo(vehname_, vehid_, vehs_)) {
     ros::shutdown();
@@ -38,6 +39,16 @@ CoordinationROS::CoordinationROS(const ros::NodeHandle nh,
   nhp_.param<double>("auctioneer_dt", auctioneer_dt_, 0.001);
   nhp_.param<double>("autoauction_dt", autoauction_dt_, 0.2);
   nhp_.param<double>("control_dt", control_dt_, 0.05);
+  nhp_.param<bool>("use_assignment", use_assignment_, true);
+
+  if (!use_assignment_) ROS_ERROR("Not using auctioneer");
+
+  nh_.param<bool>("/operator/central_assignment", central_assignment_, false);
+  if (central_assignment_) {
+    ROS_ERROR("Expecting centralized assignment. Cheater!");
+    sub_central_assignment_ = nh_.subscribe("/central_assignment", 1,
+                                &CoordinationROS::centralAssignmentCb, this);
+  }
 
   //
   // Timers for assignment and distributed control tasks
@@ -131,8 +142,15 @@ void CoordinationROS::spin()
       // (i.e., when to start the next assignment)
       startauction_ = (formationsent_ + ros::Duration(form_settle_time_));
 
-      // manage when auctions should be initiated
-      tim_autoauction_.start();
+      if (use_assignment_) {
+        // manage when auctions should be initiated
+        tim_autoauction_.start();
+      } else {
+        // just skip the auctioneer and set an identity assignment
+        AssignmentPerm Pident;
+        Pident.setIdentity(n_);
+        newAssignmentCb(Pident);
+      }
       newformation_ = nullptr;
     }
 
@@ -174,12 +192,17 @@ void CoordinationROS::init()
   // Distributed Control
   //
 
-  double K, kp, kd;
-  nhp_.param<double>("cntrl/K", K, 4.0);
-  nhp_.param<double>("cntrl/kp", kp, 1.0);
-  nhp_.param<double>("cntrl/kd", kd, 0.0);
+  DistCntrl::Gains gains;
+  nhp_.param<double>("cntrl/K1_xy", gains.K1_xy, 0.1);
+  nhp_.param<double>("cntrl/K2_xy", gains.K2_xy, 0.1);
+  nhp_.param<double>("cntrl/K1_z", gains.K1_z, 0.1);
+  nhp_.param<double>("cntrl/K2_z", gains.K2_z, 0.1);
+  nhp_.param<double>("cntrl/e_xy_thr", gains.e_xy_thr, 0.1);
+  nhp_.param<double>("cntrl/e_z_thr", gains.e_z_thr, 0.1);
+  nhp_.param<double>("cntrl/kp", gains.kp, 1.0);
+  nhp_.param<double>("cntrl/kd", gains.kd, 0.0);
 
-  controller_->setGains(K, kp, kd);
+  controller_->setGains(gains);
 }
 
 // ----------------------------------------------------------------------------
@@ -246,6 +269,18 @@ void CoordinationROS::cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehi
 
 // ----------------------------------------------------------------------------
 
+void CoordinationROS::centralAssignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg)
+{
+  // unpack permutation vector
+  Pcentral_ = AssignmentPerm(Eigen::Map<const AssignmentVec>(msg->data.data(),
+                                                          msg->data.size()));
+
+  bool assignment_changed = !(Pcentral_.indices().isApprox(auctioneer_->getAssignment().indices()));
+  if (first_assignment_ || assignment_changed) central_assignment_rcvd_ = true;
+}
+
+// ----------------------------------------------------------------------------
+
 void CoordinationROS::newAssignmentCb(const AssignmentPerm& P)
 {
   // let distributed controller know
@@ -287,10 +322,25 @@ void CoordinationROS::sendBidCb(uint32_t auctionid, uint32_t iter,
 void CoordinationROS::autoauctionCb(const ros::TimerEvent& event)
 {
   // are we ready to start a new auction?
-  if ((ros::Time::now() - startauction_).toNSec() < 0) return;
+  if (ros::Time::now() < startauction_) return;
 
   // set the time of the next autoauction
   startauction_ = ros::Time::now() + ros::Duration(autoauction_dt_);
+
+  if (central_assignment_) {
+
+    // this mode is to receive a global swarm assignment from a centralized
+    // coordinator. It is for comparing the distributed assignment method.
+    // Use this assignment as if the auctioneer had decided it.
+    if (central_assignment_rcvd_) {
+      auctioneer_->setAssignment(Pcentral_);
+      newAssignmentCb(Pcentral_);
+      central_assignment_rcvd_ = false;
+    }
+
+    // no need to start the auctioneer since we will not perform CBAA
+    return;
+  }
 
   if (auctioneer_->didConvergeOnInvalidAssignment()) {
     // since invalid auctions are reached in consensus, this is synchronized.

@@ -29,6 +29,7 @@
 #include <acl_msgs/QuadFlightMode.h>
 #include <acl_msgs/State.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
+#include <aclswarm_msgs/SafetyStatus.h>
 
 #include "aclswarm/utils.h"
 
@@ -44,7 +45,7 @@ namespace aclswarm {
   private:
     ros::NodeHandle nh_, nhp_;
     ros::Subscriber sub_fmode_, sub_cmdin_, sub_state_, sub_tracker_;
-    ros::Publisher pub_cmdout_;
+    ros::Publisher pub_cmdout_, pub_status_;
     ros::Timer tim_control_;
 
     uint8_t vehid_; ///< ID of vehicle (index in veh named list)
@@ -57,6 +58,7 @@ namespace aclswarm {
         double r = 0; ///< yawrate goal signal
         bool active = false; ///< should this goal even be considered?
         int priority = 0; ///< highest priority wins
+        bool modified = false; ///< indicates active collision avoidance
 
         // to enable sorting of velocity goals
         bool operator<(const VelocityGoal& other) const { return priority < other.priority; }
@@ -85,6 +87,7 @@ namespace aclswarm {
     double landing_slow_dec_; ///< use smaller decrements for "slow" landing
     double max_accel_xy_, max_accel_z_; ///< maximum translational accels
     double max_vel_xy_; ///< maximum planar translational velocity
+    double max_vel_z_; ///< maximum vertical translational velocity
     double d_avoid_thresh_; ///< do collision avoidance if within this distance
     double r_keep_out_; ///< the radius around obstacles to stay out of
 

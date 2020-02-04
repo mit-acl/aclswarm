@@ -3,21 +3,25 @@
 <launch>
     <arg name="formations" />
     <arg name="send_gains" default="false" />
+    <arg name="central_assignment" default="true" />
+    <arg name="load_vehicles" default="true" />
     <arg name="room" default="vicon"/>
     <arg name="leader" default=""/>
     <arg name="dev" default="js0"/>
 
     <!-- Load vehicles and room bounds -->
-    <rosparam file="$(find aclswarm)/param/vehicles.yaml" command="load"/>
+    <rosparam if="$(arg load_vehicles)" file="$(find aclswarm)/param/vehicles.yaml" command="load"/>
     <group unless="$(eval room == 'sim')">
         <rosparam ns="room_bounds" file="$(find acl_demos)/room_cfg/$(arg room).yaml" command="load"/>
     </group>
     <group if="$(eval room == 'sim')">
         <rosparam ns="room_bounds">
-            x_min: -30
-            x_max:  30
-            y_min: -30
-            y_max:  30
+            x_min: -100
+            x_max:  100
+            y_min: -100
+            y_max:  100
+            z_min:    0
+            z_max:   30
         </rosparam>
     </group>
 
@@ -25,6 +29,8 @@
     <node name="operator" pkg="aclswarm" type="operator.py" output="screen">
         <param name="formation_group" value="$(arg formations)" />
         <param name="send_gains" value="$(arg send_gains)" />
+        <param name="central_assignment" value="$(arg central_assignment)" />
+        <param name="central_assignment_dt" value="1" />
         <rosparam file="$(find aclswarm)/param/formations.yaml" command="load"/>
     </node>
 

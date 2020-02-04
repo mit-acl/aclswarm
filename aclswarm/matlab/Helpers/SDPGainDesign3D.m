@@ -29,14 +29,21 @@ qz = Qs(3,:)'; % Vector of z-coordinates
 % Kernel space
 N = [qz, oneZ];
 
+% Determine if desired formation is actually 2D
+xyform = (std(qz) < 1e-2);
+
+% Reduced problem dimension
+if xyform, dimkerAz = 1;
+else, dimkerAz = 2; end
+m = n - dimkerAz;
+
 % Get orthogonal complement of N
 [U,~,~] = svd(N);
-Q = U(:,3:n);
+% Qbar = U(:,1:dimkerAz);
+Q = U(:,(dimkerAz+1):n);
 
 % Subspace constraints for the given sensing topology
 S = not( adj + diag(ones(1,n)) );
-
-m = n - 2; % Reduced dimension
 
 % Solve via CVX
 % NOTE: CVX must be downloaded and installed. See http://cvxr.com/cvx/

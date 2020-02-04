@@ -29,14 +29,26 @@ namespace aclswarm {
       GainMat gains; ///< gains for the current formation (3xn3x)
       PtsMat qdes; ///< desired 3D positions of swarm (nx3)
 
-      Eigen::MatrixXd dstar; ///< desired scale (derived from qdes)
+      Eigen::MatrixXd dstar_xy; ///< desired 2D scale (derived from qdes)
+      Eigen::MatrixXd dstar_z; ///< desired z scale (derived from qdes)
+    };
+
+    struct Gains {
+      double K1_xy; ///< nonlinear scale control gain
+      double K2_xy; ///< nonlinear scale control gain -- multiplies error
+      double K1_z; ///< nonlinear scale control gain
+      double K2_z; ///< nonlinear scale control gain -- multiplies error
+      double e_xy_thr; ///< no scale control when scale error is below this
+      double e_z_thr; ///< no scale control when scale error is below this
+      double kp; ///< proportional gain on distance error
+      double kd; ///< derivative gain on velocity error
     };
 
   public:
     DistCntrl(vehidx_t vehid, uint8_t n);
     ~DistCntrl() = default;
     
-    void setGains(double K, double kp, double kd);
+    void setGains(const Gains& gains);
     void setFormation(const std::shared_ptr<Formation>& f);
     void setAssignment(const AssignmentPerm& P);
 
@@ -51,9 +63,7 @@ namespace aclswarm {
     AssignmentPerm P_; ///< nxn assignment permutation (P: vehid --> formpt)
 
     /// \brief Control parameters
-    double K_ = 1; ///< the gain on the slow scale dynamics (higher ==> slower)
-    double kp_ = 0; ///< proportional gain on distance error
-    double kd_ = 0; ///< derivative gain on velocity error
+    Gains gains_;
 
   };
 

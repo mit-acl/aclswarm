@@ -4,21 +4,20 @@
 // government, commercial, or other organizational use.
 // File: xswap.h
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 #ifndef XSWAP_H
 #define XSWAP_H
 
 // Include Files
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 
 // Function Declarations
-extern void b_xswap(int n, emxArray_real_T *x, int ix0, int iy0);
-extern void c_xswap(double x[4]);
+extern void b_xswap(double x[4]);
 extern void xswap(double x[16], int ix0, int iy0);
 
 #endif

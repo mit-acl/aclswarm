@@ -4,14 +4,14 @@
 // government, commercial, or other organizational use.
 // File: xzlarf.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "xzlarf.h"
+#include "ADMMGainDesign3D.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -34,13 +34,12 @@ void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int ic0, int
   int i;
   bool exitg2;
   int jy;
-  int i55;
+  int b_i;
+  int j;
   int ia;
   int ix;
   int exitg1;
   double c;
-  int i56;
-  int ijA;
   if (tau != 0.0) {
     lastv = m;
     i = iv0 + m;
@@ -84,12 +83,12 @@ void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int ic0, int
       }
 
       i = 0;
-      i55 = ic0 + ldc * lastc;
-      for (jy = ic0; ldc < 0 ? jy >= i55 : jy <= i55; jy += ldc) {
+      b_i = ic0 + ldc * lastc;
+      for (jy = ic0; ldc < 0 ? jy >= b_i : jy <= b_i; jy += ldc) {
         ix = iv0;
         c = 0.0;
-        i56 = (jy + lastv) - 1;
-        for (ia = jy; ia <= i56; ia++) {
+        j = (jy + lastv) - 1;
+        for (ia = jy; ia <= j; ia++) {
           c += C->data[ia - 1] * C->data[ix - 1];
           ix++;
         }
@@ -100,16 +99,15 @@ void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int ic0, int
     }
 
     if (!(-tau == 0.0)) {
-      i = ic0 - 1;
+      i = ic0;
       jy = 0;
-      for (ia = 0; ia <= lastc; ia++) {
+      for (j = 0; j <= lastc; j++) {
         if (work->data[jy] != 0.0) {
           c = work->data[jy] * -tau;
           ix = iv0;
-          i55 = i + 1;
-          i56 = lastv + i;
-          for (ijA = i55; ijA <= i56; ijA++) {
-            C->data[ijA - 1] += C->data[ix - 1] * c;
+          b_i = lastv + i;
+          for (ia = i; ia < b_i; ia++) {
+            C->data[ia - 1] += C->data[ix - 1] * c;
             ix++;
           }
         }

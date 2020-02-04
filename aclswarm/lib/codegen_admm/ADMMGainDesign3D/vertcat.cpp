@@ -4,15 +4,16 @@
 // government, commercial, or other organizational use.
 // File: vertcat.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "vertcat.h"
-#include "sparse.h"
+#include "ADMMGainDesign3D.h"
+#include "ADMMGainDesign3D_emxutil.h"
+#include "fillIn.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -38,99 +39,123 @@ void sparse_vertcat(const emxArray_real_T *varargin_1_d, const emxArray_int32_T 
                     int varargin_2_n, coder_internal_sparse *c)
 {
   int cnfixeddim;
-  bool foundSize;
-  bool isAcceptableEmpty;
+  bool emptyflag_idx_0;
+  bool emptyflag_idx_1;
   bool allEmpty;
-  int cnnz;
+  int numalloc;
   int cnvardim;
-  int crowoffs;
+  int i;
   int cidx;
   int kpstart;
+  int kpend_tmp;
   int kpend;
   int kp;
   cnfixeddim = varargin_1_n;
-  foundSize = false;
   if ((varargin_1_m == 0) || (varargin_1_n == 0)) {
-    isAcceptableEmpty = true;
+    emptyflag_idx_0 = true;
   } else {
-    isAcceptableEmpty = false;
-  }
-
-  allEmpty = isAcceptableEmpty;
-  if (!isAcceptableEmpty) {
-    foundSize = true;
+    emptyflag_idx_0 = false;
   }
 
   if ((varargin_2_m == 0) || (varargin_2_n == 0)) {
-    isAcceptableEmpty = true;
+    emptyflag_idx_1 = true;
   } else {
-    isAcceptableEmpty = false;
+    emptyflag_idx_1 = false;
   }
 
-  allEmpty = (allEmpty && isAcceptableEmpty);
-  if ((!isAcceptableEmpty) && (!foundSize)) {
+  allEmpty = (emptyflag_idx_0 && emptyflag_idx_1);
+  if ((!emptyflag_idx_1) && emptyflag_idx_0) {
     cnfixeddim = varargin_2_n;
   }
 
-  cnnz = 0;
+  numalloc = 0;
   cnvardim = 0;
-  if (allEmpty || ((varargin_1_m != 0) && (varargin_1_n != 0))) {
-    cnnz = varargin_1_colidx->data[varargin_1_colidx->size[0] - 1] - 1;
+  if (allEmpty || (!emptyflag_idx_0)) {
+    numalloc = varargin_1_colidx->data[varargin_1_colidx->size[0] - 1] - 1;
     cnvardim = varargin_1_m;
   }
 
-  if (allEmpty || ((varargin_2_m != 0) && (varargin_2_n != 0))) {
-    cnnz = (cnnz + varargin_2_colidx->data[varargin_2_colidx->size[0] - 1]) - 1;
+  if (allEmpty || (!emptyflag_idx_1)) {
+    numalloc = (numalloc + varargin_2_colidx->data[varargin_2_colidx->size[0] -
+                1]) - 1;
     cnvardim += varargin_2_m;
   }
 
-  sparse_sparse(cnvardim, cnfixeddim, cnnz, c);
-  cnfixeddim = -1;
+  c->m = cnvardim;
+  c->n = cnfixeddim;
+  if (numalloc < 1) {
+    numalloc = 1;
+  }
+
+  i = c->d->size[0];
+  c->d->size[0] = numalloc;
+  emxEnsureCapacity_real_T(c->d, i);
+  for (i = 0; i < numalloc; i++) {
+    c->d->data[i] = 0.0;
+  }
+
+  i = c->colidx->size[0];
+  c->colidx->size[0] = cnfixeddim + 1;
+  emxEnsureCapacity_int32_T(c->colidx, i);
+  c->colidx->data[0] = 1;
+  i = c->rowidx->size[0];
+  c->rowidx->size[0] = numalloc;
+  emxEnsureCapacity_int32_T(c->rowidx, i);
+  for (i = 0; i < numalloc; i++) {
+    c->rowidx->data[i] = 0;
+  }
+
+  for (numalloc = 0; numalloc < cnfixeddim; numalloc++) {
+    c->colidx->data[numalloc + 1] = 1;
+  }
+
+  sparse_fillIn(c);
+  cnvardim = -1;
   if ((varargin_1_m == 0) || (varargin_1_n == 0)) {
-    foundSize = true;
+    emptyflag_idx_0 = true;
   } else {
-    foundSize = false;
+    emptyflag_idx_0 = false;
   }
 
   if ((varargin_2_m == 0) || (varargin_2_n == 0)) {
-    isAcceptableEmpty = true;
+    emptyflag_idx_1 = true;
   } else {
-    isAcceptableEmpty = false;
+    emptyflag_idx_1 = false;
   }
 
-  cnnz = c->n;
-  for (cnvardim = 0; cnvardim < cnnz; cnvardim++) {
-    crowoffs = 0;
-    if (!foundSize) {
-      cidx = cnfixeddim;
-      kpstart = varargin_1_colidx->data[cnvardim];
-      kpend = varargin_1_colidx->data[cnvardim + 1] - 1;
+  i = c->n;
+  for (numalloc = 0; numalloc < i; numalloc++) {
+    cnfixeddim = 0;
+    if (!emptyflag_idx_0) {
+      cidx = cnvardim;
+      kpstart = varargin_1_colidx->data[numalloc];
+      kpend_tmp = varargin_1_colidx->data[numalloc + 1];
+      kpend = kpend_tmp - 1;
       for (kp = kpstart; kp <= kpend; kp++) {
         cidx++;
         c->rowidx->data[cidx] = varargin_1_rowidx->data[kp - 1];
         c->d->data[cidx] = varargin_1_d->data[kp - 1];
       }
 
-      cnfixeddim = (cnfixeddim + varargin_1_colidx->data[cnvardim + 1]) -
-        varargin_1_colidx->data[cnvardim];
-      crowoffs = varargin_1_m;
+      cnvardim = (cnvardim + kpend_tmp) - varargin_1_colidx->data[numalloc];
+      cnfixeddim = varargin_1_m;
     }
 
-    if (!isAcceptableEmpty) {
-      cidx = cnfixeddim;
-      kpstart = varargin_2_colidx->data[cnvardim];
-      kpend = varargin_2_colidx->data[cnvardim + 1] - 1;
+    if (!emptyflag_idx_1) {
+      cidx = cnvardim;
+      kpstart = varargin_2_colidx->data[numalloc];
+      kpend_tmp = varargin_2_colidx->data[numalloc + 1];
+      kpend = kpend_tmp - 1;
       for (kp = kpstart; kp <= kpend; kp++) {
         cidx++;
-        c->rowidx->data[cidx] = varargin_2_rowidx->data[kp - 1] + crowoffs;
+        c->rowidx->data[cidx] = varargin_2_rowidx->data[kp - 1] + cnfixeddim;
         c->d->data[cidx] = varargin_2_d->data[kp - 1];
       }
 
-      cnfixeddim = (cnfixeddim + varargin_2_colidx->data[cnvardim + 1]) -
-        varargin_2_colidx->data[cnvardim];
+      cnvardim = (cnvardim + kpend_tmp) - varargin_2_colidx->data[numalloc];
     }
 
-    c->colidx->data[cnvardim + 1] = cnfixeddim + 2;
+    c->colidx->data[numalloc + 1] = cnvardim + 2;
   }
 }
 

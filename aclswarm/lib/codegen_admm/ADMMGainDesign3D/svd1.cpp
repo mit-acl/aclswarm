@@ -4,25 +4,23 @@
 // government, commercial, or other organizational use.
 // File: svd1.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include <string.h>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "svd1.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
-#include "xrot.h"
-#include "xrotg.h"
-#include "sqrt.h"
-#include "xswap.h"
-#include "xscal.h"
+#include "rt_nonfinite.h"
 #include "xaxpy.h"
 #include "xdotc.h"
 #include "xnrm2.h"
+#include "xrot.h"
+#include "xrotg.h"
+#include "xswap.h"
+#include <cmath>
+#include <cstring>
 
 // Function Definitions
 
@@ -38,16 +36,16 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
            s_size[1], double V[16])
 {
   emxArray_real_T *b_A;
-  int i8;
+  int i;
   int ns;
   int n;
   int minnp;
   double b_s_data[4];
-  double e[4];
   emxArray_real_T *work;
-  int nctp1;
+  double e[4];
   int nrt;
   int nct;
+  int nctp1;
   int q;
   int qp1;
   int m;
@@ -55,24 +53,27 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
   int nmq;
   bool apply_transform;
   double nrm;
-  int k;
+  int jj;
   int qjj;
   int ii;
-  double rt;
+  double r;
+  int ix;
+  int iy;
+  int k;
   double snorm;
   bool exitg1;
+  double f;
   double scale;
   double sqds;
-  double sm;
   double b;
   emxInit_real_T(&b_A, 2);
-  i8 = b_A->size[0] * b_A->size[1];
+  i = b_A->size[0] * b_A->size[1];
   b_A->size[0] = A->size[0];
   b_A->size[1] = 4;
-  emxEnsureCapacity_real_T(b_A, i8);
+  emxEnsureCapacity_real_T(b_A, i);
   ns = A->size[0] * A->size[1];
-  for (i8 = 0; i8 < ns; i8++) {
-    b_A->data[i8] = A->data[i8];
+  for (i = 0; i < ns; i++) {
+    b_A->data[i] = A->data[i];
   }
 
   n = A->size[0];
@@ -87,34 +88,32 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
   }
 
   if (0 <= ns - 1) {
-    memset(&b_s_data[0], 0, (unsigned int)(ns * (int)sizeof(double)));
+    std::memset(&b_s_data[0], 0, ns * sizeof(double));
   }
 
+  emxInit_real_T(&work, 1);
   e[0] = 0.0;
   e[1] = 0.0;
   e[2] = 0.0;
   e[3] = 0.0;
-  emxInit_real_T(&work, 1);
+  i = work->size[0];
+  work->size[0] = A->size[0];
+  emxEnsureCapacity_real_T(work, i);
   ns = A->size[0];
-  i8 = work->size[0];
-  work->size[0] = ns;
-  emxEnsureCapacity_real_T(work, i8);
-  for (i8 = 0; i8 < ns; i8++) {
-    work->data[i8] = 0.0;
+  for (i = 0; i < ns; i++) {
+    work->data[i] = 0.0;
   }
 
-  ns = A->size[0];
-  nctp1 = A->size[0];
-  i8 = U->size[0] * U->size[1];
-  U->size[0] = ns;
-  U->size[1] = nctp1;
-  emxEnsureCapacity_real_T(U, i8);
-  ns *= nctp1;
-  for (i8 = 0; i8 < ns; i8++) {
-    U->data[i8] = 0.0;
+  i = U->size[0] * U->size[1];
+  U->size[0] = A->size[0];
+  U->size[1] = A->size[0];
+  emxEnsureCapacity_real_T(U, i);
+  ns = A->size[0] * A->size[0];
+  for (i = 0; i < ns; i++) {
+    U->data[i] = 0.0;
   }
 
-  memset(&V[0], 0, sizeof(double) << 4);
+  std::memset(&V[0], 0, 16U * sizeof(double));
   if (A->size[0] == 0) {
     V[0] = 1.0;
     V[5] = 1.0;
@@ -138,33 +137,36 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
 
     nctp1 = nct + 1;
     if (nct > nrt) {
-      i8 = nct;
+      i = nct;
     } else {
-      i8 = nrt;
+      i = nrt;
     }
 
-    for (q = 0; q < i8; q++) {
+    for (q = 0; q < i; q++) {
       qp1 = q + 2;
       qq = (q + n * q) + 1;
-      nmq = n - q;
+      nmq = (n - q) - 1;
       apply_transform = false;
       if (q + 1 <= nct) {
-        nrm = xnrm2(nmq, b_A, qq);
+        nrm = xnrm2(nmq + 1, b_A, qq);
         if (nrm > 0.0) {
           apply_transform = true;
           if (b_A->data[qq - 1] < 0.0) {
-            nrm = -nrm;
+            r = -nrm;
+            b_s_data[q] = -nrm;
+          } else {
+            r = nrm;
+            b_s_data[q] = nrm;
           }
 
-          b_s_data[q] = nrm;
-          if (std::abs(nrm) >= 1.0020841800044864E-292) {
-            nrm = 1.0 / nrm;
-            ns = (qq + nmq) - 1;
+          if (std::abs(r) >= 1.0020841800044864E-292) {
+            nrm = 1.0 / r;
+            ns = qq + nmq;
             for (k = qq; k <= ns; k++) {
               b_A->data[k - 1] *= nrm;
             }
           } else {
-            ns = (qq + nmq) - 1;
+            ns = qq + nmq;
             for (k = qq; k <= ns; k++) {
               b_A->data[k - 1] /= b_s_data[q];
             }
@@ -177,15 +179,25 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
         }
       }
 
-      for (k = qp1; k < 5; k++) {
-        qjj = q + n * (k - 1);
+      for (jj = qp1; jj < 5; jj++) {
+        qjj = q + n * (jj - 1);
         if (apply_transform) {
-          nrm = -(xdotc(nmq, b_A, qq, b_A, qjj + 1) / b_A->data[q + b_A->size[0]
-                  * q]);
-          xaxpy(nmq, nrm, qq, b_A, qjj + 1);
+          nrm = 0.0;
+          if (nmq + 1 >= 1) {
+            ix = qq;
+            iy = qjj;
+            for (k = 0; k <= nmq; k++) {
+              nrm += b_A->data[ix - 1] * b_A->data[iy];
+              ix++;
+              iy++;
+            }
+          }
+
+          nrm = -(nrm / b_A->data[q + b_A->size[0] * q]);
+          xaxpy(nmq + 1, nrm, qq, b_A, qjj + 1);
         }
 
-        e[k - 1] = b_A->data[qjj];
+        e[jj - 1] = b_A->data[qjj];
       }
 
       if (q + 1 <= nct) {
@@ -225,13 +237,13 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
               work->data[ii - 1] = 0.0;
             }
 
-            for (k = qp1; k < 5; k++) {
-              b_xaxpy(nmq - 1, e[k - 1], b_A, (q + n * (k - 1)) + 2, work, q + 2);
+            for (jj = qp1; jj < 5; jj++) {
+              b_xaxpy(nmq, e[jj - 1], b_A, (q + n * (jj - 1)) + 2, work, q + 2);
             }
 
-            for (k = qp1; k < 5; k++) {
-              b_xaxpy(nmq - 1, -e[k - 1] / e[q + 1], work, q + 2, b_A, (q + n *
-                       (k - 1)) + 2);
+            for (jj = qp1; jj < 5; jj++) {
+              b_xaxpy(nmq, -e[jj - 1] / e[q + 1], work, q + 2, b_A, (q + n * (jj
+                        - 1)) + 2);
             }
           }
         }
@@ -262,25 +274,36 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
 
     e[m] = 0.0;
     if (nct + 1 <= A->size[0]) {
-      for (k = nctp1; k <= n; k++) {
+      for (jj = nctp1; jj <= n; jj++) {
         for (ii = 0; ii < n; ii++) {
-          U->data[ii + U->size[0] * (k - 1)] = 0.0;
+          U->data[ii + U->size[0] * (jj - 1)] = 0.0;
         }
 
-        U->data[(k + U->size[0] * (k - 1)) - 1] = 1.0;
+        U->data[(jj + U->size[0] * (jj - 1)) - 1] = 1.0;
       }
     }
 
     for (q = nct; q >= 1; q--) {
       qp1 = q + 1;
       ns = n - q;
-      nctp1 = ns + 1;
+      nmq = ns + 1;
       qq = (q + n * (q - 1)) - 1;
       if (b_s_data[q - 1] != 0.0) {
-        for (k = qp1; k <= n; k++) {
-          qjj = q + n * (k - 1);
-          nrm = -(xdotc(nctp1, U, qq + 1, U, qjj) / U->data[qq]);
-          xaxpy(ns + 1, nrm, qq + 1, U, qjj);
+        for (jj = qp1; jj <= n; jj++) {
+          qjj = q + n * (jj - 1);
+          nrm = 0.0;
+          if (nmq >= 1) {
+            ix = qq;
+            iy = qjj;
+            for (k = 0; k <= ns; k++) {
+              nrm += U->data[ix] * U->data[iy - 1];
+              ix++;
+              iy++;
+            }
+          }
+
+          nrm = -(nrm / U->data[qq]);
+          xaxpy(nmq, nrm, qq + 1, U, qjj);
         }
 
         for (ii = q; ii <= n; ii++) {
@@ -305,70 +328,72 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
       if ((q + 1 <= nrt) && (e[q] != 0.0)) {
         qp1 = q + 2;
         ns = (q + (q << 2)) + 2;
-        for (k = qp1; k < 5; k++) {
-          nctp1 = (q + ((k - 1) << 2)) + 2;
-          c_xaxpy(3 - q, -(b_xdotc(3 - q, V, ns, V, nctp1) / V[ns - 1]), ns, V,
-                  nctp1);
+        for (jj = qp1; jj < 5; jj++) {
+          qjj = (q + ((jj - 1) << 2)) + 2;
+          c_xaxpy(3 - q, -(xdotc(3 - q, V, ns, V, qjj) / V[ns - 1]), ns, V, qjj);
         }
       }
 
-      V[q << 2] = 0.0;
-      V[1 + (q << 2)] = 0.0;
-      V[2 + (q << 2)] = 0.0;
-      V[3 + (q << 2)] = 0.0;
+      ns = q << 2;
+      V[ns] = 0.0;
+      V[ns + 1] = 0.0;
+      V[ns + 2] = 0.0;
+      V[ns + 3] = 0.0;
       V[q + (q << 2)] = 1.0;
     }
 
+    nct = m;
+    nctp1 = 0;
+    snorm = 0.0;
     for (q = 0; q <= m; q++) {
       if (b_s_data[q] != 0.0) {
-        rt = std::abs(b_s_data[q]);
-        nrm = b_s_data[q] / rt;
-        b_s_data[q] = rt;
+        nrm = std::abs(b_s_data[q]);
+        r = b_s_data[q] / nrm;
+        b_s_data[q] = nrm;
         if (q + 1 < m + 1) {
-          e[q] /= nrm;
+          e[q] /= r;
         }
 
         if (q + 1 <= n) {
-          xscal(n, nrm, U, 1 + n * q);
+          ns = n * q;
+          i = ns + n;
+          for (k = ns + 1; k <= i; k++) {
+            U->data[k - 1] *= r;
+          }
         }
       }
 
       if ((q + 1 < m + 1) && (e[q] != 0.0)) {
-        rt = std::abs(e[q]);
-        nrm = rt / e[q];
-        e[q] = rt;
-        b_s_data[q + 1] *= nrm;
-        ns = 1 + ((q + 1) << 2);
-        i8 = ns + 3;
-        for (k = ns; k <= i8; k++) {
-          V[k - 1] *= nrm;
+        nrm = std::abs(e[q]);
+        r = nrm / e[q];
+        e[q] = nrm;
+        b_s_data[q + 1] *= r;
+        ns = (q + 1) << 2;
+        i = ns + 4;
+        for (k = ns + 1; k <= i; k++) {
+          V[k - 1] *= r;
         }
       }
-    }
 
-    qjj = m;
-    nmq = 0;
-    snorm = 0.0;
-    for (ii = 0; ii <= m; ii++) {
-      nrm = std::abs(b_s_data[ii]);
-      rt = std::abs(e[ii]);
-      if ((nrm > rt) || rtIsNaN(rt)) {
-        rt = nrm;
+      nrm = std::abs(b_s_data[q]);
+      r = std::abs(e[q]);
+      if ((nrm > r) || rtIsNaN(r)) {
+        r = nrm;
       }
 
-      if ((!(snorm > rt)) && (!rtIsNaN(rt))) {
-        snorm = rt;
+      if ((!(snorm > r)) && (!rtIsNaN(r))) {
+        snorm = r;
       }
     }
 
-    while ((m + 1 > 0) && (nmq < 75)) {
+    while ((m + 1 > 0) && (nctp1 < 75)) {
       ii = m;
       exitg1 = false;
       while (!(exitg1 || (ii == 0))) {
         nrm = std::abs(e[ii - 1]);
         if ((nrm <= 2.2204460492503131E-16 * (std::abs(b_s_data[ii - 1]) + std::
-              abs(b_s_data[ii]))) || (nrm <= 1.0020841800044864E-292) || ((nmq >
-              20) && (nrm <= 2.2204460492503131E-16 * snorm))) {
+              abs(b_s_data[ii]))) || (nrm <= 1.0020841800044864E-292) || ((nctp1
+              > 20) && (nrm <= 2.2204460492503131E-16 * snorm))) {
           e[ii - 1] = 0.0;
           exitg1 = true;
         } else {
@@ -379,11 +404,11 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
       if (ii == m) {
         ns = 4;
       } else {
-        nctp1 = m + 1;
+        qjj = m + 1;
         ns = m + 1;
         exitg1 = false;
         while ((!exitg1) && (ns >= ii)) {
-          nctp1 = ns;
+          qjj = ns;
           if (ns == ii) {
             exitg1 = true;
           } else {
@@ -396,8 +421,8 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
               nrm += std::abs(e[ns - 2]);
             }
 
-            rt = std::abs(b_s_data[ns - 1]);
-            if ((rt <= 2.2204460492503131E-16 * nrm) || (rt <=
+            r = std::abs(b_s_data[ns - 1]);
+            if ((r <= 2.2204460492503131E-16 * nrm) || (r <=
                  1.0020841800044864E-292)) {
               b_s_data[ns - 1] = 0.0;
               exitg1 = true;
@@ -407,142 +432,166 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
           }
         }
 
-        if (nctp1 == ii) {
+        if (qjj == ii) {
           ns = 3;
-        } else if (nctp1 == m + 1) {
+        } else if (qjj == m + 1) {
           ns = 1;
         } else {
           ns = 2;
-          ii = nctp1;
+          ii = qjj;
         }
       }
 
       switch (ns) {
        case 1:
-        rt = e[m - 1];
+        f = e[m - 1];
         e[m - 1] = 0.0;
         for (k = m; k >= ii + 1; k--) {
-          xrotg(&b_s_data[k - 1], &rt, &sqds, &sm);
+          xrotg(&b_s_data[k - 1], &f, &sqds, &scale);
           if (k > ii + 1) {
             b = e[k - 2];
-            rt = -sm * b;
+            f = -scale * b;
             e[k - 2] = b * sqds;
           }
 
-          xrot(V, 1 + ((k - 1) << 2), 1 + (m << 2), sqds, sm);
+          xrot(V, ((k - 1) << 2) + 1, (m << 2) + 1, sqds, scale);
         }
         break;
 
        case 2:
-        rt = e[ii - 1];
+        f = e[ii - 1];
         e[ii - 1] = 0.0;
         for (k = ii + 1; k <= m + 1; k++) {
-          xrotg(&b_s_data[k - 1], &rt, &sqds, &sm);
+          xrotg(&b_s_data[k - 1], &f, &sqds, &scale);
           b = e[k - 1];
-          rt = -sm * b;
+          f = -scale * b;
           e[k - 1] = b * sqds;
-          b_xrot(n, U, 1 + n * (k - 1), 1 + n * (ii - 1), sqds, sm);
+          if (n >= 1) {
+            ix = n * (k - 1);
+            iy = n * (ii - 1);
+            for (ns = 0; ns < n; ns++) {
+              nrm = sqds * U->data[ix] + scale * U->data[iy];
+              U->data[iy] = sqds * U->data[iy] - scale * U->data[ix];
+              U->data[ix] = nrm;
+              iy++;
+              ix++;
+            }
+          }
         }
         break;
 
        case 3:
         scale = std::abs(b_s_data[m]);
         nrm = b_s_data[m - 1];
-        rt = std::abs(nrm);
-        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
-          scale = rt;
+        r = std::abs(nrm);
+        if ((!(scale > r)) && (!rtIsNaN(r))) {
+          scale = r;
         }
 
         b = e[m - 1];
-        rt = std::abs(b);
-        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
-          scale = rt;
+        r = std::abs(b);
+        if ((!(scale > r)) && (!rtIsNaN(r))) {
+          scale = r;
         }
 
-        rt = std::abs(b_s_data[ii]);
-        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
-          scale = rt;
+        r = std::abs(b_s_data[ii]);
+        if ((!(scale > r)) && (!rtIsNaN(r))) {
+          scale = r;
         }
 
-        rt = std::abs(e[ii]);
-        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
-          scale = rt;
+        r = std::abs(e[ii]);
+        if ((!(scale > r)) && (!rtIsNaN(r))) {
+          scale = r;
         }
 
-        sm = b_s_data[m] / scale;
+        f = b_s_data[m] / scale;
         nrm /= scale;
-        rt = b / scale;
+        r = b / scale;
         sqds = b_s_data[ii] / scale;
-        b = ((nrm + sm) * (nrm - sm) + rt * rt) / 2.0;
-        nrm = sm * rt;
+        b = ((nrm + f) * (nrm - f) + r * r) / 2.0;
+        nrm = f * r;
         nrm *= nrm;
         if ((b != 0.0) || (nrm != 0.0)) {
-          rt = b * b + nrm;
-          b_sqrt(&rt);
+          r = std::sqrt(b * b + nrm);
           if (b < 0.0) {
-            rt = -rt;
+            r = -r;
           }
 
-          rt = nrm / (b + rt);
+          r = nrm / (b + r);
         } else {
-          rt = 0.0;
+          r = 0.0;
         }
 
-        rt += (sqds + sm) * (sqds - sm);
-        nrm = sqds * (e[ii] / scale);
+        f = (sqds + f) * (sqds - f) + r;
+        r = sqds * (e[ii] / scale);
         for (k = ii + 1; k <= m; k++) {
-          xrotg(&rt, &nrm, &sqds, &sm);
+          xrotg(&f, &r, &sqds, &scale);
           if (k > ii + 1) {
-            e[k - 2] = rt;
+            e[k - 2] = f;
           }
 
-          b = e[k - 1];
-          nrm = b_s_data[k - 1];
-          e[k - 1] = sqds * b - sm * nrm;
-          rt = sm * b_s_data[k];
+          nrm = e[k - 1];
+          b = b_s_data[k - 1];
+          e[k - 1] = sqds * nrm - scale * b;
+          r = scale * b_s_data[k];
           b_s_data[k] *= sqds;
-          xrot(V, 1 + ((k - 1) << 2), 1 + (k << 2), sqds, sm);
-          b_s_data[k - 1] = sqds * nrm + sm * b;
-          xrotg(&b_s_data[k - 1], &rt, &sqds, &sm);
-          b = e[k - 1];
-          rt = sqds * b + sm * b_s_data[k];
-          b_s_data[k] = -sm * b + sqds * b_s_data[k];
-          nrm = sm * e[k];
+          xrot(V, ((k - 1) << 2) + 1, (k << 2) + 1, sqds, scale);
+          b_s_data[k - 1] = sqds * b + scale * nrm;
+          xrotg(&b_s_data[k - 1], &r, &sqds, &scale);
+          f = sqds * e[k - 1] + scale * b_s_data[k];
+          b_s_data[k] = -scale * e[k - 1] + sqds * b_s_data[k];
+          r = scale * e[k];
           e[k] *= sqds;
-          if (k < n) {
-            b_xrot(n, U, 1 + n * (k - 1), 1 + n * k, sqds, sm);
+          if ((k < n) && (n >= 1)) {
+            ix = n * (k - 1);
+            iy = n * k;
+            for (ns = 0; ns < n; ns++) {
+              nrm = sqds * U->data[ix] + scale * U->data[iy];
+              U->data[iy] = sqds * U->data[iy] - scale * U->data[ix];
+              U->data[ix] = nrm;
+              iy++;
+              ix++;
+            }
           }
         }
 
-        e[m - 1] = rt;
-        nmq++;
+        e[m - 1] = f;
+        nctp1++;
         break;
 
        default:
         if (b_s_data[ii] < 0.0) {
           b_s_data[ii] = -b_s_data[ii];
-          ns = 1 + (ii << 2);
-          i8 = ns + 3;
-          for (k = ns; k <= i8; k++) {
+          ns = ii << 2;
+          i = ns + 4;
+          for (k = ns + 1; k <= i; k++) {
             V[k - 1] = -V[k - 1];
           }
         }
 
         qp1 = ii + 1;
-        while ((ii + 1 < qjj + 1) && (b_s_data[ii] < b_s_data[qp1])) {
-          rt = b_s_data[ii];
+        while ((ii + 1 < nct + 1) && (b_s_data[ii] < b_s_data[qp1])) {
+          nrm = b_s_data[ii];
           b_s_data[ii] = b_s_data[qp1];
-          b_s_data[qp1] = rt;
-          xswap(V, 1 + (ii << 2), 1 + ((ii + 1) << 2));
+          b_s_data[qp1] = nrm;
+          xswap(V, (ii << 2) + 1, ((ii + 1) << 2) + 1);
           if (ii + 1 < n) {
-            b_xswap(n, U, 1 + n * ii, 1 + n * (ii + 1));
+            ix = n * ii;
+            iy = n * (ii + 1);
+            for (k = 0; k < n; k++) {
+              nrm = U->data[ix];
+              U->data[ix] = U->data[iy];
+              U->data[iy] = nrm;
+              ix++;
+              iy++;
+            }
           }
 
           ii = qp1;
           qp1++;
         }
 
-        nmq = 0;
+        nctp1 = 0;
         m--;
         break;
       }
@@ -553,7 +602,7 @@ void b_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
   emxFree_real_T(&b_A);
   s_size[0] = minnp;
   if (0 <= minnp - 1) {
-    memcpy(&s_data[0], &b_s_data[0], (unsigned int)(minnp * (int)sizeof(double)));
+    std::memcpy(&s_data[0], &b_s_data[0], minnp * sizeof(double));
   }
 }
 
@@ -569,14 +618,14 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
            s_size[1], double V[4])
 {
   emxArray_real_T *b_A;
-  int i38;
+  int qjj;
   int ns;
   int n;
   int minnp;
   double b_s_data[2];
   double e[2];
-  int qjj;
   int nct;
+  int nctp1;
   int q;
   int m;
   int qp1;
@@ -584,23 +633,26 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
   int nmq_tmp;
   bool apply_transform;
   double nrm;
-  int iter;
+  int jj;
   double rt;
+  int ix;
+  int iy;
+  int k;
   double snorm;
-  double r;
   bool exitg1;
   double f;
   double scale;
+  double b;
   double sm;
   double sqds;
   emxInit_real_T(&b_A, 2);
-  i38 = b_A->size[0] * b_A->size[1];
+  qjj = b_A->size[0] * b_A->size[1];
   b_A->size[0] = A->size[0];
   b_A->size[1] = 2;
-  emxEnsureCapacity_real_T(b_A, i38);
+  emxEnsureCapacity_real_T(b_A, qjj);
   ns = A->size[0] * A->size[1];
-  for (i38 = 0; i38 < ns; i38++) {
-    b_A->data[i38] = A->data[i38];
+  for (qjj = 0; qjj < ns; qjj++) {
+    b_A->data[qjj] = A->data[qjj];
   }
 
   n = A->size[0];
@@ -615,26 +667,22 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
   }
 
   if (0 <= ns - 1) {
-    memset(&b_s_data[0], 0, (unsigned int)(ns * (int)sizeof(double)));
+    std::memset(&b_s_data[0], 0, ns * sizeof(double));
   }
 
   e[0] = 0.0;
   e[1] = 0.0;
-  ns = A->size[0];
-  qjj = A->size[0];
-  i38 = U->size[0] * U->size[1];
-  U->size[0] = ns;
-  U->size[1] = qjj;
-  emxEnsureCapacity_real_T(U, i38);
-  ns *= qjj;
-  for (i38 = 0; i38 < ns; i38++) {
-    U->data[i38] = 0.0;
+  qjj = U->size[0] * U->size[1];
+  U->size[0] = A->size[0];
+  U->size[1] = A->size[0];
+  emxEnsureCapacity_real_T(U, qjj);
+  ns = A->size[0] * A->size[0];
+  for (qjj = 0; qjj < ns; qjj++) {
+    U->data[qjj] = 0.0;
   }
 
-  V[0] = 0.0;
   V[1] = 0.0;
   V[2] = 0.0;
-  V[3] = 0.0;
   if (A->size[0] == 0) {
     V[0] = 1.0;
     V[3] = 1.0;
@@ -649,31 +697,35 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
       nct = 2;
     }
 
-    ns = nct + 1;
+    nctp1 = nct + 1;
     for (q = 0; q < nct; q++) {
       qp1 = q + 2;
       qq = (q + n * q) + 1;
       nmq_tmp = n - q;
+      ns = nmq_tmp - 1;
       apply_transform = false;
       if (q + 1 <= nct) {
         nrm = xnrm2(nmq_tmp, b_A, qq);
         if (nrm > 0.0) {
           apply_transform = true;
           if (b_A->data[qq - 1] < 0.0) {
-            nrm = -nrm;
+            rt = -nrm;
+            b_s_data[q] = -nrm;
+          } else {
+            rt = nrm;
+            b_s_data[q] = nrm;
           }
 
-          b_s_data[q] = nrm;
-          if (std::abs(nrm) >= 1.0020841800044864E-292) {
-            nrm = 1.0 / nrm;
-            i38 = (qq + nmq_tmp) - 1;
-            for (qjj = qq; qjj <= i38; qjj++) {
-              b_A->data[qjj - 1] *= nrm;
+          if (std::abs(rt) >= 1.0020841800044864E-292) {
+            nrm = 1.0 / rt;
+            qjj = qq + ns;
+            for (k = qq; k <= qjj; k++) {
+              b_A->data[k - 1] *= nrm;
             }
           } else {
-            i38 = (qq + nmq_tmp) - 1;
-            for (qjj = qq; qjj <= i38; qjj++) {
-              b_A->data[qjj - 1] /= b_s_data[q];
+            qjj = qq + ns;
+            for (k = qq; k <= qjj; k++) {
+              b_A->data[k - 1] /= b_s_data[q];
             }
           }
 
@@ -684,11 +736,21 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
         }
       }
 
-      for (iter = qp1; iter < 3; iter++) {
+      for (jj = qp1; jj < 3; jj++) {
         qjj = q + n;
         if (apply_transform) {
-          nrm = -(xdotc(nmq_tmp, b_A, qq, b_A, qjj + 1) / b_A->data[q +
-                  b_A->size[0] * q]);
+          nrm = 0.0;
+          if (nmq_tmp >= 1) {
+            ix = qq;
+            iy = qjj;
+            for (k = 0; k <= ns; k++) {
+              nrm += b_A->data[ix - 1] * b_A->data[iy];
+              ix++;
+              iy++;
+            }
+          }
+
+          nrm = -(nrm / b_A->data[q + b_A->size[0] * q]);
           xaxpy(nmq_tmp, nrm, qq, b_A, qjj + 1);
         }
 
@@ -722,12 +784,12 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
 
     e[m - 1] = 0.0;
     if (nct + 1 <= A->size[0]) {
-      for (iter = ns; iter <= n; iter++) {
+      for (jj = nctp1; jj <= n; jj++) {
         for (nmq_tmp = 0; nmq_tmp < n; nmq_tmp++) {
-          U->data[nmq_tmp + U->size[0] * (iter - 1)] = 0.0;
+          U->data[nmq_tmp + U->size[0] * (jj - 1)] = 0.0;
         }
 
-        U->data[(iter + U->size[0] * (iter - 1)) - 1] = 1.0;
+        U->data[(jj + U->size[0] * (jj - 1)) - 1] = 1.0;
       }
     }
 
@@ -737,10 +799,21 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
       ns = nmq_tmp + 1;
       qq = (q + n * (q - 1)) - 1;
       if (b_s_data[q - 1] != 0.0) {
-        for (iter = qp1; iter <= n; iter++) {
-          qjj = q + n * (iter - 1);
-          nrm = -(xdotc(ns, U, qq + 1, U, qjj) / U->data[qq]);
-          xaxpy(nmq_tmp + 1, nrm, qq + 1, U, qjj);
+        for (jj = qp1; jj <= n; jj++) {
+          qjj = q + n * (jj - 1);
+          nrm = 0.0;
+          if (ns >= 1) {
+            ix = qq;
+            iy = qjj;
+            for (k = 0; k <= nmq_tmp; k++) {
+              nrm += U->data[ix] * U->data[iy - 1];
+              ix++;
+              iy++;
+            }
+          }
+
+          nrm = -(nrm / U->data[qq]);
+          xaxpy(ns, nrm, qq + 1, U, qjj);
         }
 
         for (nmq_tmp = q; nmq_tmp <= n; nmq_tmp++) {
@@ -749,7 +822,7 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
         }
 
         U->data[qq]++;
-        for (nmq_tmp = 0; nmq_tmp <= q - 2; nmq_tmp++) {
+        if (0 <= q - 2) {
           U->data[U->size[0] * (q - 1)] = 0.0;
         }
       } else {
@@ -762,61 +835,60 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
     }
 
     V[2] = 0.0;
-    V[3] = 0.0;
     V[3] = 1.0;
-    V[0] = 0.0;
     V[1] = 0.0;
     V[0] = 1.0;
-    nrm = e[0];
     for (q = 0; q < m; q++) {
       if (b_s_data[q] != 0.0) {
         rt = std::abs(b_s_data[q]);
-        r = b_s_data[q] / rt;
+        nrm = b_s_data[q] / rt;
         b_s_data[q] = rt;
         if (q + 1 < m) {
-          nrm /= r;
+          e[0] /= nrm;
         }
 
         if (q + 1 <= n) {
-          xscal(n, r, U, 1 + n * q);
+          ns = n * q;
+          qjj = ns + n;
+          for (k = ns + 1; k <= qjj; k++) {
+            U->data[k - 1] *= nrm;
+          }
         }
       }
 
-      if ((q + 1 < m) && (nrm != 0.0)) {
-        rt = std::abs(nrm);
-        r = rt / nrm;
-        nrm = rt;
-        b_s_data[1] *= r;
-        V[2] *= r;
-        V[3] *= r;
+      if ((q + 1 < m) && (e[0] != 0.0)) {
+        rt = std::abs(e[0]);
+        nrm = rt / e[0];
+        e[0] = rt;
+        b_s_data[1] *= nrm;
+        V[2] *= nrm;
+        V[3] *= nrm;
       }
-
-      e[0] = nrm;
     }
 
     qp1 = m;
-    iter = 0;
+    nctp1 = 0;
     snorm = 0.0;
     for (nmq_tmp = 0; nmq_tmp < m; nmq_tmp++) {
       nrm = std::abs(b_s_data[nmq_tmp]);
-      r = std::abs(e[nmq_tmp]);
-      if ((nrm > r) || rtIsNaN(r)) {
-        r = nrm;
+      rt = std::abs(e[nmq_tmp]);
+      if ((nrm > rt) || rtIsNaN(rt)) {
+        rt = nrm;
       }
 
-      if ((!(snorm > r)) && (!rtIsNaN(r))) {
-        snorm = r;
+      if ((!(snorm > rt)) && (!rtIsNaN(rt))) {
+        snorm = rt;
       }
     }
 
-    while ((m > 0) && (iter < 75)) {
+    while ((m > 0) && (nctp1 < 75)) {
       nmq_tmp = m - 1;
       exitg1 = false;
       while (!(exitg1 || (nmq_tmp == 0))) {
         nrm = std::abs(e[0]);
         if ((nrm <= 2.2204460492503131E-16 * (std::abs(b_s_data[0]) + std::abs
-              (b_s_data[1]))) || (nrm <= 1.0020841800044864E-292) || ((iter > 20)
-             && (nrm <= 2.2204460492503131E-16 * snorm))) {
+              (b_s_data[1]))) || (nrm <= 1.0020841800044864E-292) || ((nctp1 >
+              20) && (nrm <= 2.2204460492503131E-16 * snorm))) {
           e[0] = 0.0;
           exitg1 = true;
         } else {
@@ -844,8 +916,8 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
               nrm += std::abs(e[0]);
             }
 
-            r = std::abs(b_s_data[ns - 1]);
-            if ((r <= 2.2204460492503131E-16 * nrm) || (r <=
+            rt = std::abs(b_s_data[ns - 1]);
+            if ((rt <= 2.2204460492503131E-16 * nrm) || (rt <=
                  1.0020841800044864E-292)) {
               b_s_data[ns - 1] = 0.0;
               exitg1 = true;
@@ -869,99 +941,116 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
        case 1:
         f = e[0];
         e[0] = 0.0;
-        i38 = m - 1;
-        for (qjj = i38; qjj >= nmq_tmp + 1; qjj--) {
-          xrotg(&b_s_data[0], &f, &rt, &sm);
-          c_xrot(V, 1 + ((m - 1) << 1), rt, sm);
+        qjj = m - 1;
+        for (k = qjj; k >= nmq_tmp + 1; k--) {
+          xrotg(&b_s_data[0], &f, &b, &sm);
+          b_xrot(V, ((m - 1) << 1) + 1, b, sm);
         }
         break;
 
        case 2:
         f = e[nmq_tmp - 1];
         e[nmq_tmp - 1] = 0.0;
-        for (qjj = nmq_tmp + 1; qjj <= m; qjj++) {
-          xrotg(&b_s_data[qjj - 1], &f, &rt, &sm);
-          nrm = e[qjj - 1];
+        for (k = nmq_tmp + 1; k <= m; k++) {
+          xrotg(&b_s_data[k - 1], &f, &b, &sm);
+          nrm = e[k - 1];
           f = -sm * nrm;
-          e[qjj - 1] = nrm * rt;
-          b_xrot(n, U, 1 + n * (qjj - 1), 1 + n * (nmq_tmp - 1), rt, sm);
+          e[k - 1] = nrm * b;
+          if (n >= 1) {
+            ix = n * (k - 1);
+            iy = n * (nmq_tmp - 1);
+            for (ns = 0; ns < n; ns++) {
+              nrm = b * U->data[ix] + sm * U->data[iy];
+              U->data[iy] = b * U->data[iy] - sm * U->data[ix];
+              U->data[ix] = nrm;
+              iy++;
+              ix++;
+            }
+          }
         }
         break;
 
        case 3:
         nrm = b_s_data[m - 1];
         scale = std::abs(nrm);
-        r = std::abs(b_s_data[0]);
-        if ((!(scale > r)) && (!rtIsNaN(r))) {
-          scale = r;
+        rt = std::abs(b_s_data[0]);
+        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
+          scale = rt;
         }
 
-        r = std::abs(e[0]);
-        if ((!(scale > r)) && (!rtIsNaN(r))) {
-          scale = r;
+        rt = std::abs(e[0]);
+        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
+          scale = rt;
         }
 
-        r = std::abs(b_s_data[nmq_tmp]);
-        if ((!(scale > r)) && (!rtIsNaN(r))) {
-          scale = r;
+        rt = std::abs(b_s_data[nmq_tmp]);
+        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
+          scale = rt;
         }
 
-        r = std::abs(e[nmq_tmp]);
-        if ((!(scale > r)) && (!rtIsNaN(r))) {
-          scale = r;
+        rt = std::abs(e[nmq_tmp]);
+        if ((!(scale > rt)) && (!rtIsNaN(rt))) {
+          scale = rt;
         }
 
         sm = nrm / scale;
         nrm = b_s_data[0] / scale;
-        r = e[0] / scale;
+        rt = e[0] / scale;
         sqds = b_s_data[nmq_tmp] / scale;
-        rt = ((nrm + sm) * (nrm - sm) + r * r) / 2.0;
-        nrm = sm * r;
+        b = ((nrm + sm) * (nrm - sm) + rt * rt) / 2.0;
+        nrm = sm * rt;
         nrm *= nrm;
-        if ((rt != 0.0) || (nrm != 0.0)) {
-          r = rt * rt + nrm;
-          b_sqrt(&r);
-          if (rt < 0.0) {
-            r = -r;
+        if ((b != 0.0) || (nrm != 0.0)) {
+          rt = std::sqrt(b * b + nrm);
+          if (b < 0.0) {
+            rt = -rt;
           }
 
-          r = nrm / (rt + r);
+          rt = nrm / (b + rt);
         } else {
-          r = 0.0;
+          rt = 0.0;
         }
 
-        f = (sqds + sm) * (sqds - sm) + r;
-        nrm = sqds * (e[nmq_tmp] / scale);
-        for (qjj = nmq_tmp + 1; qjj < 2; qjj++) {
-          xrotg(&f, &nrm, &rt, &sm);
-          f = rt * b_s_data[0] + sm * e[0];
-          nrm = rt * e[0] - sm * b_s_data[0];
-          e[0] = nrm;
-          r = sm * b_s_data[1];
-          b_s_data[1] *= rt;
-          c_xrot(V, 3, rt, sm);
+        f = (sqds + sm) * (sqds - sm) + rt;
+        rt = sqds * (e[nmq_tmp] / scale);
+        for (k = nmq_tmp + 1; k < 2; k++) {
+          xrotg(&f, &rt, &b, &sm);
+          f = b * b_s_data[0] + sm * e[0];
+          rt = b * e[0] - sm * b_s_data[0];
+          e[0] = rt;
+          nrm = sm * b_s_data[1];
+          b_s_data[1] *= b;
+          b_xrot(V, 3, b, sm);
           b_s_data[0] = f;
-          xrotg(&b_s_data[0], &r, &rt, &sm);
-          f = rt * nrm + sm * b_s_data[1];
-          b_s_data[1] = -sm * nrm + rt * b_s_data[1];
-          nrm = sm * e[1];
-          e[1] *= rt;
+          xrotg(&b_s_data[0], &nrm, &b, &sm);
+          f = b * rt + sm * b_s_data[1];
+          b_s_data[1] = -sm * rt + b * b_s_data[1];
+          rt = sm * e[1];
+          e[1] *= b;
           if (1 < n) {
-            b_xrot(n, U, 1, 1 + n, rt, sm);
+            ix = 0;
+            iy = n;
+            for (ns = 0; ns < n; ns++) {
+              nrm = b * U->data[ix] + sm * U->data[iy];
+              U->data[iy] = b * U->data[iy] - sm * U->data[ix];
+              U->data[ix] = nrm;
+              iy++;
+              ix++;
+            }
           }
         }
 
         e[0] = f;
-        iter++;
+        nctp1++;
         break;
 
        default:
         if (b_s_data[nmq_tmp] < 0.0) {
           b_s_data[nmq_tmp] = -b_s_data[nmq_tmp];
-          ns = 1 + (nmq_tmp << 1);
-          i38 = ns + 1;
-          for (qjj = ns; qjj <= i38; qjj++) {
-            V[qjj - 1] = -V[qjj - 1];
+          ns = nmq_tmp << 1;
+          qjj = ns + 2;
+          for (k = ns + 1; k <= qjj; k++) {
+            V[k - 1] = -V[k - 1];
           }
         }
 
@@ -969,15 +1058,23 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
           rt = b_s_data[0];
           b_s_data[0] = b_s_data[1];
           b_s_data[1] = rt;
-          c_xswap(V);
+          b_xswap(V);
           if (1 < n) {
-            b_xswap(n, U, 1, 1 + n);
+            iy = n;
+            ix = 0;
+            for (k = 0; k < n; k++) {
+              nrm = U->data[ix];
+              U->data[ix] = U->data[iy];
+              U->data[iy] = nrm;
+              ix++;
+              iy++;
+            }
           }
 
           nmq_tmp = 1;
         }
 
-        iter = 0;
+        nctp1 = 0;
         m--;
         break;
       }
@@ -987,7 +1084,7 @@ void d_svd(const emxArray_real_T *A, emxArray_real_T *U, double s_data[], int
   emxFree_real_T(&b_A);
   s_size[0] = minnp;
   if (0 <= minnp - 1) {
-    memcpy(&s_data[0], &b_s_data[0], (unsigned int)(minnp * (int)sizeof(double)));
+    std::memcpy(&s_data[0], &b_s_data[0], minnp * sizeof(double));
   }
 }
 

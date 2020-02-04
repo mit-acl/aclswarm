@@ -4,18 +4,17 @@
 // government, commercial, or other organizational use.
 // File: xdhseqr.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "xdhseqr.h"
-#include "xrot.h"
+#include "ADMMGainDesign3D.h"
+#include "rt_nonfinite.h"
 #include "xdlanv2.h"
 #include "xzlarfg.h"
+#include <cmath>
 
 // Function Definitions
 
@@ -43,18 +42,17 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
   bool exitg2;
   int k;
   bool exitg3;
-  double d0;
-  double d1;
+  double s;
+  double d;
   double tst;
-  double htmp1;
+  double ba;
   double aa;
   double ab;
-  double ba;
-  double h22;
-  double s;
+  double bb;
+  double rt2r;
+  double rt1r;
   int hoffset;
   int m;
-  double b_SMLNUM;
   int b_k;
   n = h->size[0];
   ldh = h->size[0];
@@ -80,8 +78,9 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
       nr = n;
     }
 
-    itmax = 30.0 * (double)nr;
-    SMLNUM = 2.2250738585072014E-308 * ((double)n / 2.2204460492503131E-16);
+    itmax = 30.0 * static_cast<double>(nr);
+    SMLNUM = 2.2250738585072014E-308 * (static_cast<double>(n) /
+      2.2204460492503131E-16);
     i = n - 1;
     exitg1 = false;
     while ((!exitg1) && (i + 1 >= 1)) {
@@ -89,60 +88,58 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
       goto150 = false;
       its = 0;
       exitg2 = false;
-      while ((!exitg2) && (its <= (int)itmax)) {
+      while ((!exitg2) && (its <= static_cast<int>(itmax))) {
         k = i;
         exitg3 = false;
-        while ((!exitg3) && ((k + 1 > L) && (!(std::abs(h->data[k + h->size[0] *
-                   (k - 1)]) <= SMLNUM)))) {
-          tst = std::abs(h->data[(k + h->size[0] * (k - 1)) - 1]) + std::abs
-            (h->data[k + h->size[0] * k]);
-          if (tst == 0.0) {
-            if (k - 1 >= 1) {
-              tst = std::abs(h->data[(k + h->size[0] * (k - 2)) - 1]);
+        while ((!exitg3) && (k + 1 > L)) {
+          ba = std::abs(h->data[k + h->size[0] * (k - 1)]);
+          if (ba <= SMLNUM) {
+            exitg3 = true;
+          } else {
+            bb = std::abs(h->data[k + h->size[0] * k]);
+            tst = std::abs(h->data[(k + h->size[0] * (k - 1)) - 1]) + bb;
+            if (tst == 0.0) {
+              if (k - 1 >= 1) {
+                tst = std::abs(h->data[(k + h->size[0] * (k - 2)) - 1]);
+              }
+
+              if (k + 2 <= n) {
+                tst += std::abs(h->data[(k + h->size[0] * k) + 1]);
+              }
             }
 
-            if (k + 2 <= n) {
-              tst += std::abs(h->data[(k + h->size[0] * k) + 1]);
-            }
-          }
+            if (ba <= 2.2204460492503131E-16 * tst) {
+              tst = std::abs(h->data[(k + h->size[0] * k) - 1]);
+              if (ba > tst) {
+                ab = ba;
+                ba = tst;
+              } else {
+                ab = tst;
+              }
 
-          if (std::abs(h->data[k + h->size[0] * (k - 1)]) <=
-              2.2204460492503131E-16 * tst) {
-            htmp1 = std::abs(h->data[k + h->size[0] * (k - 1)]);
-            tst = std::abs(h->data[(k + h->size[0] * k) - 1]);
-            if (htmp1 > tst) {
-              ab = htmp1;
-              ba = tst;
-            } else {
-              ab = tst;
-              ba = htmp1;
-            }
+              tst = std::abs(h->data[(k + h->size[0] * (k - 1)) - 1] - h->data[k
+                             + h->size[0] * k]);
+              if (bb > tst) {
+                aa = bb;
+                bb = tst;
+              } else {
+                aa = tst;
+              }
 
-            htmp1 = std::abs(h->data[k + h->size[0] * k]);
-            tst = std::abs(h->data[(k + h->size[0] * (k - 1)) - 1] - h->data[k +
-                           h->size[0] * k]);
-            if (htmp1 > tst) {
-              aa = htmp1;
-              htmp1 = tst;
-            } else {
-              aa = tst;
-            }
+              s = aa + ab;
+              tst = 2.2204460492503131E-16 * (bb * (aa / s));
+              if ((SMLNUM > tst) || rtIsNaN(tst)) {
+                tst = SMLNUM;
+              }
 
-            s = aa + ab;
-            tst = 2.2204460492503131E-16 * (htmp1 * (aa / s));
-            if ((SMLNUM > tst) || rtIsNaN(tst)) {
-              b_SMLNUM = SMLNUM;
-            } else {
-              b_SMLNUM = tst;
-            }
-
-            if (ba * (ab / s) <= b_SMLNUM) {
-              exitg3 = true;
+              if (ba * (ab / s) <= tst) {
+                exitg3 = true;
+              } else {
+                k--;
+              }
             } else {
               k--;
             }
-          } else {
-            k--;
           }
         }
 
@@ -159,70 +156,70 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
             s = std::abs(h->data[(k + h->size[0] * k) + 1]) + std::abs(h->data
               [(k + h->size[0] * (k + 1)) + 2]);
             tst = 0.75 * s + h->data[k + h->size[0] * k];
-            aa = -0.4375 * s;
-            htmp1 = s;
-            h22 = tst;
+            ab = -0.4375 * s;
+            aa = s;
+            ba = tst;
           } else if (its == 20) {
             s = std::abs(h->data[i + h->size[0] * (i - 1)]) + std::abs(h->data
               [(i + h->size[0] * (i - 2)) - 1]);
             tst = 0.75 * s + h->data[i + h->size[0] * i];
-            aa = -0.4375 * s;
-            htmp1 = s;
-            h22 = tst;
+            ab = -0.4375 * s;
+            aa = s;
+            ba = tst;
           } else {
             tst = h->data[(i + h->size[0] * (i - 1)) - 1];
-            htmp1 = h->data[i + h->size[0] * (i - 1)];
-            aa = h->data[(i + h->size[0] * i) - 1];
-            h22 = h->data[i + h->size[0] * i];
+            aa = h->data[i + h->size[0] * (i - 1)];
+            ab = h->data[(i + h->size[0] * i) - 1];
+            ba = h->data[i + h->size[0] * i];
           }
 
-          s = ((std::abs(tst) + std::abs(aa)) + std::abs(htmp1)) + std::abs(h22);
+          s = ((std::abs(tst) + std::abs(ab)) + std::abs(aa)) + std::abs(ba);
           if (s == 0.0) {
-            ba = 0.0;
-            tst = 0.0;
+            rt1r = 0.0;
+            aa = 0.0;
+            rt2r = 0.0;
             ab = 0.0;
-            htmp1 = 0.0;
           } else {
             tst /= s;
-            htmp1 /= s;
             aa /= s;
-            h22 /= s;
-            ab = (tst + h22) / 2.0;
-            tst = (tst - ab) * (h22 - ab) - aa * htmp1;
-            htmp1 = std::sqrt(std::abs(tst));
+            ab /= s;
+            ba /= s;
+            bb = (tst + ba) / 2.0;
+            tst = (tst - bb) * (ba - bb) - ab * aa;
+            aa = std::sqrt(std::abs(tst));
             if (tst >= 0.0) {
-              ba = ab * s;
-              ab = ba;
-              tst = htmp1 * s;
-              htmp1 = -tst;
+              rt1r = bb * s;
+              rt2r = rt1r;
+              aa *= s;
+              ab = -aa;
             } else {
-              ba = ab + htmp1;
-              ab -= htmp1;
-              if (std::abs(ba - h22) <= std::abs(ab - h22)) {
-                ba *= s;
-                ab = ba;
+              rt1r = bb + aa;
+              rt2r = bb - aa;
+              if (std::abs(rt1r - ba) <= std::abs(rt2r - ba)) {
+                rt1r *= s;
+                rt2r = rt1r;
               } else {
-                ab *= s;
-                ba = ab;
+                rt2r *= s;
+                rt1r = rt2r;
               }
 
-              tst = 0.0;
-              htmp1 = 0.0;
+              aa = 0.0;
+              ab = 0.0;
             }
           }
 
           m = i - 1;
           exitg3 = false;
           while ((!exitg3) && (m >= k + 1)) {
-            s = (std::abs(h->data[(m + h->size[0] * (m - 1)) - 1] - ab) + std::
-                 abs(htmp1)) + std::abs(h->data[m + h->size[0] * (m - 1)]);
-            aa = h->data[m + h->size[0] * (m - 1)] / s;
-            v[0] = (aa * h->data[(m + h->size[0] * m) - 1] + (h->data[(m +
-                      h->size[0] * (m - 1)) - 1] - ba) * ((h->data[(m + h->size
-                       [0] * (m - 1)) - 1] - ab) / s)) - tst * (htmp1 / s);
-            v[1] = aa * (((h->data[(m + h->size[0] * (m - 1)) - 1] + h->data[m +
-                           h->size[0] * m]) - ba) - ab);
-            v[2] = aa * h->data[(m + h->size[0] * m) + 1];
+            tst = h->data[m + h->size[0] * (m - 1)];
+            bb = h->data[(m + h->size[0] * (m - 1)) - 1];
+            ba = bb - rt2r;
+            s = (std::abs(ba) + std::abs(ab)) + std::abs(tst);
+            tst /= s;
+            v[0] = (tst * h->data[(m + h->size[0] * m) - 1] + (bb - rt1r) * (ba /
+                     s)) - aa * (ab / s);
+            v[1] = tst * (((bb + h->data[m + h->size[0] * m]) - rt1r) - rt2r);
+            v[2] = tst * h->data[(m + h->size[0] * m) + 1];
             s = (std::abs(v[0]) + std::abs(v[1])) + std::abs(v[2]);
             v[0] /= s;
             v[1] /= s;
@@ -230,9 +227,8 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
             if ((m == k + 1) || (std::abs(h->data[(m + h->size[0] * (m - 2)) - 1])
                                  * (std::abs(v[1]) + std::abs(v[2])) <=
                                  2.2204460492503131E-16 * std::abs(v[0]) * ((std::
-                   abs(h->data[(m + h->size[0] * (m - 2)) - 2]) + std::abs
-                   (h->data[(m + h->size[0] * (m - 1)) - 1])) + std::abs(h->
-                   data[m + h->size[0] * m])))) {
+                   abs(h->data[(m + h->size[0] * (m - 2)) - 2]) + std::abs(bb))
+                  + std::abs(h->data[m + h->size[0] * m])))) {
               exitg3 = true;
             } else {
               m--;
@@ -253,7 +249,7 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
             }
 
             tst = v[0];
-            ab = xzlarfg(nr, &tst, v);
+            ba = xzlarfg(nr, &tst, v);
             v[0] = tst;
             if (b_k > m) {
               h->data[(b_k + h->size[0] * (b_k - 2)) - 1] = tst;
@@ -263,22 +259,22 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
               }
             } else {
               if (m > k + 1) {
-                h->data[(b_k + h->size[0] * (b_k - 2)) - 1] *= 1.0 - ab;
+                h->data[(b_k + h->size[0] * (b_k - 2)) - 1] *= 1.0 - ba;
               }
             }
 
-            d0 = v[1];
-            tst = ab * v[1];
+            s = v[1];
+            tst = ba * v[1];
             if (nr == 3) {
-              d1 = v[2];
-              aa = ab * v[2];
+              d = v[2];
+              bb = ba * v[2];
               for (iy = b_k; iy <= n; iy++) {
-                htmp1 = (h->data[(b_k + h->size[0] * (iy - 1)) - 1] + d0 *
-                         h->data[b_k + h->size[0] * (iy - 1)]) + d1 * h->data
-                  [(b_k + h->size[0] * (iy - 1)) + 1];
-                h->data[(b_k + h->size[0] * (iy - 1)) - 1] -= htmp1 * ab;
-                h->data[b_k + h->size[0] * (iy - 1)] -= htmp1 * tst;
-                h->data[(b_k + h->size[0] * (iy - 1)) + 1] -= htmp1 * aa;
+                ab = (h->data[(b_k + h->size[0] * (iy - 1)) - 1] + s * h->
+                      data[b_k + h->size[0] * (iy - 1)]) + d * h->data[(b_k +
+                  h->size[0] * (iy - 1)) + 1];
+                h->data[(b_k + h->size[0] * (iy - 1)) - 1] -= ab * ba;
+                h->data[b_k + h->size[0] * (iy - 1)] -= ab * tst;
+                h->data[(b_k + h->size[0] * (iy - 1)) + 1] -= ab * bb;
               }
 
               if (b_k + 3 < i + 1) {
@@ -288,43 +284,43 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
               }
 
               for (iy = 0; iy <= nr; iy++) {
-                htmp1 = (h->data[iy + h->size[0] * (b_k - 1)] + d0 * h->data[iy
-                         + h->size[0] * b_k]) + d1 * h->data[iy + h->size[0] *
-                  (b_k + 1)];
-                h->data[iy + h->size[0] * (b_k - 1)] -= htmp1 * ab;
-                h->data[iy + h->size[0] * b_k] -= htmp1 * tst;
-                h->data[iy + h->size[0] * (b_k + 1)] -= htmp1 * aa;
+                ab = (h->data[iy + h->size[0] * (b_k - 1)] + s * h->data[iy +
+                      h->size[0] * b_k]) + d * h->data[iy + h->size[0] * (b_k +
+                  1)];
+                h->data[iy + h->size[0] * (b_k - 1)] -= ab * ba;
+                h->data[iy + h->size[0] * b_k] -= ab * tst;
+                h->data[iy + h->size[0] * (b_k + 1)] -= ab * bb;
               }
 
               for (iy = 0; iy < n; iy++) {
-                htmp1 = (z->data[iy + z->size[0] * (b_k - 1)] + d0 * z->data[iy
-                         + z->size[0] * b_k]) + d1 * z->data[iy + z->size[0] *
-                  (b_k + 1)];
-                z->data[iy + z->size[0] * (b_k - 1)] -= htmp1 * ab;
-                z->data[iy + z->size[0] * b_k] -= htmp1 * tst;
-                z->data[iy + z->size[0] * (b_k + 1)] -= htmp1 * aa;
+                aa = z->data[iy + z->size[0] * (b_k - 1)];
+                ab = (aa + s * z->data[iy + z->size[0] * b_k]) + d * z->data[iy
+                  + z->size[0] * (b_k + 1)];
+                z->data[iy + z->size[0] * (b_k - 1)] = aa - ab * ba;
+                z->data[iy + z->size[0] * b_k] -= ab * tst;
+                z->data[iy + z->size[0] * (b_k + 1)] -= ab * bb;
               }
             } else {
               if (nr == 2) {
                 for (iy = b_k; iy <= n; iy++) {
-                  htmp1 = h->data[(b_k + h->size[0] * (iy - 1)) - 1] + d0 *
-                    h->data[b_k + h->size[0] * (iy - 1)];
-                  h->data[(b_k + h->size[0] * (iy - 1)) - 1] -= htmp1 * ab;
-                  h->data[b_k + h->size[0] * (iy - 1)] -= htmp1 * tst;
+                  aa = h->data[(b_k + h->size[0] * (iy - 1)) - 1];
+                  ab = aa + s * h->data[b_k + h->size[0] * (iy - 1)];
+                  h->data[(b_k + h->size[0] * (iy - 1)) - 1] = aa - ab * ba;
+                  h->data[b_k + h->size[0] * (iy - 1)] -= ab * tst;
                 }
 
                 for (iy = 0; iy <= i; iy++) {
-                  htmp1 = h->data[iy + h->size[0] * (b_k - 1)] + d0 * h->data[iy
-                    + h->size[0] * b_k];
-                  h->data[iy + h->size[0] * (b_k - 1)] -= htmp1 * ab;
-                  h->data[iy + h->size[0] * b_k] -= htmp1 * tst;
+                  ab = h->data[iy + h->size[0] * (b_k - 1)] + s * h->data[iy +
+                    h->size[0] * b_k];
+                  h->data[iy + h->size[0] * (b_k - 1)] -= ab * ba;
+                  h->data[iy + h->size[0] * b_k] -= ab * tst;
                 }
 
                 for (iy = 0; iy < n; iy++) {
-                  htmp1 = z->data[iy + z->size[0] * (b_k - 1)] + d0 * z->data[iy
-                    + z->size[0] * b_k];
-                  z->data[iy + z->size[0] * (b_k - 1)] -= htmp1 * ab;
-                  z->data[iy + z->size[0] * b_k] -= htmp1 * tst;
+                  aa = z->data[iy + z->size[0] * (b_k - 1)];
+                  ab = aa + s * z->data[iy + z->size[0] * b_k];
+                  z->data[iy + z->size[0] * (b_k - 1)] = aa - ab * ba;
+                  z->data[iy + z->size[0] * b_k] -= ab * tst;
                 }
               }
             }
@@ -339,13 +335,13 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
         exitg1 = true;
       } else {
         if ((L != i + 1) && (L == i)) {
-          d0 = h->data[(i + h->size[0] * i) - 1];
-          d1 = h->data[i + h->size[0] * (i - 1)];
+          s = h->data[(i + h->size[0] * i) - 1];
+          d = h->data[i + h->size[0] * (i - 1)];
           tst = h->data[i + h->size[0] * i];
-          xdlanv2(&h->data[(i + h->size[0] * (i - 1)) - 1], &d0, &d1, &tst,
-                  &htmp1, &aa, &ab, &ba, &h22, &s);
-          h->data[(i + h->size[0] * i) - 1] = d0;
-          h->data[i + h->size[0] * (i - 1)] = d1;
+          xdlanv2(&h->data[(i + h->size[0] * (i - 1)) - 1], &s, &d, &tst, &aa,
+                  &ab, &bb, &ba, &rt2r, &rt1r);
+          h->data[(i + h->size[0] * i) - 1] = s;
+          h->data[i + h->size[0] * (i - 1)] = d;
           h->data[i + h->size[0] * i] = tst;
           if (n > i + 1) {
             nr = (n - i) - 2;
@@ -353,8 +349,8 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
               iy = i + (i + 1) * ldh;
               hoffset = iy - 1;
               for (k = 0; k <= nr; k++) {
-                tst = h22 * h->data[hoffset] + s * h->data[iy];
-                h->data[iy] = h22 * h->data[iy] - s * h->data[hoffset];
+                tst = rt2r * h->data[hoffset] + rt1r * h->data[iy];
+                h->data[iy] = rt2r * h->data[iy] - rt1r * h->data[hoffset];
                 h->data[hoffset] = tst;
                 iy += ldh;
                 hoffset += ldh;
@@ -362,8 +358,29 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
             }
           }
 
-          b_xrot(i - 1, h, 1 + (i - 1) * ldh, 1 + i * ldh, h22, s);
-          b_xrot(n, z, 1 + (i - 1) * ldz, 1 + i * ldz, h22, s);
+          if (i - 1 >= 1) {
+            hoffset = (i - 1) * ldh;
+            iy = i * ldh;
+            for (k = 0; k <= i - 2; k++) {
+              tst = rt2r * h->data[hoffset] + rt1r * h->data[iy];
+              h->data[iy] = rt2r * h->data[iy] - rt1r * h->data[hoffset];
+              h->data[hoffset] = tst;
+              iy++;
+              hoffset++;
+            }
+          }
+
+          if (n >= 1) {
+            hoffset = (i - 1) * ldz;
+            iy = i * ldz;
+            for (k = 0; k < n; k++) {
+              tst = rt2r * z->data[hoffset] + rt1r * z->data[iy];
+              z->data[iy] = rt2r * z->data[iy] - rt1r * z->data[hoffset];
+              z->data[hoffset] = tst;
+              iy++;
+              hoffset++;
+            }
+          }
         }
 
         i = L - 2;

@@ -4,14 +4,15 @@
 // government, commercial, or other organizational use.
 // File: ADMMGainDesign3D_initialize.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_initialize.h"
+#include "ADMMGainDesign3D.h"
+#include "ADMMGainDesign3D_data.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -21,7 +22,8 @@
 //
 void ADMMGainDesign3D_initialize()
 {
-  rt_InitInfAndNaN(8U);
+  rt_InitInfAndNaN();
+  isInitialized_ADMMGainDesign3D = true;
 }
 
 //

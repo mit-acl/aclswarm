@@ -4,14 +4,14 @@
 // government, commercial, or other organizational use.
 // File: fillIn.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "fillIn.h"
+#include "ADMMGainDesign3D.h"
+#include "rt_nonfinite.h"
 
 // Function Definitions
 
@@ -22,14 +22,14 @@
 void b_sparse_fillIn(coder_internal_sparse *b_this)
 {
   int idx;
-  int i49;
+  int i;
   int c;
   int ridx;
   int currRowIdx;
   double val;
   idx = 1;
-  i49 = b_this->colidx->size[0];
-  for (c = 0; c <= i49 - 2; c++) {
+  i = b_this->colidx->size[0];
+  for (c = 0; c <= i - 2; c++) {
     ridx = b_this->colidx->data[c];
     b_this->colidx->data[c] = idx;
     while (ridx < b_this->colidx->data[c + 1]) {
@@ -54,14 +54,14 @@ void b_sparse_fillIn(coder_internal_sparse *b_this)
 void c_sparse_fillIn(coder_internal_sparse_1 *b_this)
 {
   int idx;
-  int i50;
+  int i;
   int c;
   int ridx;
   int currRowIdx;
   double val;
   idx = 1;
-  i50 = b_this->colidx->size[0];
-  for (c = 0; c <= i50 - 2; c++) {
+  i = b_this->colidx->size[0];
+  for (c = 0; c <= i - 2; c++) {
     ridx = b_this->colidx->data[c];
     b_this->colidx->data[c] = idx;
     while (ridx < b_this->colidx->data[c + 1]) {
@@ -86,31 +86,39 @@ void c_sparse_fillIn(coder_internal_sparse_1 *b_this)
 void sparse_fillIn(coder_internal_sparse *b_this)
 {
   int idx;
-  int i45;
+  int i;
   int c;
   int ridx;
+  int exitg1;
+  int i1;
   double val;
-  int currRowIdx;
+  int currRowIdx_tmp;
   idx = 1;
-  i45 = b_this->colidx->size[0];
-  for (c = 0; c <= i45 - 2; c++) {
+  i = b_this->colidx->size[0];
+  for (c = 0; c <= i - 2; c++) {
     ridx = b_this->colidx->data[c];
     b_this->colidx->data[c] = idx;
-    while (ridx < b_this->colidx->data[c + 1]) {
-      val = 0.0;
-      currRowIdx = b_this->rowidx->data[ridx - 1];
-      while ((ridx < b_this->colidx->data[c + 1]) && (b_this->rowidx->data[ridx
-              - 1] == currRowIdx)) {
-        val += b_this->d->data[ridx - 1];
-        ridx++;
-      }
+    do {
+      exitg1 = 0;
+      i1 = b_this->colidx->data[c + 1];
+      if (ridx < i1) {
+        val = 0.0;
+        currRowIdx_tmp = b_this->rowidx->data[ridx - 1];
+        while ((ridx < i1) && (b_this->rowidx->data[ridx - 1] == currRowIdx_tmp))
+        {
+          val += b_this->d->data[ridx - 1];
+          ridx++;
+        }
 
-      if (val != 0.0) {
-        b_this->d->data[idx - 1] = val;
-        b_this->rowidx->data[idx - 1] = currRowIdx;
-        idx++;
+        if (val != 0.0) {
+          b_this->d->data[idx - 1] = val;
+          b_this->rowidx->data[idx - 1] = currRowIdx_tmp;
+          idx++;
+        }
+      } else {
+        exitg1 = 1;
       }
-    }
+    } while (exitg1 == 0);
   }
 
   b_this->colidx->data[b_this->colidx->size[0] - 1] = idx;

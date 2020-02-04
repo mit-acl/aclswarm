@@ -8,7 +8,7 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-file(GLOB cxsparse_srcs "ADMMGainDesign3D/CXSparse/Source/*.c" "ADMMGainDesign3D/CXSparse/CXSparseSupport/*.c")
+file(GLOB cxsparse_srcs "ADMMGainDesign3D/CXSparse/Source/*.cpp" "ADMMGainDesign3D/CXSparse/CXSparseSupport/*.cpp")
 set_source_files_properties(${cxsparse_srcs} PROPERTIES LANGUAGE C)
 file(GLOB admm_srcs "ADMMGainDesign3D/*.cpp")
 set_source_files_properties(${admm_srcs} PROPERTIES LANGUAGE CXX)
@@ -18,8 +18,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE CS_COMPLEX)
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   ADMMGainDesign3D
-  PRIVATE
   ADMMGainDesign3D/CXSparse/Include
-  ADMMGainDesign3D/CXSparse/include
+  ADMMGainDesign3D/CXSparse/SuiteSparse_config
+  PRIVATE
   ADMMGainDesign3D/CXSparse/CXSparseSupport
 )

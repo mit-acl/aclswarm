@@ -36,6 +36,8 @@ Dd0 = Dd;
 qs0 = qs;
 adj0 = adj;
 
+% x-y-z position of agents in matrix
+qm = reshape(q, [3,n]);
 
 %% Assignment
 
@@ -44,12 +46,6 @@ if runAssign % If assignment should be used
 % Run assignment at determined time intervals
 if t - tAssign > T % Run assignment    
     disp('Assignment is being executed');
-    
-    % x-y position of agents in matrix
-    qm = zeros(2,n);
-    for i = 1 : n
-        qm(:,i) = [q(2*i-1); q(2*i)];
-    end
     
     % Formation points at the latest assignment
     qs = qs0 * P;
@@ -81,7 +77,7 @@ if t - tAssign > T % Run assignment
 end
 
 % Permute the state and the desired distance matrix
-P2 = kron(P,eye(2));
+P2 = kron(P,eye(3));
 
 % Wrong permutation:
 % A = P2 * A0 * P2';
@@ -96,61 +92,72 @@ adj = P' * adj0 * P;
 end
 
 
-%% Dynamics
+%% Relative distance
+% inter-agent distances in current formation
+Dc = squareform(pdist(qm'));
 
-% Current distances
-Dc = zeros(n,n); % inter-agent distances in current formation
-for i = 1 : n
-    for j = i+1 : n
-        Dc(i,j) = norm(q(2*i-1:2*i)-q(2*j-1:2*j), 2);
-    end
-end
-Dc = Dc + Dc';
+Dcxy = squareform(pdist(qm(1:2,:)'));
+Dcz = squareform(pdist(qm(3,:)'));
 
+%% Desired relative distance
+
+Ddxy = squareform(pdist(qs(1:2,:)'));
+Ddz = squareform(pdist(qs(3,:)'));
 
 %% Control to fix the scale
 
-g = 2; % Gain
-F = g * atan( adj.*(Dc-Dd) );
-F = F + diag(-sum(F,2));
-F = kron(F, eye(2));
+% xy scale
+K = 8; % gain
+eps = 1 ./ (K * Dcxy);
+eps(eps == Inf) = 0;
+Fxy = eps .* atan( adj.*(Dcxy-Ddxy) );
+Fxy = Fxy + diag(-sum(Fxy,2));
+
+% z scale
+K = 4; % gain
+eps = 1 ./ (K * Dcz);
+eps(eps == Inf) = 0;
+Fz = eps .* atan( adj.*(Dcz-Ddz) );
+Fz = Fz + diag(-sum(Fz,2));
+
+F = kron(Fxy, eye(3));
+F(3:3:end, 3:3:end) = Fz;
+
+% all scale
+% K = 8; % gain
+% eps = 1 ./ (K * Dc);
+% eps(eps == Inf) = 0;
+% F = eps .* atan( adj.*(Dc-Dd) );
+% F = F + diag(-sum(F,2));
+% F = kron(F, eye(3));
 
 
 %% Full control 
 
-u0 = A * q  + F * q;
+u0 = A * q + F * q;
 u = u0;
 
 
-%% Collision avoidacne
+%% Collision avoidance
 
 if runColAvoid
+    % Control in matrix form
+    um = reshape(u0, [3,n]);
 
-% Positions in matrix form
-qm = zeros(2,n);
-for i = 1 : n
-    qm(:,i) = [q(2*i-1); q(2*i)];
+    u = ColAvoid(um, qm, par);
 end
 
-% Control in matrix form
-um = zeros(2,n);
-for i = 1 : n
-    um(:,i) = [u0(2*i-1); u0(2*i)];
-end
-
-u = ColAvoid(um, qm, par);
-
-end
-
+% pin down agent 1's altitude
+% u(3) = 0;
 
 %% Dynamics
 
 % Speed saturation
 for i = 1 : n
-    ui = u(2*i-1:2*i);
+    ui = u(3*(i-1)+1 : 3*(i-1)+3);
     vi = norm(ui);
     if vi > vSat
-        u(2*i-1: 2*i) = ui ./ vi .* vSat;
+        u(3*(i-1)+1 : 3*(i-1)+3) = ui ./ vi .* vSat;
     end
 end
 

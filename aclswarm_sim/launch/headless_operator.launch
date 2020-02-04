@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Used by the swarm operator to dispatch formation shapes -->
+<launch>
+    <arg name="send_gains" default="false" />
+
+    <!-- Load enlarged room bounds for simulation -->
+    <rosparam ns="room_bounds">
+        x_min: -100
+        x_max:  100
+        y_min: -100
+        y_max:  100
+        z_min:    0
+        z_max:   10
+    </rosparam>
+
+    <!-- Start operator script -->
+    <node name="operator" pkg="aclswarm" type="operator.py" output="screen">
+        <!-- formation group is set by trial.sh -->
+        <param name="send_gains" value="$(arg send_gains)" />
+        <param name="central_assignment" value="true" />
+        <param name="central_assignment_dt" value="1" />
+    </node>
+
+    <!-- Start visualization script -->
+    <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
+        <param name="distcmds" value="true" />
+        <param name="safecmds" value="true" />
+        <param name="mesh" value="true" />
+    </node>
+</launch>

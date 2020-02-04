@@ -4,17 +4,16 @@
 // government, commercial, or other organizational use.
 // File: xdlanv2.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "xdlanv2.h"
-#include "schur.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_rtwutil.h"
+#include "rt_nonfinite.h"
+#include <cmath>
 
 // Function Definitions
 
@@ -40,11 +39,8 @@ void xdlanv2(double *a, double *b, double *c, double *d, double *rt1r, double
   double scale;
   double bcmis;
   double bcmax;
-  double b_scale;
   int b_b;
   int b_c;
-  double b_p;
-  int c_scale;
   if (*c == 0.0) {
     *cs = 1.0;
     *sn = 0.0;
@@ -72,9 +68,7 @@ void xdlanv2(double *a, double *b, double *c, double *d, double *rt1r, double
       }
 
       if ((scale < bcmis) || rtIsNaN(bcmis)) {
-        b_scale = scale;
-      } else {
-        b_scale = bcmis;
+        bcmis = scale;
       }
 
       if (!(*b < 0.0)) {
@@ -89,23 +83,20 @@ void xdlanv2(double *a, double *b, double *c, double *d, double *rt1r, double
         b_c = -1;
       }
 
-      bcmis = b_scale * (double)b_b * (double)b_c;
+      bcmis = bcmis * static_cast<double>(b_b) * static_cast<double>(b_c);
       scale = std::abs(p);
-      if ((scale > bcmax) || rtIsNaN(bcmax)) {
-      } else {
+      if ((!(scale > bcmax)) && (!rtIsNaN(bcmax))) {
         scale = bcmax;
       }
 
       z = p / scale * p + bcmax / scale * bcmis;
       if (z >= 8.8817841970012523E-16) {
         *a = std::sqrt(scale) * std::sqrt(z);
-        if (!(p < 0.0)) {
-          b_p = *a;
-        } else {
-          b_p = -*a;
+        if (p < 0.0) {
+          *a = -*a;
         }
 
-        z = p + b_p;
+        z = p + *a;
         *a = *d + z;
         *d -= bcmax / z * bcmis;
         tau = rt_hypotd_snf(*c, z);
@@ -116,14 +107,14 @@ void xdlanv2(double *a, double *b, double *c, double *d, double *rt1r, double
       } else {
         scale = *b + *c;
         tau = rt_hypotd_snf(scale, tau);
-        *cs = std::sqrt(0.5 * (1.0 + std::abs(scale) / tau));
+        *cs = std::sqrt(0.5 * (std::abs(scale) / tau + 1.0));
         if (!(scale < 0.0)) {
-          c_scale = 1;
+          b_b = 1;
         } else {
-          c_scale = -1;
+          b_b = -1;
         }
 
-        *sn = -(p / (tau * *cs)) * (double)c_scale;
+        *sn = -(p / (tau * *cs)) * static_cast<double>(b_b);
         bcmax = *a * *cs + *b * *sn;
         bcmis = -*a * *sn + *b * *cs;
         z = *c * *cs + *d * *sn;

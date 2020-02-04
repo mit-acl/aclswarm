@@ -4,15 +4,15 @@
 // government, commercial, or other organizational use.
 // File: xnrm2.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "xnrm2.h"
+#include "ADMMGainDesign3D.h"
+#include "rt_nonfinite.h"
+#include <cmath>
 
 // Function Definitions
 
@@ -37,7 +37,7 @@ double b_xnrm2(int n, const double x[4], int ix0)
     absxk = std::abs(x[k - 1]);
     if (absxk > scale) {
       t = scale / absxk;
-      y = 1.0 + y * t * t;
+      y = y * t * t + 1.0;
       scale = absxk;
     } else {
       t = absxk / scale;
@@ -57,27 +57,27 @@ double c_xnrm2(int n, const double x[3])
 {
   double y;
   double scale;
-  double t;
   double absxk;
+  double t;
   y = 0.0;
   if (n >= 1) {
     if (n == 1) {
       y = std::abs(x[1]);
     } else {
       scale = 3.3121686421112381E-170;
-      t = std::abs(x[1]);
-      if (t > 3.3121686421112381E-170) {
+      absxk = std::abs(x[1]);
+      if (absxk > 3.3121686421112381E-170) {
         y = 1.0;
-        scale = t;
+        scale = absxk;
       } else {
-        t /= 3.3121686421112381E-170;
+        t = absxk / 3.3121686421112381E-170;
         y = t * t;
       }
 
       absxk = std::abs(x[2]);
       if (absxk > scale) {
         t = scale / absxk;
-        y = 1.0 + y * t * t;
+        y = y * t * t + 1.0;
         scale = absxk;
       } else {
         t = absxk / scale;
@@ -116,7 +116,7 @@ double xnrm2(int n, const emxArray_real_T *x, int ix0)
         absxk = std::abs(x->data[k - 1]);
         if (absxk > scale) {
           t = scale / absxk;
-          y = 1.0 + y * t * t;
+          y = y * t * t + 1.0;
           scale = absxk;
         } else {
           t = absxk / scale;

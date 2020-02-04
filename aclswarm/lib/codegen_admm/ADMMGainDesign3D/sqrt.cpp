@@ -4,102 +4,94 @@
 // government, commercial, or other organizational use.
 // File: sqrt.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include <cmath>
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "sqrt.h"
-#include "schur.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_rtwutil.h"
+#include "rt_nonfinite.h"
+#include "xdlanv2.h"
+#include <cmath>
 
 // Function Definitions
-
-//
-// Arguments    : double *x
-// Return Type  : void
-//
-void b_sqrt(double *x)
-{
-  *x = std::sqrt(*x);
-}
 
 //
 // Arguments    : creal_T *x
 // Return Type  : void
 //
-void c_sqrt(creal_T *x)
+void b_sqrt(creal_T *x)
 {
   double xr;
   double xi;
-  double yr;
+  double absxi;
   double absxr;
   xr = x->re;
   xi = x->im;
   if (xi == 0.0) {
     if (xr < 0.0) {
-      yr = 0.0;
+      absxi = 0.0;
       xr = std::sqrt(-xr);
     } else {
-      yr = std::sqrt(xr);
+      absxi = std::sqrt(xr);
       xr = 0.0;
     }
   } else if (xr == 0.0) {
     if (xi < 0.0) {
-      yr = std::sqrt(-xi / 2.0);
-      xr = -yr;
+      absxi = std::sqrt(-xi / 2.0);
+      xr = -absxi;
     } else {
-      yr = std::sqrt(xi / 2.0);
-      xr = yr;
+      absxi = std::sqrt(xi / 2.0);
+      xr = absxi;
     }
   } else if (rtIsNaN(xr)) {
-    yr = xr;
+    absxi = xr;
   } else if (rtIsNaN(xi)) {
-    yr = xi;
+    absxi = xi;
     xr = xi;
   } else if (rtIsInf(xi)) {
-    yr = std::abs(xi);
+    absxi = std::abs(xi);
     xr = xi;
   } else if (rtIsInf(xr)) {
     if (xr < 0.0) {
-      yr = 0.0;
+      absxi = 0.0;
       xr = xi * -xr;
     } else {
-      yr = xr;
+      absxi = xr;
       xr = 0.0;
     }
   } else {
     absxr = std::abs(xr);
-    yr = std::abs(xi);
-    if ((absxr > 4.4942328371557893E+307) || (yr > 4.4942328371557893E+307)) {
+    absxi = std::abs(xi);
+    if ((absxr > 4.4942328371557893E+307) || (absxi > 4.4942328371557893E+307))
+    {
       absxr *= 0.5;
-      yr = rt_hypotd_snf(absxr, yr * 0.5);
-      if (yr > absxr) {
-        yr = std::sqrt(yr) * std::sqrt(1.0 + absxr / yr);
+      absxi = rt_hypotd_snf(absxr, absxi * 0.5);
+      if (absxi > absxr) {
+        absxi = std::sqrt(absxi) * std::sqrt(absxr / absxi + 1.0);
       } else {
-        yr = std::sqrt(yr) * 1.4142135623730951;
+        absxi = std::sqrt(absxi) * 1.4142135623730951;
       }
     } else {
-      yr = std::sqrt((rt_hypotd_snf(absxr, yr) + absxr) * 0.5);
+      absxi = std::sqrt((rt_hypotd_snf(absxr, absxi) + absxr) * 0.5);
     }
 
     if (xr > 0.0) {
-      xr = 0.5 * (xi / yr);
+      xr = 0.5 * (xi / absxi);
     } else {
       if (xi < 0.0) {
-        xr = -yr;
+        xr = -absxi;
       } else {
-        xr = yr;
+        xr = absxi;
       }
 
-      yr = 0.5 * (xi / xr);
+      absxi = 0.5 * (xi / xr);
     }
   }
 
-  x->re = yr;
+  x->re = absxi;
   x->im = xr;
 }
 

@@ -4,15 +4,15 @@
 // government, commercial, or other organizational use.
 // File: svd1.h
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 #ifndef SVD1_H
 #define SVD1_H
 
 // Include Files
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 

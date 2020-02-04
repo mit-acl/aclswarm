@@ -47,6 +47,7 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("max_accel_z", max_accel_z_, 0.8);
 
   nhp_.param<double>("max_vel_xy", max_vel_xy_, 0.5);
+  nhp_.param<double>("max_vel_z", max_vel_z_, 0.3);
   nhp_.param<double>("d_avoid_thresh", d_avoid_thresh_, 1.5);
   nhp_.param<double>("r_keep_out", r_keep_out_, 1.2);
 
@@ -68,6 +69,7 @@ Safety::Safety(const ros::NodeHandle nh,
                                 &Safety::vehicleTrackerCb, this);
 
   pub_cmdout_ = nh_.advertise<acl_msgs::QuadGoal>("goal", 1);
+  pub_status_ = nhp_.advertise<aclswarm_msgs::SafetyStatus>("status", 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -160,14 +162,18 @@ void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
     goal.vy  = goal.vy/velxy * max_vel_xy_;
   }
 
-  // TODO: kill z vel? fix z alt?
-  goal.vz = 0;
+  // saturate vertical velocity (keeping the same direction)
+  double velz = std::abs(goal.vz);
+  if (velz > max_vel_z_) {
+    goal.vz = goal.vz/velz * max_vel_z_;
+  }
 }
 
 // ----------------------------------------------------------------------------
 
 void Safety::controlCb(const ros::TimerEvent& event)
 {
+  static aclswarm_msgs::SafetyStatus statusmsg;
   static acl_msgs::QuadGoal goalmsg;
   static bool flight_initialized = false;
   static ros::Time takeoff_time;
@@ -190,6 +196,7 @@ void Safety::controlCb(const ros::TimerEvent& event)
       goalmsg.vel.z = 0;
       goalmsg.yaw = tf2::getYaw(pose_.pose.orientation);
       goalmsg.dyaw = 0;
+      statusmsg.collision_avoidance_active = false;
 
       // There is no real velocity control, since the ACL outer loop tracks
       // trajectories and their derivatives. To achieve velocity control,
@@ -240,6 +247,9 @@ void Safety::controlCb(const ros::TimerEvent& event)
 
         collisionAvoidance(g);
 
+        // notify others if collision avoidance mode is active
+        statusmsg.collision_avoidance_active = g.modified;
+
         // Use this velocity goal to make a safe pos+vel trajectory goal
         makeSafeTraj(dt, g, goalmsg);
 
@@ -255,6 +265,7 @@ void Safety::controlCb(const ros::TimerEvent& event)
 
   } else if (mode_ == Mode::LANDING) {
 
+    statusmsg.collision_avoidance_active = false;
     goalmsg.vel.x = goalmsg.vel.y = goalmsg.vel.z = 0;
     goalmsg.dyaw = 0;
 
@@ -282,6 +293,9 @@ void Safety::controlCb(const ros::TimerEvent& event)
   goalmsg.header.stamp = ros::Time::now();
   goalmsg.header.frame_id = "body";
   pub_cmdout_.publish(goalmsg);
+
+  statusmsg.header.stamp = goalmsg.header.stamp;
+  pub_status_.publish(statusmsg);
 }
 
 // ----------------------------------------------------------------------------
@@ -458,6 +472,9 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
   // Find the closest safe direction
   //
 
+  // notify others that this goal was modified by collision avoidance
+  goal.modified = true;
+
   // The nearest safe direction is an edge. Flatten zones into edges only.
   // If we wrapped, then pi/-pi edges (artificially inserted or not) are unsafe
   std::vector<double> nfzedges;
@@ -471,6 +488,7 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
   // if we are surrounded, there are no safe edges and we must surrender.
   if (nfzedges.size() == 0) {
     goal.vx = goal.vy = 0;
+    goal.vz = 0;
     return;
   }
 
@@ -492,6 +510,7 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
 
   // otherwise, nothing we do is safe. Just stop.
   goal.vx = goal.vy = 0;
+  goal.vz = 0;
 }
 
 } // ns aclswarm

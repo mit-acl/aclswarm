@@ -4,16 +4,16 @@
 // government, commercial, or other organizational use.
 // File: diag.cpp
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 
 // Include Files
-#include "rt_nonfinite.h"
-#include "ADMMGainDesign3D.h"
 #include "diag.h"
+#include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
-#include "locBsearch1.h"
+#include "locBsearch.h"
+#include "rt_nonfinite.h"
 #include "sparse.h"
 
 // Function Definitions
@@ -36,7 +36,7 @@ void sparse_diag(const emxArray_real_T *this_d, const emxArray_int32_T
                  emxArray_int32_T *y_rowidx, int *y_m)
 {
   int M;
-  int u1;
+  int minval;
   int expl_temp;
   int toFill;
   bool found;
@@ -54,19 +54,20 @@ void sparse_diag(const emxArray_real_T *this_d, const emxArray_int32_T
     M = this_n;
   }
 
-  u1 = this_colidx->data[this_colidx->size[0] - 1] - 1;
-  if (M < u1) {
-    u1 = M;
+  if (M < this_colidx->data[this_colidx->size[0] - 1] - 1) {
+    minval = M;
+  } else {
+    minval = this_colidx->data[this_colidx->size[0] - 1] - 1;
   }
 
-  b_sparse_sparse(M, u1, y_d, y_colidx, y_rowidx, y_m, &expl_temp);
+  sparse_spallocLike(M, minval, y_d, y_colidx, y_rowidx, y_m, &expl_temp);
   toFill = 0;
   for (M = 0; M < this_n; M++) {
-    u1 = 1 + M;
-    locBsearch(this_rowidx, u1, this_colidx->data[u1 - 1], this_colidx->data[u1],
-               &expl_temp, &found);
+    minval = M + 1;
+    sparse_locBsearch(this_rowidx, minval, this_colidx->data[minval - 1],
+                      this_colidx->data[minval], &expl_temp, &found);
     if (found) {
-      y_rowidx->data[toFill] = u1;
+      y_rowidx->data[toFill] = minval;
       y_d->data[toFill] = this_d->data[expl_temp - 1];
       toFill++;
     }

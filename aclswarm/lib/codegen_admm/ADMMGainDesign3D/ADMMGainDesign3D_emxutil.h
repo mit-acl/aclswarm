@@ -4,25 +4,21 @@
 // government, commercial, or other organizational use.
 // File: ADMMGainDesign3D_emxutil.h
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 #ifndef ADMMGAINDESIGN3D_EMXUTIL_H
 #define ADMMGAINDESIGN3D_EMXUTIL_H
 
 // Include Files
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 
 // Function Declarations
-extern void c_emxCopyStruct_coder_internal_(coder_internal_sparse *dst, const
-  coder_internal_sparse *src);
 extern void c_emxFreeStruct_coder_internal_(coder_internal_sparse *pStruct);
 extern void c_emxInitStruct_coder_internal_(coder_internal_sparse *pStruct);
-extern void d_emxCopyStruct_coder_internal_(coder_internal_sparse_1 *dst, const
-  coder_internal_sparse_1 *src);
 extern void d_emxFreeStruct_coder_internal_(coder_internal_sparse_1 *pStruct);
 extern void d_emxInitStruct_coder_internal_(coder_internal_sparse_1 *pStruct);
 extern void emxEnsureCapacity_boolean_T(emxArray_boolean_T *emxArray, int

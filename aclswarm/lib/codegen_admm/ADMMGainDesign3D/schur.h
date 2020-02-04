@@ -4,21 +4,21 @@
 // government, commercial, or other organizational use.
 // File: schur.h
 //
-// MATLAB Coder version            : 4.1
-// C/C++ source code generated on  : 28-Jan-2020 15:30:30
+// MATLAB Coder version            : 4.3
+// C/C++ source code generated on  : 02-Feb-2020 11:20:18
 //
 #ifndef SCHUR_H
 #define SCHUR_H
 
 // Include Files
-#include <stddef.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 
 // Function Declarations
-extern void schur(const emxArray_real_T *A, emxArray_creal_T *V,
-                  emxArray_creal_T *T);
+extern void schur(const emxArray_real_T *A, emxArray_real_T *V, emxArray_real_T *
+                  T);
 
 #endif
 

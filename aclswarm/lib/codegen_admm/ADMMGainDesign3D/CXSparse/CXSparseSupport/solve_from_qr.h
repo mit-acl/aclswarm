@@ -2,9 +2,6 @@
 #ifndef _SOLVE_FROM_QR_H
 #define _SOLVE_FROM_QR_H
 #include "cs.h"
-#include <float.h>
-#include <math.h>
-
 
 #ifdef __cplusplus
 extern "C" {

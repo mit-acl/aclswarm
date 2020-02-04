@@ -52,6 +52,7 @@ add_message_files(
   CBAA.msg
   Formation.msg
   VehicleEstimates.msg
+  SafetyStatus.msg
 )
 
 ## Generate services in the 'srv' folder
