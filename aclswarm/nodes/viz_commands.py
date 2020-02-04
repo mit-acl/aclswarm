@@ -142,10 +142,10 @@ class VizCommands:
             m.ns = 'mesh'
             m.id = i*10
             m.type = Marker.MESH_RESOURCE
-            m.mesh_resource = "package://snap_sim/meshes/quadrotor.dae"
             m.action = Marker.ADD
-            m.color.a = 1
-            m.color.r, m.color.g, m.color.b = (1,1,1)
+            m.mesh_resource = "package://snap_sim/meshes/quadrotor.dae"
+            m.mesh_use_embedded_materials = True
+            m.color.r, m.color.g, m.color.b, m.color.a = (0,0,0,0)
             m.pose.orientation.w = 1.0
             m.scale = Vector3(0.75, 0.75, 0.75)
             m.lifetime = rospy.Duration(1.0)
