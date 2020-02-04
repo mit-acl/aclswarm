@@ -30,13 +30,13 @@ def generate_formation(name, n, l, w, h, min_dist):
 
     pts = np.array([])
 
-    while pts.shape[0] < n:
+    while np.atleast_2d(pts).shape[0] < n:
         overlapped = False
 
         # uniformly sample a point
         pt = sample_point(l, w, h)
 
-        if pts.shape[0] > 1:
+        if np.atleast_2d(pts).shape[0] > 1:
             # check if this sampled cylinder collides with any other cylinder
             for p in np.atleast_2d(pts):
                 d = np.linalg.norm(pt[0:2] - p[0:2])
