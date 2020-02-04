@@ -46,15 +46,13 @@ sleep 1 # wait for roscore to initialize
 if [[ "$formation" == simform* ]]; then
   numAgents=$(echo "${formation//[!0-9]/}")
   formation="simform"
+
+  # this generates a formation and sets the appropriate rosparam
   rosrun aclswarm_sim generate_random_formation.py -l 20 -w 20 -h 5 "$numAgents"
-else
-  # load formations
-  formparam="$MYPATH/../param/formations.yaml"
-  rosparam load "$formparam" operator
 fi
 
-# set formation
-rosparam set /operator/formation_group "$formation"
+# cheat: the launch file also does this, but there is a dependency loop unless we do this
+rosparam load "$(rospack find aclswarm)/param/formations.yaml" operator
 
 # retrieve how many agents are needed for this formation
 n=$(rosparam get "/operator/${formation}/agents")
@@ -71,9 +69,9 @@ done
 rosparam set /vehs "[$tmp]"
 
 if [ $interactive == "false" ]; then
-  roslaunch aclswarm_sim headless_operator.launch & #>/dev/null 2>&1 &
+  roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false headless:=true &
 else
-  roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false room:=sim & 
+  roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false &
 fi
 
 rviz >/dev/null 2>&1 &
@@ -115,7 +113,6 @@ pkill -f -9 operator.py
 pkill -f -9 viz_commands.py
 pkill -f -9 supervisor.py
 pkill -x -9 roslaunch
-pkill -x -9 vicon_relay
 pkill -x -9 snap_sim
 pkill -x -9 snap
 pkill -f -9 outer_loop

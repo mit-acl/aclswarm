@@ -110,7 +110,13 @@ while getopts 'hn:r:x' option; do
 done
 
 #
-# quad sim
+# Set room bounds for simulation
+#
+
+rosparam set /room_bounds "{x_min: -100, x_max: 100, y_min: -100, y_max: 100, z_min: 0, z_max: 30}"
+
+#
+# snap sim
 #
 
 echo -e "\e[33;1mStarting Simulation\e[0m"
