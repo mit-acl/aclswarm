@@ -99,11 +99,11 @@ if [ $interactive == "false" ]; then
   rosrun aclswarm_sim supervisor.py
 else
   sleep 3 # wait for snapstack sim to initialize
-  echo "Simulation initialized. You may now press 'START'."
+  echo -e "\e[97;1mSimulation initialized. You may now press '\e[32;1mSTART\e[97;1m'.\e[0m"
 
   # get pid of controls rqt
   rqtpid=$(pgrep -f rqt_gui)
-  echo "Once rqt_gui ($rqtpid) is quit, simulation will clean up."
+  echo -e "\e[97;1mOnce rqt_gui ($rqtpid) is quit, simulation will clean up.\e[0m"
   tail --pid=$rqtpid -f /dev/null # kind of a hack
 fi
 
