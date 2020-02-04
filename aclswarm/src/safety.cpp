@@ -51,6 +51,12 @@ Safety::Safety(const ros::NodeHandle nh,
   nhp_.param<double>("d_avoid_thresh", d_avoid_thresh_, 1.5);
   nhp_.param<double>("r_keep_out", r_keep_out_, 1.2);
 
+  nhp_.param<bool>("leader", leader_, false);
+  nhp_.param<double>("joy/kx", joy_kx_, 2.0);
+  nhp_.param<double>("joy/ky", joy_ky_, 2.0);
+  nhp_.param<double>("joy/kz", joy_kz_, 0.5);
+  nhp_.param<double>("joy/kr", joy_kr_, 2.0);
+
   //
   // Timers
   //
@@ -62,6 +68,7 @@ Safety::Safety(const ros::NodeHandle nh,
   // ROS pub/sub communication
   //
 
+  if (leader_) sub_joy_ = nh_.subscribe("joy", 1, &Safety::joyCb, this);
   sub_fmode_ = nh_.subscribe("/globalflightmode", 1, &Safety::flightmodeCb, this);
   sub_cmdin_ = nh_.subscribe("distcmd", 1, &Safety::cmdinCb, this);
   sub_state_ = nh_.subscribe("state", 1, &Safety::stateCb, this);
@@ -138,6 +145,26 @@ void Safety::vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg
     tf::pointMsgToEigen(msg->positions[i].point, qrow);
     q_.row(i) = qrow;
   }
+}
+
+// ----------------------------------------------------------------------------
+
+void Safety::joyCb(const sensor_msgs::JoyConstPtr& msg)
+{
+  static constexpr size_t LEFT_X = 0;
+  static constexpr size_t LEFT_Y = 1;
+  static constexpr size_t RIGHT_X = 3;
+  static constexpr size_t RIGHT_Y = 4;
+
+  // for convenience
+  auto& goal = goals_[GoalSrc::JOY];
+
+  goal.active = true;
+  goal.stamp_s = msg->header.stamp.toSec();
+  goal.vx = msg->axes[RIGHT_Y] * joy_kx_;
+  goal.vy = msg->axes[RIGHT_X] * joy_ky_;
+  goal.vz = msg->axes[LEFT_Y] * joy_kz_;
+  goal.r = msg->axes[LEFT_X] * joy_kr_;
 }
 
 // ----------------------------------------------------------------------------

@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
     eigen_conversions
     std_msgs
     geometry_msgs
+    sensor_msgs
     snapstack_msgs
     aclswarm_msgs
 )

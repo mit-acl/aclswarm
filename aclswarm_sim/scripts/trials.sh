@@ -11,23 +11,25 @@ _trap() {
 
 trap _trap INT
 
-usage="$(basename "$0") [-h] -m <#> -f <formation> -n <name> -i -- perform m simulation trials
+usage="$(basename "$0") [-h] -m <#> -f <formation> -n <name> -i -l -- perform m simulation trials
 
 where:
     -h                    show this help text
     -m <#>                number of trials to simulate
     -f <formation_group>  which formation group to use
     -n <name>             name of trials for logging
-    -i                    interactive operator"
+    -i                    interactive operator
+    -l                    use SQ01s as a leader"
 
 if [ "$#" -le 2 ]; then
     echo "$usage"
     exit 1
 fi
 
+use_leader="false"
 interactive="false"
 
-while getopts 'hm:f:n:i' option; do
+while getopts 'hm:f:n:il' option; do
   case "$option" in
     h)
       echo "$usage"
@@ -44,6 +46,9 @@ while getopts 'hm:f:n:i' option; do
       ;;
     i)
       interactive="true"
+      ;;
+    l)
+      use_leader="true"
       ;;
    \?)
       printf "illegal option: -%s\n" "$OPTARG" >&2
@@ -74,7 +79,7 @@ for i in $(seq 1 $m); do
   # zero pad based on total number of trials
   printf -v j "%0${#m}d" $i
 
-  rosrun aclswarm_sim trial.sh "$name" "$j" "$formation_group" "$interactive" &
+  rosrun aclswarm_sim trial.sh "$name" "$j" "$formation_group" "$interactive" "$use_leader" &
   trialpid=$!
   wait $trialpid
 

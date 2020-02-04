@@ -23,6 +23,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/utils.h>
 
+#include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <snapstack_msgs/QuadGoal.h>
@@ -44,7 +45,7 @@ namespace aclswarm {
     
   private:
     ros::NodeHandle nh_, nhp_;
-    ros::Subscriber sub_fmode_, sub_cmdin_, sub_state_, sub_tracker_;
+    ros::Subscriber sub_joy_, sub_fmode_, sub_cmdin_, sub_state_, sub_tracker_;
     ros::Publisher pub_cmdout_, pub_status_;
     ros::Timer tim_control_;
 
@@ -90,6 +91,8 @@ namespace aclswarm {
     double max_vel_z_; ///< maximum vertical translational velocity
     double d_avoid_thresh_; ///< do collision avoidance if within this distance
     double r_keep_out_; ///< the radius around obstacles to stay out of
+    bool leader_; ///< should this agent listen to external commands?
+    double joy_kx_, joy_ky_, joy_kz_, joy_kr_; ///< joystick gains for leader
 
     void init();
     void makeSafeTraj(double dt, const VelocityGoal& g,
@@ -98,6 +101,7 @@ namespace aclswarm {
 
     /// \brief ROS callback handlers
     void flightmodeCb(const snapstack_msgs::QuadFlightModeConstPtr& msg);
+    void joyCb(const sensor_msgs::JoyConstPtr& msg);
     void cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg);
     void stateCb(const snapstack_msgs::StateConstPtr& msg);
     void controlCb(const ros::TimerEvent& event);

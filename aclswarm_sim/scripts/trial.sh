@@ -16,6 +16,7 @@ trialname=$1
 trialnumber=$2
 formation=$3
 interactive=$4
+use_leader=$5
 
 if [ -z "$formation" ]; then
   echo
@@ -68,11 +69,15 @@ for i in $(seq -f "%02g" 1 $n); do
 done
 rosparam set /vehs "[$tmp]"
 
+# Launch the operator with any necessary flags
+extras=""
 if [ $interactive == "false" ]; then
-  roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false headless:=true &
-else
-  roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false &
+  extras="$extras headless:=false"
 fi
+if [ $use_leader == "true" ]; then
+  extras="$extras leader:=SQ01s"
+fi
+roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false $extras &
 
 rviz >/dev/null 2>&1 &
 
@@ -93,9 +98,12 @@ sleep 5 # wait for system bring up
 if [ $interactive == "false" ]; then
   rosrun aclswarm_sim supervisor.py
 else
+  sleep 3 # wait for snapstack sim to initialize
+  echo "Simulation initialized. You may now press 'START'."
+
   # get pid of controls rqt
   rqtpid=$(pgrep -f rqt_gui)
-  echo "waiting on $rqtpid"
+  echo "Once rqt_gui ($rqtpid) is quit, simulation will clean up."
   tail --pid=$rqtpid -f /dev/null # kind of a hack
 fi
 
