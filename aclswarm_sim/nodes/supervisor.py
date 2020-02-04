@@ -13,7 +13,7 @@ from std_msgs.msg import UInt8MultiArray
 from geometry_msgs.msg import PoseStamped, Vector3Stamped
 from aclswarm_msgs.msg import SafetyStatus
 from behavior_selector.srv import MissionModeChange
-from snapstack_msgs.msg import QuadGoal
+from snapstack_msgs.msg import QuadGoal, State as SnapState
 
 class State:
     IDLE = 1
@@ -90,7 +90,7 @@ class Supervisor:
 
         for idx, veh in enumerate(self.vehs):
             # ground truth state of each vehicle
-            rospy.Subscriber('/{}/world'.format(veh), PoseStamped,
+            rospy.Subscriber('/{}/state'.format(veh), SnapState,
                     lambda msg, v=veh: self.stateCb(msg, v), queue_size=1)
             # the desired velocity goal from the distributed motion planner
             rospy.Subscriber('/{}/distcmd'.format(veh), Vector3Stamped,
@@ -262,10 +262,16 @@ class Supervisor:
     def has_sim_initialized(self):
         # the simulation is ready if we have received states
         # for each of the vehicles in the swarm
-        return len(self.vstates.keys()) == len(self.vehs)
+
+        # TODO: this is a bandaid. If we start too early,
+        # the vehicle flies to the origin.
+        s = [veh for (veh,msg) in self.vstates.items()
+                if msg.state_stamp != rospy.Time(0)]
+
+        return len(s) == len(self.vehs)
 
     def has_taken_off(self):
-        z = [msg.pose.position.z for (veh,msg) in self.vstates.items()]
+        z = [msg.pos.z for (veh,msg) in self.vstates.items()]
 
         # the swarm has taken off if every vehicle has achieved
         # the takeoff altitude
@@ -416,11 +422,11 @@ class Supervisor:
                 for (veh,msg) in self.vstatus.items()]
 
     def sample_position_x(self):
-        return [msg.pose.position.x
+        return [msg.pos.x
                 for (veh,msg) in self.vstates.items()]
 
     def sample_position_y(self):
-        return [msg.pose.position.y
+        return [msg.pos.y
                 for (veh,msg) in self.vstates.items()]
 
     def wrapToPi(self, x):
