@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
     eigen_conversions
     std_msgs
     geometry_msgs
-    acl_msgs
+    snapstack_msgs
     aclswarm_msgs
 )
 
@@ -122,7 +122,7 @@ catkin_package(
 #  LIBRARIES aclswarm
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
-   CATKIN_DEPENDS message_runtime std_msgs acl_msgs aclswarm_msgs
+   CATKIN_DEPENDS message_runtime std_msgs snapstack_msgs aclswarm_msgs
 )
 
 ###########

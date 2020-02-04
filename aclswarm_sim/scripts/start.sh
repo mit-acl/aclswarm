@@ -133,7 +133,7 @@ for _sim in $(eval echo {01..$num}); do
     x=${circles_x[$_pane]}
     y=${circles_y[$_pane]}
   fi
-  tmux send-keys -t sims:0.${_pane} "roslaunch quad_sim quad_sim.launch num:=$_sim x:=$x y:=$y" C-m
+  tmux send-keys -t sims:0.${_pane} "roslaunch snap_sim sim.launch num:=$_sim x:=$x y:=$y room:=none" C-m
 done
 
 # send commands to all panes

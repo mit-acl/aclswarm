@@ -68,7 +68,7 @@ Safety::Safety(const ros::NodeHandle nh,
   sub_tracker_ = nh_.subscribe("vehicle_estimates", 1,
                                 &Safety::vehicleTrackerCb, this);
 
-  pub_cmdout_ = nh_.advertise<acl_msgs::QuadGoal>("goal", 1);
+  pub_cmdout_ = nh_.advertise<snapstack_msgs::QuadGoal>("goal", 1);
   pub_status_ = nhp_.advertise<aclswarm_msgs::SafetyStatus>("status", 1);
 }
 
@@ -91,22 +91,22 @@ void Safety::init()
 
 // ----------------------------------------------------------------------------
 
-void Safety::flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg)
+void Safety::flightmodeCb(const snapstack_msgs::QuadFlightModeConstPtr& msg)
 {
   // handle safety state machine transitions based on
   // global flight modes dispatched by the operator.
 
   if (mode_ == Mode::NOT_FLYING &&
-        msg->mode == acl_msgs::QuadFlightMode::GO) {
+        msg->mode == snapstack_msgs::QuadFlightMode::GO) {
     mode_ = Mode::TAKEOFF;
     ROS_INFO("Spinning up motors for takeoff...");
 
   } else if ((mode_ == Mode::TAKEOFF || mode_ == Mode::FLYING) &&
-        msg->mode == acl_msgs::QuadFlightMode::LAND) {
+        msg->mode == snapstack_msgs::QuadFlightMode::LAND) {
     mode_ = Mode::LANDING;
     ROS_INFO("Landing...");
 
-  } else if (msg->mode == acl_msgs::QuadFlightMode::KILL) {
+  } else if (msg->mode == snapstack_msgs::QuadFlightMode::KILL) {
     mode_ = Mode::NOT_FLYING;
     ROS_WARN("Killing!");
 
@@ -115,7 +115,7 @@ void Safety::flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg)
 
 // ----------------------------------------------------------------------------
 
-void Safety::stateCb(const acl_msgs::StateConstPtr& msg)
+void Safety::stateCb(const snapstack_msgs::StateConstPtr& msg)
 {
   pose_.header = msg->header;
   pose_.pose.position.x = msg->pos.x;
@@ -174,7 +174,7 @@ void Safety::cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg)
 void Safety::controlCb(const ros::TimerEvent& event)
 {
   static aclswarm_msgs::SafetyStatus statusmsg;
-  static acl_msgs::QuadGoal goalmsg;
+  static snapstack_msgs::QuadGoal goalmsg;
   static bool flight_initialized = false;
   static ros::Time takeoff_time;
   static double last_active_goal_time;
@@ -201,8 +201,8 @@ void Safety::controlCb(const ros::TimerEvent& event)
       // There is no real velocity control, since the ACL outer loop tracks
       // trajectories and their derivatives. To achieve velocity control,
       // we will integrate the velocity commands to obtain the trajectory.
-      goalmsg.xy_mode = acl_msgs::QuadGoal::MODE_POS;
-      goalmsg.z_mode = acl_msgs::QuadGoal::MODE_POS;
+      goalmsg.xy_mode = snapstack_msgs::QuadGoal::MODE_POS;
+      goalmsg.z_mode = snapstack_msgs::QuadGoal::MODE_POS;
 
       // allow the outer loop to send low-level autopilot commands
       goalmsg.cut_power = false;
@@ -301,7 +301,7 @@ void Safety::controlCb(const ros::TimerEvent& event)
 // ----------------------------------------------------------------------------
 
 void Safety::makeSafeTraj(double dt, const VelocityGoal& g,
-                          acl_msgs::QuadGoal& goal)
+                          snapstack_msgs::QuadGoal& goal)
 {
   // The following assumes that we are dealing with velocity goals.
   // Using the current goal state, this function generates a position+yaw

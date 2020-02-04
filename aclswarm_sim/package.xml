@@ -14,7 +14,12 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>aclswarm</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>aclswarm_msgs</depend>
+  <depend>snapstack_msgs</depend>
+  <depend>behavior_selector</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

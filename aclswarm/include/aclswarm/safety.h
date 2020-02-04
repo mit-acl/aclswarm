@@ -25,9 +25,9 @@
 
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <acl_msgs/QuadGoal.h>
-#include <acl_msgs/QuadFlightMode.h>
-#include <acl_msgs/State.h>
+#include <snapstack_msgs/QuadGoal.h>
+#include <snapstack_msgs/QuadFlightMode.h>
+#include <snapstack_msgs/State.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
 #include <aclswarm_msgs/SafetyStatus.h>
 
@@ -93,13 +93,13 @@ namespace aclswarm {
 
     void init();
     void makeSafeTraj(double dt, const VelocityGoal& g,
-                              acl_msgs::QuadGoal& goal);
+                              snapstack_msgs::QuadGoal& goal);
     void collisionAvoidance(VelocityGoal& goal);
 
     /// \brief ROS callback handlers
-    void flightmodeCb(const acl_msgs::QuadFlightModeConstPtr& msg);
+    void flightmodeCb(const snapstack_msgs::QuadFlightModeConstPtr& msg);
     void cmdinCb(const geometry_msgs::Vector3StampedConstPtr& msg);
-    void stateCb(const acl_msgs::StateConstPtr& msg);
+    void stateCb(const snapstack_msgs::StateConstPtr& msg);
     void controlCb(const ros::TimerEvent& event);
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
 

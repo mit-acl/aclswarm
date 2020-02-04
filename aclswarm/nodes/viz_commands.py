@@ -7,9 +7,9 @@ import rospy
 import numpy as np
 
 from aclswarm_msgs.msg import Formation
-from acl_msgs.msg import QuadGoal, ViconState
+from snapstack_msgs.msg import QuadGoal
 from std_msgs.msg import UInt8MultiArray
-from geometry_msgs.msg import Point, Pose, Vector3, Vector3Stamped
+from geometry_msgs.msg import Point, PoseStamped, Vector3, Vector3Stamped
 from visualization_msgs.msg import Marker, MarkerArray
 
 from aclswarm.assignment import find_optimal_assignment
@@ -61,7 +61,7 @@ class VizCommands:
                         queue_size=1)
             if self.viz_mesh:
                 self.subs[veh]['pose'] = rospy.Subscriber(
-                        "/{}/vicon".format(veh), ViconState,
+                        "/{}/world".format(veh), PoseStamped,
                         lambda msg, i=idx, v=veh: self.poseCb(msg, i, v),
                         queue_size=1)
 
@@ -142,7 +142,7 @@ class VizCommands:
             m.ns = 'mesh'
             m.id = i*10
             m.type = Marker.MESH_RESOURCE
-            m.mesh_resource = "package://acl_sim/meshes/quadrotor/quadrotor_base.dae"
+            m.mesh_resource = "package://snap_sim/meshes/quadrotor.dae"
             m.action = Marker.ADD
             m.color.a = 1
             m.color.r, m.color.g, m.color.b = (1,1,1)

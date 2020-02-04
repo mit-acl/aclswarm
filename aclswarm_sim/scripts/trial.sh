@@ -96,7 +96,7 @@ if [ $interactive == "false" ]; then
   rosrun aclswarm_sim supervisor.py
 else
   # get pid of controls rqt
-  rqtpid=$(pgrep -f controls.perspective)
+  rqtpid=$(pgrep -f rqt_gui)
   echo "waiting on $rqtpid"
   tail --pid=$rqtpid -f /dev/null # kind of a hack
 fi
@@ -116,8 +116,9 @@ pkill -f -9 viz_commands.py
 pkill -f -9 supervisor.py
 pkill -x -9 roslaunch
 pkill -x -9 vicon_relay
-pkill -x -9 quad_sim
-pkill -x -9 quad_controller
+pkill -x -9 snap_sim
+pkill -x -9 snap
+pkill -f -9 outer_loop
 pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety

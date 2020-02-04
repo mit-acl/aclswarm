@@ -98,7 +98,7 @@ void LocalizationROS::assignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg)
 
 // ----------------------------------------------------------------------------
 
-void LocalizationROS::stateCb(const acl_msgs::StateConstPtr& msg)
+void LocalizationROS::stateCb(const snapstack_msgs::StateConstPtr& msg)
 {
   // copy data to usable form
   uint64_t stamp_ns = msg->header.stamp.toNSec();

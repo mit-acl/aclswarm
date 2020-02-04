@@ -21,7 +21,7 @@
   <depend>eigen_conversions</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
-  <depend>acl_msgs</depend>
+  <depend>snapstack_msgs</depend>
   <depend>aclswarm_msgs</depend>
   <buildtool_depend>catkin</buildtool_depend>
 

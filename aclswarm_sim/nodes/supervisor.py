@@ -10,10 +10,10 @@ import rospy
 import numpy as np; np.set_printoptions(linewidth=500)
 
 from std_msgs.msg import UInt8MultiArray
-from geometry_msgs.msg import Vector3Stamped
+from geometry_msgs.msg import PoseStamped, Vector3Stamped
 from aclswarm_msgs.msg import SafetyStatus
 from behavior_selector.srv import MissionModeChange
-from acl_msgs.msg import QuadGoal, ViconState
+from snapstack_msgs.msg import QuadGoal
 
 class State:
     IDLE = 1
@@ -90,7 +90,7 @@ class Supervisor:
 
         for idx, veh in enumerate(self.vehs):
             # ground truth state of each vehicle
-            rospy.Subscriber('/{}/vicon'.format(veh), ViconState,
+            rospy.Subscriber('/{}/world'.format(veh), PoseStamped,
                     lambda msg, v=veh: self.stateCb(msg, v), queue_size=1)
             # the desired velocity goal from the distributed motion planner
             rospy.Subscriber('/{}/distcmd'.format(veh), Vector3Stamped,

@@ -41,7 +41,7 @@
     </node>
 
     <!-- Start GUI -->
-    <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui" args="--perspective-file $(find aclswarm)/cfg/controls.perspective"/>
+    <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui" args="--perspective-file $(find behavior_selector)/cfg/default.perspective"/>
 
     <!-- Start the joy node if a leader is specified -->
     <group if="$(eval leader != '')">

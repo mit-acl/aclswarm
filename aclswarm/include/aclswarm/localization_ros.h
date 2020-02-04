@@ -18,7 +18,7 @@
 
 #include <std_msgs/UInt8MultiArray.h>
 #include <std_msgs/MultiArrayDimension.h>
-#include <acl_msgs/State.h>
+#include <snapstack_msgs/State.h>
 #include <aclswarm_msgs/Formation.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
 
@@ -63,7 +63,7 @@ namespace aclswarm {
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
     void assignmentCb(const std_msgs::UInt8MultiArrayConstPtr& msg);
-    void stateCb(const acl_msgs::StateConstPtr& msg);
+    void stateCb(const snapstack_msgs::StateConstPtr& msg);
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg,
                           int vehid);
     void trackingCb(const ros::TimerEvent& event);

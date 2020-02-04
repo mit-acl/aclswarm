@@ -251,7 +251,7 @@ void CoordinationROS::vehicleTrackerCb(
 
 // ----------------------------------------------------------------------------
 
-void CoordinationROS::stateCb(const acl_msgs::StateConstPtr& msg)
+void CoordinationROS::stateCb(const snapstack_msgs::StateConstPtr& msg)
 {
   // we just need our velocity for damping in the controller
   tf::vectorMsgToEigen(msg->vel, vel_);

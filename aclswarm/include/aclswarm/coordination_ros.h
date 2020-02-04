@@ -18,7 +18,7 @@
 
 #include <Eigen/Dense>
 
-#include <acl_msgs/State.h>
+#include <snapstack_msgs/State.h>
 #include <aclswarm_msgs/CBAA.h>
 #include <aclswarm_msgs/Formation.h>
 #include <aclswarm_msgs/VehicleEstimates.h>
@@ -96,7 +96,7 @@ namespace aclswarm {
     /// \brief ROS callback handlers
     void formationCb(const aclswarm_msgs::FormationConstPtr& msg);
     void vehicleTrackerCb(const aclswarm_msgs::VehicleEstimatesConstPtr& msg);
-    void stateCb(const acl_msgs::StateConstPtr& msg);
+    void stateCb(const snapstack_msgs::StateConstPtr& msg);
     void cbaabidCb(const aclswarm_msgs::CBAAConstPtr& msg, int vehid);
     void auctioneerCb(const ros::TimerEvent& event);
     void autoauctionCb(const ros::TimerEvent& event);

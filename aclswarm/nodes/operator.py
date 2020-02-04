@@ -9,7 +9,7 @@ import numpy as np
 from std_msgs.msg import UInt8MultiArray, MultiArrayDimension
 from geometry_msgs.msg import Point, PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
-from acl_msgs.msg import QuadFlightMode, ViconState
+from snapstack_msgs.msg import QuadFlightMode
 from aclswarm_msgs.msg import Formation
 from behavior_selector.srv import MissionModeChange
 
@@ -71,7 +71,7 @@ class Operator:
             # ground truth state of each vehicle
             self.poses = [None]*self.n
             for idx,veh in enumerate(self.vehs):
-                rospy.Subscriber('/{}/vicon'.format(veh), ViconState,
+                rospy.Subscriber('/{}/world'.format(veh), PoseStamped,
                         lambda msg, i=idx: self.poseCb(msg, i), queue_size=1)
 
             self.tim_sendassign = rospy.Timer(rospy.Duration(self.assignment_dt),
