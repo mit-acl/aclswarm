@@ -82,6 +82,12 @@ roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false
 rviz >/dev/null 2>&1 &
 
 #
+# Set room bounds for simulation
+#
+
+rosparam set /room_bounds "{x_min: -100, x_max: 100, y_min: -100, y_max: 100, z_min: 0, z_max: 30}"
+
+#
 # Start swarm simulations
 #
 

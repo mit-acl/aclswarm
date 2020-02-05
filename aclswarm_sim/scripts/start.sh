@@ -110,12 +110,6 @@ while getopts 'hn:r:x' option; do
 done
 
 #
-# Set room bounds for simulation
-#
-
-rosparam set /room_bounds "{x_min: -100, x_max: 100, y_min: -100, y_max: 100, z_min: 0, z_max: 30}"
-
-#
 # snap sim
 #
 

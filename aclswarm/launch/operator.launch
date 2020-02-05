@@ -43,4 +43,10 @@
             <param name="autorepeat_rate" value="100" />
         </node>
     </group>
+
+    <!-- better z room bounds for aclswarm -->
+    <rosparam ns="room_bounds">
+        z_min:  1.0
+        z_max:  3.0
+    </rosparam>
 </launch>

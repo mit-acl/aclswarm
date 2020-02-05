@@ -18,12 +18,12 @@
     <!-- coordinated control and assignment -->
     <node name="coordination" pkg="aclswarm" type="coordination" output="screen">
       <param name="auctioneer_dt" value="0.001" />
-      <param name="autoauction_dt" value="0.75" />
+      <param name="autoauction_dt" value="0.85" />
       <param name="control_dt" value="0.01" />
 
       <!-- auctioneer parameters -->
       <param name="use_assignment" value="true" />
-      <param name="form_settle_time" value="5" />
+      <param name="form_settle_time" value="1.5" />
       <param name="verbose" value="false" />
 
       <param name="cntrl/K1_xy" value="0.1" />
