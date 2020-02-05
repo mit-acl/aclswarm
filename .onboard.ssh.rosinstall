@@ -1,0 +1,18 @@
+- git:
+    local-name: aclswarm
+    uri: git@github.com:mit-acl/aclswarm.git
+- git:
+    local-name: comm_monitor
+    uri: git@gitlab.com:mit-acl/fsw/snap-stack/comm_monitor.git
+- git:
+    local-name: outer_loop
+    uri: git@gitlab.com:mit-acl/fsw/snap-stack/outer_loop.git
+- git:
+    local-name: snap
+    uri: git@gitlab.com:mit-acl/fsw/snap-stack/snap.git
+- git:
+    local-name: snap-vislam-pkgs
+    uri: git@gitlab.com:mit-acl/fsw/snap-stack/snap-vislam-pkgs.git
+- git:
+    local-name: snapstack_msgs
+    uri: git@gitlab.com:mit-acl/fsw/snap-stack/snapstack_msgs.git
