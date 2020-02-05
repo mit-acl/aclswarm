@@ -45,7 +45,7 @@ tmux send-keys -t $SESSION:0.5 "roslaunch snap snap.launch" C-m
 tmux send-keys -t $SESSION:0.0 "roslaunch outer_loop cntrl.launch" C-m
 tmux send-keys -t $SESSION:0.3 "roslaunch snap esc.launch" C-m
 tmux send-keys -t $SESSION:0.1 "roslaunch aclswarm start.launch veh:=$VEH$NUM"
-#tmux send-keys -t $SESSION:0.2 "roslaunch vislam vislam.launch"
+tmux send-keys -t $SESSION:0.2 "roslaunch vislam vislam.launch initLnDepth:=-2.617" # on stand
 #tmux send-keys -t $SESSION:0.6 "rosrun aclswarm bagrecord.sh -o $VEH$NUM"
 
 tmux select-pane -t $SESSION:0.1
