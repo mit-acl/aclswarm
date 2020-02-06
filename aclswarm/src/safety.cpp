@@ -424,7 +424,7 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
     const Eigen::Vector3d qij = q_.row(j) - q_.row(vehid_);
 
     // check if we are even close enough to start worrying about collision
-    if (qij.norm() > d_avoid_thresh_) continue;
+    if (qij.head<2>().norm() > d_avoid_thresh_) continue;
 
     //
     // Calculate the "no-fly zones" (the 'pizza slices' in polar coordinates)
@@ -434,7 +434,7 @@ void Safety::collisionAvoidance(VelocityGoal& goal)
     double theta = std::atan2(qij.y(), qij.x());
 
     // half-angle of pizza slice / sector / velocity obstacle
-    double alpha = std::abs(std::asin(std::min(1.0, r_keep_out_/qij.norm())));
+    double alpha = std::abs(std::asin(std::min(1.0, r_keep_out_/qij.head<2>().norm())));
 
     // beginning and ending angles of the tangent lines (on edge of sector)
     const double beg = utils::wrapToPi(theta-alpha);
