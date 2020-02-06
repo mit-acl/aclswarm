@@ -9,7 +9,7 @@ IFS=", " read -r -a vehs <<< "$vehstr"
 declare -a raw_topics=(\
             "state" \
             "distcmd" \
-            # "goal" \
+            "safety/status" \
             "cbaabid" \
             "assignment" \
             "world" \
@@ -17,7 +17,9 @@ declare -a raw_topics=(\
             "/viz_safe_cmd" \
             "/viz_dist_cmd" \
             "/viz_central_alignment" \
-            "/viz_mesh"
+            "/viz_mesh" \
+            "/Tag01/world" \
+            "/Tag02/world"
             )
 
 # A place to put the parsed topics to be recorded
