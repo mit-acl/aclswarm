@@ -65,12 +65,15 @@ def align(q, p):
         paligned    dxn np.array         - (R*p + t)
     """
 
-    _, sQ, _ = np.linalg.svd(q.T - q.T.mean(0))
-    _, sP, _ = np.linalg.svd(p.T - p.T.mean(0))
+    # _, sQ, _ = np.linalg.svd(q.T - q.T.mean(0))
+    # _, sP, _ = np.linalg.svd(p.T - p.T.mean(0))
 
-    # determine the rank of the formation
-    RANK_TH = 0.05 # be very stringent
-    d = 3 if np.all(sQ > RANK_TH*sQ[0]) and np.all(sP > RANK_TH*sP[0]) else 2
+    # # determine the rank of the formation
+    # RANK_TH = 0.05 # be very stringent
+    # d = 3 if np.all(sQ > RANK_TH*sQ[0]) and np.all(sP > RANK_TH*sP[0]) else 2
+
+    # our control is only invariant to rot about z -- always use 2D umeyama
+    d = 2
 
     T = arun(q[0:d,:], p[0:d,:])
 

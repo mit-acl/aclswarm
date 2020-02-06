@@ -373,15 +373,18 @@ PtsMat Auctioneer::alignFormation(const PtsMat& q,
   // Determine if the formation is a colinear, flat, or 3d
   //
 
-  // be very stringent on what we consider a nonzero singular value (for noise)
-  constexpr double RANK_TH = 0.05;
-  Eigen::JacobiSVD<PtsMat> svdQ(qnbrs.rowwise() - qnbrs.colwise().mean());
-  Eigen::JacobiSVD<PtsMat> svdP(pnbrs.rowwise() - pnbrs.colwise().mean());
-  svdQ.setThreshold(RANK_TH);
-  svdP.setThreshold(RANK_TH);
+  // // be very stringent on what we consider a nonzero singular value (for noise)
+  // constexpr double RANK_TH = 0.05;
+  // Eigen::JacobiSVD<PtsMat> svdQ(qnbrs.rowwise() - qnbrs.colwise().mean());
+  // Eigen::JacobiSVD<PtsMat> svdP(pnbrs.rowwise() - pnbrs.colwise().mean());
+  // svdQ.setThreshold(RANK_TH);
+  // svdP.setThreshold(RANK_TH);
 
-  // Only perform 3D Umeyama if there is structure in both swarm and formation
-  int d = (svdQ.rank() == 3 && svdP.rank() == 3) ? 3 : 2;
+  // // Only perform 3D Umeyama if there is structure in both swarm and formation
+  // int d = (svdQ.rank() == 3 && svdP.rank() == 3) ? 3 : 2;
+
+  // our control is only invariant to rotation about z -- always use 2D umeyama
+  const int d = 2;
 
   //
   // Point cloud alignment (maps p onto q)
