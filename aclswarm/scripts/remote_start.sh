@@ -41,8 +41,8 @@ for _pane in $(tmux list-pane -F '#P'); do
 done
 
 tmux send-keys -t $SESSION:0.4 "imu_app -s 2" C-m
-tmux send-keys -t $SESSION:0.5 "roslaunch snap snap.launch #extpose:=pose_selector/pose" C-m
-tmux send-keys -t $SESSION:0.0 "roslaunch outer_loop cntrl.launch" C-m
+tmux send-keys -t $SESSION:0.5 "roslaunch snap snap.launch extpose:=pose_selector/pose" C-m
+tmux send-keys -t $SESSION:0.0 "roslaunch aclswarm snapstack_cntrl.launch" C-m
 tmux send-keys -t $SESSION:0.3 "roslaunch snap esc.launch" C-m
 tmux send-keys -t $SESSION:0.1 "roslaunch aclswarm start.launch veh:=$VEH$NUM"
 tmux send-keys -t $SESSION:0.2 "roslaunch vislam vislam.launch initLnDepth:=-2.617" # on stand

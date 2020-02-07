@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="veh" default="$(optenv VEHTYPE SQ)" />
+  <arg name="num" default="$(optenv VEHNUM 01)" />
+
+  <group ns="$(arg veh)$(arg num)">
+    <!-- Position / trajectory tracking -->
+    <node name="cntrl" pkg="outer_loop" type="cntrl" output="screen" clear_params="true">
+      <!-- Load vehicle type parameters -->
+      <rosparam file="$(find outer_loop)/param/$(arg veh).yaml" command="load"/>
+    </node>
+  </group>
+
+  <!-- pass through for mocap by default, allows registering vislam -->
+  <include file="$(find vislam_utils)/launch/pose_selector.launch">
+    <arg name="veh" value="$(arg veh)" />
+    <arg name="num" value="$(arg num)" />
+    <arg name="shutdown_mocap" value="true" />
+  </include>
+</launch>
