@@ -14,4 +14,19 @@
     <arg name="veh" value="$(arg veh)" />
   </include>
 
+  <!-- throttle signals for external logging -->
+  <group ns="$(arg veh)">
+    <node pkg="topic_tools" type="throttle" name="throttle_state"
+      args="messages state 30" />
+
+    <node pkg="topic_tools" type="throttle" name="throttle_goal"
+      args="messages goal 30" />
+
+    <node pkg="topic_tools" type="throttle" name="throttle_distcmd"
+      args="messages distcmd 30" />
+
+    <node pkg="topic_tools" type="throttle" name="throttle_saftey_status"
+      args="messages safety/status 30" />
+  </group>
+
 </launch>

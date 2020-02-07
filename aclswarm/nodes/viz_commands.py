@@ -51,12 +51,12 @@ class VizCommands:
             self.subs[veh] = {}
             if self.viz_distcmds:
                 self.subs[veh]['distcmd'] = rospy.Subscriber(
-                        "/{}/distcmd".format(veh), Vector3Stamped,
+                        "/{}/distcmd_throttle".format(veh), Vector3Stamped,
                         lambda msg, v=veh: self.distcmdCb(msg, 'distcmd', v),
                         queue_size=1)
             if self.viz_safecmds:
                 self.subs[veh]['safecmd'] = rospy.Subscriber(
-                        "/{}/goal".format(veh), QuadGoal,
+                        "/{}/goal_throttle".format(veh), QuadGoal,
                         lambda msg, v=veh: self.safecmdCb(msg, 'safecmd', v),
                         queue_size=1)
             if self.viz_mesh:

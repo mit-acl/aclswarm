@@ -7,10 +7,10 @@ IFS=", " read -r -a vehs <<< "$vehstr"
 # a list of topics to record. Topics without a leading
 # slash are assumed to exist under the vehicle namespaces.
 declare -a raw_topics=(\
-            "state" \
-            "distcmd" \
-            "goal" \
-            "safety/status" \
+            "state_throttle" \
+            "distcmd_throttle" \
+            "goal_throttle" \
+            "safety/status_throttle" \
             "cbaabid" \
             "assignment" \
             "world" \
