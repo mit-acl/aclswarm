@@ -9,6 +9,7 @@ IFS=", " read -r -a vehs <<< "$vehstr"
 declare -a raw_topics=(\
             "state" \
             "distcmd" \
+            "goal" \
             "safety/status" \
             "cbaabid" \
             "assignment" \
