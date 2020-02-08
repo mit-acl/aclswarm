@@ -32,15 +32,17 @@ oneZ = ones(n,1); % Vector of ones
 qz = Qs(3,:)'; % Vector of z-coordinates
 d = 1; % ambient dimension of problem
 
-% Kernel of gain matrix 
-N = [qz, oneZ];
-
 % Determine if desired formation is actually 2D
 xyform = (std(qz) < 1e-2);
 
-% Reduced problem dimension
-if xyform, dimkerAz = 1;
-else, dimkerAz = 2; end
+% Set problem dimension
+if xyform % Planar formation
+    dimkerAz = 1; % Dimension of kernel
+    N = oneZ; % Kernel of gain matrix 
+else
+    dimkerAz = 2; % Dimension of kernel
+    N = [qz, oneZ]; % Kernel of gain matrix 
+end
 m = n - dimkerAz;
 
 % Get orthogonal complement of N
