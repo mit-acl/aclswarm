@@ -18,7 +18,7 @@
     <!-- coordinated control and assignment -->
     <node name="coordination" pkg="aclswarm" type="coordination" output="screen">
       <param name="auctioneer_dt" value="0.001" />
-      <param name="autoauction_dt" value="1" />
+      <param name="autoauction_dt" value="1.2" />
       <param name="control_dt" value="0.01" />
 
       <!-- auctioneer parameters -->
