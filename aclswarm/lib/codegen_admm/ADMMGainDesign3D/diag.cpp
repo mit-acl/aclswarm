@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: diag.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * diag.cpp
+ *
+ * Code generation for function 'diag'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "diag.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -16,20 +17,7 @@
 #include "rt_nonfinite.h"
 #include "sparse.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-//                const emxArray_int32_T *this_rowidx
-//                int this_m
-//                int this_n
-//                emxArray_real_T *y_d
-//                emxArray_int32_T *y_colidx
-//                emxArray_int32_T *y_rowidx
-//                int *y_m
-// Return Type  : void
-//
+/* Function Definitions */
 void sparse_diag(const emxArray_real_T *this_d, const emxArray_int32_T
                  *this_colidx, const emxArray_int32_T *this_rowidx, int this_m,
                  int this_n, emxArray_real_T *y_d, emxArray_int32_T *y_colidx,
@@ -80,8 +68,4 @@ void sparse_diag(const emxArray_real_T *this_d, const emxArray_int32_T
   y_colidx->data[1] = toFill + 1;
 }
 
-//
-// File trailer for diag.cpp
-//
-// [EOF]
-//
+/* End of code generation (diag.cpp) */

@@ -1,29 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xaxpy.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xaxpy.cpp
+ *
+ * Code generation for function 'xaxpy'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xaxpy.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : int n
-//                double a
-//                const emxArray_real_T *x
-//                int ix0
-//                emxArray_real_T *y
-//                int iy0
-// Return Type  : void
-//
+/* Function Definitions */
 void b_xaxpy(int n, double a, const emxArray_real_T *x, int ix0, emxArray_real_T
              *y, int iy0)
 {
@@ -43,14 +34,6 @@ void b_xaxpy(int n, double a, const emxArray_real_T *x, int ix0, emxArray_real_T
   }
 }
 
-//
-// Arguments    : int n
-//                double a
-//                int ix0
-//                double y[16]
-//                int iy0
-// Return Type  : void
-//
 void c_xaxpy(int n, double a, int ix0, double y[16], int iy0)
 {
   int ix;
@@ -69,14 +52,6 @@ void c_xaxpy(int n, double a, int ix0, double y[16], int iy0)
   }
 }
 
-//
-// Arguments    : int n
-//                double a
-//                int ix0
-//                emxArray_real_T *y
-//                int iy0
-// Return Type  : void
-//
 void xaxpy(int n, double a, int ix0, emxArray_real_T *y, int iy0)
 {
   int ix;
@@ -95,8 +70,4 @@ void xaxpy(int n, double a, int ix0, emxArray_real_T *y, int iy0)
   }
 }
 
-//
-// File trailer for xaxpy.cpp
-//
-// [EOF]
-//
+/* End of code generation (xaxpy.cpp) */

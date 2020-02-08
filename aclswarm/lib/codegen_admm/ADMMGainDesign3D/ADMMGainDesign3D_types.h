@@ -1,22 +1,24 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D_types.h
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D_types.h
+ *
+ * Code generation for function 'ADMMGainDesign3D_types'
+ *
+ */
+
 #ifndef ADMMGAINDESIGN3D_TYPES_H
 #define ADMMGAINDESIGN3D_TYPES_H
 
-// Include Files
+/* Include files */
 #include "rtwtypes.h"
 
-// Type Definitions
+/* Type Definitions */
 #include "cs.h"
 
-// Type Definitions
+/* Type Definitions */
 struct emxArray_int32_T
 {
   int *data;
@@ -87,8 +89,4 @@ struct emxArray_creal_T
 
 #endif
 
-//
-// File trailer for ADMMGainDesign3D_types.h
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D_types.h) */

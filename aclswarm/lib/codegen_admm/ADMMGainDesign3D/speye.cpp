@@ -1,27 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: speye.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * speye.cpp
+ *
+ * Code generation for function 'speye'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "speye.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "fillIn.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : double m
-//                coder_internal_sparse *y
-// Return Type  : void
-//
+/* Function Definitions */
 void speye(double m, coder_internal_sparse *y)
 {
   double t;
@@ -91,8 +86,4 @@ void speye(double m, coder_internal_sparse *y)
   }
 }
 
-//
-// File trailer for speye.cpp
-//
-// [EOF]
-//
+/* End of code generation (speye.cpp) */

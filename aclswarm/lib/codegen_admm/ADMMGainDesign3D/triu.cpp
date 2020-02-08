@@ -1,24 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: triu.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * triu.cpp
+ *
+ * Code generation for function 'triu'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "triu.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : emxArray_real_T *x
-// Return Type  : void
-//
+/* Function Definitions */
 void triu(emxArray_real_T *x)
 {
   int m;
@@ -45,8 +41,4 @@ void triu(emxArray_real_T *x)
   }
 }
 
-//
-// File trailer for triu.cpp
-//
-// [EOF]
-//
+/* End of code generation (triu.cpp) */

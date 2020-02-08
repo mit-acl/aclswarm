@@ -1,12 +1,13 @@
-//
-//  Academic License - for use in teaching, academic research, and meeting
-//  course requirements at degree granting institutions only.  Not for
-//  government, commercial, or other organizational use.
-//  File: rt_nonfinite.h
-//
-//  MATLAB Coder version            : 4.3
-//  C/C++ source code generated on  : 02-Feb-2020 11:20:18
-
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * rt_nonfinite.h
+ *
+ * Code generation for function 'ADMMGainDesign3D'
+ *
+ */
 
 #ifndef RT_NONFINITE_H
 #define RT_NONFINITE_H
@@ -35,8 +36,4 @@ extern "C" {
 #endif
 #endif
 
-//
-//  File trailer for rt_nonfinite.h
-//
-//  [EOF]
-
+/* End of code generation (rt_nonfinite.h) */

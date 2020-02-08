@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: vec.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * vec.cpp
+ *
+ * Code generation for function 'vec'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "vec.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_rtwutil.h"
@@ -16,23 +17,7 @@
 #include "rt_nonfinite.h"
 #include "sparse.h"
 
-// Function Definitions
-
-//
-// VEC   Vectorize.
-//     VEC(X), where X is a vector, matrix, or N-D array, returns a column vector
-//     containing all of the elements of X; i.e., VEC(X)=X(:).
-// Arguments    : const emxArray_real_T *x_d
-//                const emxArray_int32_T *x_colidx
-//                const emxArray_int32_T *x_rowidx
-//                int x_m
-//                int x_n
-//                emxArray_real_T *v_d
-//                emxArray_int32_T *v_colidx
-//                emxArray_int32_T *v_rowidx
-//                int *v_m
-// Return Type  : void
-//
+/* Function Definitions */
 void vec(const emxArray_real_T *x_d, const emxArray_int32_T *x_colidx, const
          emxArray_int32_T *x_rowidx, int x_m, int x_n, emxArray_real_T *v_d,
          emxArray_int32_T *v_colidx, emxArray_int32_T *v_rowidx, int *v_m)
@@ -47,6 +32,10 @@ void vec(const emxArray_real_T *x_d, const emxArray_int32_T *x_colidx, const
   int idx_tmp;
   int idx;
   int vk;
+
+  /*  VEC   Vectorize. */
+  /*     VEC(X), where X is a vector, matrix, or N-D array, returns a column vector */
+  /*     containing all of the elements of X; i.e., VEC(X)=X(:). */
   varargin_1 = x_m * x_n;
   sparse_spallocLike(varargin_1, x_colidx->data[x_colidx->size[0] - 1] - 1, v_d,
                      v_colidx, v_rowidx, v_m, &expl_temp);
@@ -86,13 +75,9 @@ void vec(const emxArray_real_T *x_d, const emxArray_int32_T *x_colidx, const
     }
   }
 
-  //  Copyright 2005-2016 CVX Research, Inc.
-  //  See the file LICENSE.txt for full copyright information.
-  //  The command 'cvx_where' will show where this file is located.
+  /*  Copyright 2005-2016 CVX Research, Inc. */
+  /*  See the file LICENSE.txt for full copyright information. */
+  /*  The command 'cvx_where' will show where this file is located. */
 }
 
-//
-// File trailer for vec.cpp
-//
-// [EOF]
-//
+/* End of code generation (vec.cpp) */

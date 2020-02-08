@@ -1,48 +1,36 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D_emxutil.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D_emxutil.cpp
+ *
+ * Code generation for function 'ADMMGainDesign3D_emxutil'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "ADMMGainDesign3D_emxutil.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 #include <cstdlib>
 #include <cstring>
 
-// Function Declarations
+/* Function Declarations */
 static void emxFreeStruct_cell_wrap_3(cell_wrap_3 *pStruct);
 static void emxInitStruct_cell_wrap_3(cell_wrap_3 *pStruct);
 
-// Function Definitions
-
-//
-// Arguments    : cell_wrap_3 *pStruct
-// Return Type  : void
-//
+/* Function Definitions */
 static void emxFreeStruct_cell_wrap_3(cell_wrap_3 *pStruct)
 {
   emxFree_int32_T(&pStruct->f1);
 }
 
-//
-// Arguments    : cell_wrap_3 *pStruct
-// Return Type  : void
-//
 static void emxInitStruct_cell_wrap_3(cell_wrap_3 *pStruct)
 {
   emxInit_int32_T(&pStruct->f1, 1);
 }
 
-//
-// Arguments    : coder_internal_sparse *pStruct
-// Return Type  : void
-//
 void c_emxFreeStruct_coder_internal_(coder_internal_sparse *pStruct)
 {
   emxFree_real_T(&pStruct->d);
@@ -50,10 +38,6 @@ void c_emxFreeStruct_coder_internal_(coder_internal_sparse *pStruct)
   emxFree_int32_T(&pStruct->rowidx);
 }
 
-//
-// Arguments    : coder_internal_sparse *pStruct
-// Return Type  : void
-//
 void c_emxInitStruct_coder_internal_(coder_internal_sparse *pStruct)
 {
   emxInit_real_T(&pStruct->d, 1);
@@ -61,10 +45,6 @@ void c_emxInitStruct_coder_internal_(coder_internal_sparse *pStruct)
   emxInit_int32_T(&pStruct->rowidx, 1);
 }
 
-//
-// Arguments    : coder_internal_sparse_1 *pStruct
-// Return Type  : void
-//
 void d_emxFreeStruct_coder_internal_(coder_internal_sparse_1 *pStruct)
 {
   emxFree_real_T(&pStruct->d);
@@ -72,10 +52,6 @@ void d_emxFreeStruct_coder_internal_(coder_internal_sparse_1 *pStruct)
   emxFree_int32_T(&pStruct->rowidx);
 }
 
-//
-// Arguments    : coder_internal_sparse_1 *pStruct
-// Return Type  : void
-//
 void d_emxInitStruct_coder_internal_(coder_internal_sparse_1 *pStruct)
 {
   emxInit_real_T(&pStruct->d, 1);
@@ -83,11 +59,6 @@ void d_emxInitStruct_coder_internal_(coder_internal_sparse_1 *pStruct)
   emxInit_int32_T(&pStruct->rowidx, 1);
 }
 
-//
-// Arguments    : emxArray_boolean_T *emxArray
-//                int oldNumel
-// Return Type  : void
-//
 void emxEnsureCapacity_boolean_T(emxArray_boolean_T *emxArray, int oldNumel)
 {
   int newNumel;
@@ -130,11 +101,6 @@ void emxEnsureCapacity_boolean_T(emxArray_boolean_T *emxArray, int oldNumel)
   }
 }
 
-//
-// Arguments    : emxArray_creal_T *emxArray
-//                int oldNumel
-// Return Type  : void
-//
 void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel)
 {
   int newNumel;
@@ -177,11 +143,6 @@ void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel)
   }
 }
 
-//
-// Arguments    : emxArray_int32_T *emxArray
-//                int oldNumel
-// Return Type  : void
-//
 void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel)
 {
   int newNumel;
@@ -224,11 +185,6 @@ void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel)
   }
 }
 
-//
-// Arguments    : emxArray_int8_T *emxArray
-//                int oldNumel
-// Return Type  : void
-//
 void emxEnsureCapacity_int8_T(emxArray_int8_T *emxArray, int oldNumel)
 {
   int newNumel;
@@ -271,11 +227,6 @@ void emxEnsureCapacity_int8_T(emxArray_int8_T *emxArray, int oldNumel)
   }
 }
 
-//
-// Arguments    : emxArray_real_T *emxArray
-//                int oldNumel
-// Return Type  : void
-//
 void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel)
 {
   int newNumel;
@@ -318,10 +269,6 @@ void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel)
   }
 }
 
-//
-// Arguments    : cell_wrap_3 pMatrix[2]
-// Return Type  : void
-//
 void emxFreeMatrix_cell_wrap_3(cell_wrap_3 pMatrix[2])
 {
   int i;
@@ -330,10 +277,6 @@ void emxFreeMatrix_cell_wrap_3(cell_wrap_3 pMatrix[2])
   }
 }
 
-//
-// Arguments    : emxArray_boolean_T **pEmxArray
-// Return Type  : void
-//
 void emxFree_boolean_T(emxArray_boolean_T **pEmxArray)
 {
   if (*pEmxArray != (emxArray_boolean_T *)NULL) {
@@ -347,10 +290,6 @@ void emxFree_boolean_T(emxArray_boolean_T **pEmxArray)
   }
 }
 
-//
-// Arguments    : emxArray_creal_T **pEmxArray
-// Return Type  : void
-//
 void emxFree_creal_T(emxArray_creal_T **pEmxArray)
 {
   if (*pEmxArray != (emxArray_creal_T *)NULL) {
@@ -364,10 +303,6 @@ void emxFree_creal_T(emxArray_creal_T **pEmxArray)
   }
 }
 
-//
-// Arguments    : emxArray_int32_T **pEmxArray
-// Return Type  : void
-//
 void emxFree_int32_T(emxArray_int32_T **pEmxArray)
 {
   if (*pEmxArray != (emxArray_int32_T *)NULL) {
@@ -381,10 +316,6 @@ void emxFree_int32_T(emxArray_int32_T **pEmxArray)
   }
 }
 
-//
-// Arguments    : emxArray_int8_T **pEmxArray
-// Return Type  : void
-//
 void emxFree_int8_T(emxArray_int8_T **pEmxArray)
 {
   if (*pEmxArray != (emxArray_int8_T *)NULL) {
@@ -399,10 +330,6 @@ void emxFree_int8_T(emxArray_int8_T **pEmxArray)
   }
 }
 
-//
-// Arguments    : emxArray_real_T **pEmxArray
-// Return Type  : void
-//
 void emxFree_real_T(emxArray_real_T **pEmxArray)
 {
   if (*pEmxArray != (emxArray_real_T *)NULL) {
@@ -416,10 +343,6 @@ void emxFree_real_T(emxArray_real_T **pEmxArray)
   }
 }
 
-//
-// Arguments    : cell_wrap_3 pMatrix[2]
-// Return Type  : void
-//
 void emxInitMatrix_cell_wrap_3(cell_wrap_3 pMatrix[2])
 {
   int i;
@@ -428,11 +351,6 @@ void emxInitMatrix_cell_wrap_3(cell_wrap_3 pMatrix[2])
   }
 }
 
-//
-// Arguments    : emxArray_boolean_T **pEmxArray
-//                int numDimensions
-// Return Type  : void
-//
 void emxInit_boolean_T(emxArray_boolean_T **pEmxArray, int numDimensions)
 {
   emxArray_boolean_T *emxArray;
@@ -449,11 +367,6 @@ void emxInit_boolean_T(emxArray_boolean_T **pEmxArray, int numDimensions)
   }
 }
 
-//
-// Arguments    : emxArray_creal_T **pEmxArray
-//                int numDimensions
-// Return Type  : void
-//
 void emxInit_creal_T(emxArray_creal_T **pEmxArray, int numDimensions)
 {
   emxArray_creal_T *emxArray;
@@ -470,11 +383,6 @@ void emxInit_creal_T(emxArray_creal_T **pEmxArray, int numDimensions)
   }
 }
 
-//
-// Arguments    : emxArray_int32_T **pEmxArray
-//                int numDimensions
-// Return Type  : void
-//
 void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions)
 {
   emxArray_int32_T *emxArray;
@@ -491,11 +399,6 @@ void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions)
   }
 }
 
-//
-// Arguments    : emxArray_int8_T **pEmxArray
-//                int numDimensions
-// Return Type  : void
-//
 void emxInit_int8_T(emxArray_int8_T **pEmxArray, int numDimensions)
 {
   emxArray_int8_T *emxArray;
@@ -512,11 +415,6 @@ void emxInit_int8_T(emxArray_int8_T **pEmxArray, int numDimensions)
   }
 }
 
-//
-// Arguments    : emxArray_real_T **pEmxArray
-//                int numDimensions
-// Return Type  : void
-//
 void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions)
 {
   emxArray_real_T *emxArray;
@@ -533,8 +431,4 @@ void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions)
   }
 }
 
-//
-// File trailer for ADMMGainDesign3D_emxutil.cpp
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D_emxutil.cpp) */

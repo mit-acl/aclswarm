@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: sparse1.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * sparse1.cpp
+ *
+ * Code generation for function 'sparse1'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "sparse1.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -16,15 +17,7 @@
 #include "introsort.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *varargin_1
-//                const emxArray_real_T *varargin_2
-//                const emxArray_real_T *varargin_3
-//                coder_internal_sparse *y
-// Return Type  : void
-//
+/* Function Definitions */
 void b_sparse(const emxArray_real_T *varargin_1, const emxArray_real_T
               *varargin_2, const emxArray_real_T *varargin_3,
               coder_internal_sparse *y)
@@ -176,15 +169,6 @@ void b_sparse(const emxArray_real_T *varargin_1, const emxArray_real_T
   sparse_fillIn(y);
 }
 
-//
-// Arguments    : const emxArray_real_T *varargin_1
-//                emxArray_real_T *y_d
-//                emxArray_int32_T *y_colidx
-//                emxArray_int32_T *y_rowidx
-//                int *y_m
-//                int *y_n
-// Return Type  : void
-//
 void c_sparse(const emxArray_real_T *varargin_1, emxArray_real_T *y_d,
               emxArray_int32_T *y_colidx, emxArray_int32_T *y_rowidx, int *y_m,
               int *y_n)
@@ -250,16 +234,6 @@ void c_sparse(const emxArray_real_T *varargin_1, emxArray_real_T *y_d,
   }
 }
 
-//
-// Arguments    : double varargin_1
-//                double varargin_2
-//                emxArray_real_T *y_d
-//                emxArray_int32_T *y_colidx
-//                emxArray_int32_T *y_rowidx
-//                int *y_m
-//                int *y_n
-// Return Type  : void
-//
 void sparse(double varargin_1, double varargin_2, emxArray_real_T *y_d,
             emxArray_int32_T *y_colidx, emxArray_int32_T *y_rowidx, int *y_m,
             int *y_n)
@@ -286,8 +260,4 @@ void sparse(double varargin_1, double varargin_2, emxArray_real_T *y_d,
   *y_n = y_n_tmp;
 }
 
-//
-// File trailer for sparse1.cpp
-//
-// [EOF]
-//
+/* End of code generation (sparse1.cpp) */

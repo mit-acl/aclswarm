@@ -1,22 +1,24 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D_emxutil.h
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D_emxutil.h
+ *
+ * Code generation for function 'ADMMGainDesign3D_emxutil'
+ *
+ */
+
 #ifndef ADMMGAINDESIGN3D_EMXUTIL_H
 #define ADMMGAINDESIGN3D_EMXUTIL_H
 
-// Include Files
+/* Include files */
 #include <cstddef>
 #include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 
-// Function Declarations
+/* Function Declarations */
 extern void c_emxFreeStruct_coder_internal_(coder_internal_sparse *pStruct);
 extern void c_emxInitStruct_coder_internal_(coder_internal_sparse *pStruct);
 extern void d_emxFreeStruct_coder_internal_(coder_internal_sparse_1 *pStruct);
@@ -42,8 +44,4 @@ extern void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions);
 
 #endif
 
-//
-// File trailer for ADMMGainDesign3D_emxutil.h
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D_emxutil.h) */

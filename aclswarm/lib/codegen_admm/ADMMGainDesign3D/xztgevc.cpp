@@ -1,27 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xztgevc.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xztgevc.cpp
+ *
+ * Code generation for function 'xztgevc'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xztgevc.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_creal_T *A
-//                emxArray_creal_T *V
-// Return Type  : void
-//
+/* Function Definitions */
 void xztgevc(const emxArray_creal_T *A, emxArray_creal_T *V)
 {
   emxArray_creal_T *work1;
@@ -360,8 +355,4 @@ void xztgevc(const emxArray_creal_T *A, emxArray_creal_T *V)
   emxFree_creal_T(&work1);
 }
 
-//
-// File trailer for xztgevc.cpp
-//
-// [EOF]
-//
+/* End of code generation (xztgevc.cpp) */

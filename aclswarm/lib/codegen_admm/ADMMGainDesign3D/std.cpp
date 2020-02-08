@@ -1,26 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: std.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * std.cpp
+ *
+ * Code generation for function 'std'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "std.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *x
-// Return Type  : double
-//
+/* Function Definitions */
 double b_std(const emxArray_real_T *x)
 {
   double y;
@@ -76,8 +72,4 @@ double b_std(const emxArray_real_T *x)
   return y;
 }
 
-//
-// File trailer for std.cpp
-//
-// [EOF]
-//
+/* End of code generation (std.cpp) */

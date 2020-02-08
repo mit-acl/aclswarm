@@ -1,28 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: colon.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * colon.cpp
+ *
+ * Code generation for function 'colon'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "colon.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : double a
-//                double b
-//                emxArray_real_T *y
-// Return Type  : void
-//
+/* Function Definitions */
 void eml_float_colon(double a, double b, emxArray_real_T *y)
 {
   double ndbl;
@@ -83,8 +77,4 @@ void eml_float_colon(double a, double b, emxArray_real_T *y)
   }
 }
 
-//
-// File trailer for colon.cpp
-//
-// [EOF]
-//
+/* End of code generation (colon.cpp) */

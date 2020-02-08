@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xzhgeqz.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xzhgeqz.cpp
+ *
+ * Code generation for function 'xzhgeqz'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xzhgeqz.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -17,16 +18,10 @@
 #include "xzlartg.h"
 #include <cmath>
 
-// Function Declarations
+/* Function Declarations */
 static int div_nzp_s32(int numerator, int denominator);
 
-// Function Definitions
-
-//
-// Arguments    : int numerator
-//                int denominator
-// Return Type  : int
-//
+/* Function Definitions */
 static int div_nzp_s32(int numerator, int denominator)
 {
   int quotient;
@@ -54,16 +49,6 @@ static int div_nzp_s32(int numerator, int denominator)
   return quotient;
 }
 
-//
-// Arguments    : emxArray_creal_T *A
-//                int ilo
-//                int ihi
-//                emxArray_creal_T *Z
-//                int *info
-//                emxArray_creal_T *alpha1
-//                emxArray_creal_T *beta1
-// Return Type  : void
-//
 void xzhgeqz(emxArray_creal_T *A, int ilo, int ihi, emxArray_creal_T *Z, int
              *info, emxArray_creal_T *alpha1, emxArray_creal_T *beta1)
 {
@@ -598,8 +583,4 @@ void xzhgeqz(emxArray_creal_T *A, int ilo, int ihi, emxArray_creal_T *Z, int
   }
 }
 
-//
-// File trailer for xzhgeqz.cpp
-//
-// [EOF]
-//
+/* End of code generation (xzhgeqz.cpp) */

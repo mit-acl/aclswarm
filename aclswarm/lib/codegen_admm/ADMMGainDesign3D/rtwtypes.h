@@ -2,10 +2,11 @@
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
- * File: rtwtypes.h
  *
- * MATLAB Coder version            : 4.3
- * C/C++ source code generated on  : 02-Feb-2020 11:20:18
+ * rtwtypes.h
+ *
+ * Code generation for function 'ADMMGainDesign3D'
+ *
  */
 
 #ifndef RTWTYPES_H
@@ -131,8 +132,4 @@ static const uint32_T MIN_uint32_T = 0;
 #endif
 #endif
 
-/*
- * File trailer for rtwtypes.h
- *
- * [EOF]
- */
+/* End of code generation (rtwtypes.h) */

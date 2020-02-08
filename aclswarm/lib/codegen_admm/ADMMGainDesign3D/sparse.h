@@ -1,22 +1,24 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: sparse.h
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * sparse.h
+ *
+ * Code generation for function 'sparse'
+ *
+ */
+
 #ifndef SPARSE_H
 #define SPARSE_H
 
-// Include Files
+/* Include files */
 #include <cstddef>
 #include <cstdlib>
 #include "rtwtypes.h"
 #include "ADMMGainDesign3D_types.h"
 
-// Function Declarations
+/* Function Declarations */
 extern bool b_sparse_full(const emxArray_boolean_T *this_d, const
   emxArray_int32_T *this_colidx);
 extern void b_sparse_minus(const emxArray_real_T *a_d, const emxArray_int32_T
@@ -84,8 +86,4 @@ extern void sparse_transpose(const emxArray_real_T *this_d, const
 
 #endif
 
-//
-// File trailer for sparse.h
-//
-// [EOF]
-//
+/* End of code generation (sparse.h) */

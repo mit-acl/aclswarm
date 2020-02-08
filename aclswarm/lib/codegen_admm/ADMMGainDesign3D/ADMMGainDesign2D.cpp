@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign2D.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign2D.cpp
+ *
+ * Code generation for function 'ADMMGainDesign2D'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "ADMMGainDesign2D.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -32,16 +33,10 @@
 #include "vertcat.h"
 #include <cmath>
 
-// Function Declarations
+/* Function Declarations */
 static int div_s32_floor(int numerator, int denominator);
 
-// Function Definitions
-
-//
-// Arguments    : int numerator
-//                int denominator
-// Return Type  : int
-//
+/* Function Definitions */
 static int div_s32_floor(int numerator, int denominator)
 {
   int quotient;
@@ -85,13 +80,6 @@ static int div_s32_floor(int numerator, int denominator)
   return quotient;
 }
 
-//
-// print out size information
-// Arguments    : const emxArray_real_T *Qs
-//                const emxArray_real_T *adj
-//                emxArray_real_T *Aopt
-// Return Type  : void
-//
 void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
                       emxArray_real_T *Aopt)
 {
@@ -194,29 +182,30 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   double b_sizX[2];
   emxInit_real_T(&qsbar, 1);
 
-  //  ADMM for computing gain matrix.
-  //  --> Speeded up by using sparse matrix representation
-  //  --> Set trace to a fixed value
-  //
-  //
-  //  Inputs:
-  //
-  //        - Qs :  Desired formation coordinates (2*n matrix, each column representing coordinate of formation point) 
-  //        - adj:  Graph adjacency matrix (n*n logical matrix)
-  //
-  //  Outputs:
-  //
-  //        - Aopt : Gain matrix
-  //
-  //
-  //  Make a vector out of formation points
-  //  Number of agents
+  /*  ADMM for computing gain matrix.   */
+  /*  --> Speeded up by using sparse matrix representation */
+  /*  --> Set trace to a fixed value */
+  /*  */
+  /*   */
+  /*  Inputs: */
+  /*  */
+  /*        - Qs :  Desired formation coordinates (2*n matrix, each column representing coordinate of formation point) */
+  /*        - adj:  Graph adjacency matrix (n*n logical matrix) */
+  /*  */
+  /*  Outputs: */
+  /*  */
+  /*        - Aopt : Gain matrix */
+  /*  */
+  /*  */
+  /*  print out size information */
+  /*  Make a vector out of formation points */
+  /*  Number of agents */
   n = adj->size[0];
   m = adj->size[0] - 2;
 
-  //  Reduced number
-  //  ambient dimension of problem
-  //  90-degree rotated desired formation coordinates
+  /*  Reduced number */
+  /*  ambient dimension of problem */
+  /*  90-degree rotated desired formation coordinates */
   i = qsbar->size[0];
   qsbar->size[0] = 2 * adj->size[0];
   emxEnsureCapacity_real_T(qsbar, i);
@@ -269,7 +258,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_int32_T(&one1, 1);
 
-  //  One vectors
+  /*  One vectors */
   i = one1->size[0];
   one1->size[0] = 2 * adj->size[0];
   emxEnsureCapacity_int32_T(one1, i);
@@ -317,8 +306,8 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_real_T(&b_Qs, 2);
 
-  //  Get orthogonal complement of [z ones(n,1)]
-  //  Desired kernel bases
+  /*  Get orthogonal complement of [z ones(n,1)] */
+  /*  Desired kernel bases */
   bi_idx_0 = Qs->size[1] << 1;
   i = b_Qs->size[0] * b_Qs->size[1];
   b_Qs->size[0] = bi_idx_0;
@@ -373,7 +362,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_real_T(&Qt, 2);
 
-  //  Bases for the range space
+  /*  Bases for the range space */
   loop_ub = U->size[0];
   i2 = Qt->size[0] * Qt->size[1];
   Qt->size[0] = i1;
@@ -388,8 +377,8 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_real_T(&I0_d, 1);
   c_emxInitStruct_coder_internal_(&expl_temp);
 
-  //  Q transpose
-  //  Preallocate variables
+  /*  Q transpose */
+  /*  Preallocate variables */
   speye(2.0 * (static_cast<double>(adj->size[0]) - 2.0), &expl_temp);
   i2 = I0_d->size[0];
   I0_d->size[0] = expl_temp.d->size[0];
@@ -431,7 +420,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   sparse(4.0 * (static_cast<double>(adj->size[0]) - 2.0), 4.0 * (static_cast<
           double>(adj->size[0]) - 2.0), Z_d, Z_colidx, Z_rowidx, &Z_m, &Z_n);
 
-  //  Cost function's coefficient matrix: f = <C,X>
+  /*  Cost function's coefficient matrix: f = <C,X> */
   sparse_horzcat(I0_d, I0_colidx, I0_rowidx, expl_temp.m, expl_temp.n, Z0_d,
                  Z0_colidx, Z0_rowidx, bi_idx_0, Z0_n, &expl_temp);
   i2 = one2->size[0];
@@ -522,14 +511,14 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_boolean_T(&S, 2);
 
-  //  Trace of gain matrix must be the specified value in 'trVal'
+  /*  Trace of gain matrix must be the specified value in 'trVal' */
   trVal = 2.0 * (static_cast<double>(adj->size[0]) - 2.0);
 
-  //  fixed value for trace
-  // %%%%%%%%%%%%%%%%%%%%% Find total number of nonzero elements in A and b matrices 
-  //  Number of elements in block [X]_11
-  //  Number of elements in block [X]_12
-  //  Zero-gain constraints for the given adjacency graph
+  /*  fixed value for trace */
+  /* %%%%%%%%%%%%%%%%%%%%% Find total number of nonzero elements in A and b matrices */
+  /*  Number of elements in block [X]_11 */
+  /*  Number of elements in block [X]_12 */
+  /*  Zero-gain constraints for the given adjacency graph */
   i2 = S->size[0] * S->size[1];
   S->size[0] = adj->size[0];
   S->size[1] = adj->size[1];
@@ -543,7 +532,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_boolean_T(&r, 2);
   emxInit_boolean_T(&t6_d, 1);
 
-  //  Upper triangular part
+  /*  Upper triangular part */
   diag(S, t6_d);
   b_diag(t6_d, r);
   i2 = QQ->size[0] * QQ->size[1];
@@ -569,21 +558,23 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     qsbar->data[i2] = ii->data[i2];
   }
 
-  //  Find location of nonzero entries
-  //  Number of constraints
-  //  Number of elements in block [X]_22. Found "-m" empirically.
+  /*  Find location of nonzero entries */
+  /*  TO DO: Need to check that Q does not have zero rows that result in a */
+  /*  trivial constraint (see the code for z-component). */
+  /*  Number of constraints */
+  /*  Number of elements in block [X]_22. Found "-m" empirically. */
   idxR = 2.0 * (static_cast<double>(adj->size[0]) - 2.0);
 
-  //  Number of elements for trace
-  //  Number of elements for symmetry
-  //  Number of elements for pinning down the b-vector
-  //  Total number of elements
-  // %%%%%%%%%%%%%%%%%%%%% Preallocate sparse matrices A & b
-  //
-  //  Constraint: A * vec(X) = b
-  //
-  //  Indices of A: entry [Ai(k), Aj(k)] takes value of Av(k)
-  //  Each row of matrix A will represent a constraint
+  /*  Number of elements for trace */
+  /*  Number of elements for symmetry */
+  /*  Number of elements for pinning down the b-vector */
+  /*  Total number of elements */
+  /* %%%%%%%%%%%%%%%%%%%%% Preallocate sparse matrices A & b */
+  /*  */
+  /*  Constraint: A * vec(X) = b */
+  /*  */
+  /*  Indices of A: entry [Ai(k), Aj(k)] takes value of Av(k)  */
+  /*  Each row of matrix A will represent a constraint */
   loop_ub = static_cast<int>(((((((2.0 * (static_cast<double>(adj->size[0]) -
     2.0) - 1.0) * 2.0 + 2.0 * (static_cast<double>(adj->size[0]) - 2.0) * (2.0 *
     (static_cast<double>(adj->size[0]) - 2.0) - 1.0) / 2.0) + (2.0 * (
@@ -635,21 +626,21 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     bv->data[i2] = 0.0;
   }
 
-  //  Generate the constraint matrix
-  //
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  // %%%%%%%%%%%%%%%%%   Constraints: A . vec(X) = b  %%%%%%%%%%%%%%%%%%%%%%%%%
+  /*  Generate the constraint matrix */
+  /*  */
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+  /* %%%%%%%%%%%%%%%%%   Constraints: A . vec(X) = b  %%%%%%%%%%%%%%%%%%%%%%%%% */
   itrr = 0.0;
 
-  //  Counter for rows in A constraint
+  /*  Counter for rows in A constraint */
   itra = 0U;
 
-  //  Counter for entries in A constraint
+  /*  Counter for entries in A constraint */
   itrb = 0U;
 
-  //  Counter for entries in b constraint
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_11
-  //  The diagonal entries of X should be equal to the first diagonal entry
+  /*  Counter for entries in b constraint */
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_11 */
+  /*  The diagonal entries of X should be equal to the first diagonal entry */
   i2 = (adj->size[0] - 2) << 1;
   for (b_i = 0; b_i <= i2 - 2; b_i++) {
     itrr++;
@@ -666,7 +657,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     Av->data[static_cast<int>(itra) - 1] = -1.0;
   }
 
-  //  Off-diagonal entries should be zero
+  /*  Off-diagonal entries should be zero */
   i2 = (adj->size[0] - 2) << 1;
   for (b_i = 0; b_i <= i2 - 2; b_i++) {
     t2_n = (m << 1) - b_i;
@@ -682,8 +673,8 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     }
   }
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_12
-  //  Diagonal entries should be 1
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_12 */
+  /*  Diagonal entries should be 1 */
   i2 = (adj->size[0] - 2) << 1;
   for (b_i = 0; b_i < i2; b_i++) {
     itrr++;
@@ -700,7 +691,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     bv->data[bi_idx_0] = 1.0;
   }
 
-  //  Other entries should be 0
+  /*  Other entries should be 0 */
   i2 = (adj->size[0] - 2) << 1;
   for (b_i = 0; b_i < i2; b_i++) {
     t2_n = m << 1;
@@ -718,15 +709,15 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     }
   }
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_22
-  //  Scaled rotation matrix structure constraints
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_22 */
+  /*  Scaled rotation matrix structure constraints */
   i2 = adj->size[0];
   for (b_i = 0; b_i <= i2 - 3; b_i++) {
     t2_n = n - b_i;
     for (Z0_n = 0; Z0_n <= t2_n - 3; Z0_n++) {
       idxR = static_cast<double>((static_cast<unsigned int>(b_i) + Z0_n)) + 1.0;
 
-      //  Diagonal entries should be equal
+      /*  Diagonal entries should be equal */
       itrr++;
       itra++;
       one2_tmp = static_cast<int>(itra) - 1;
@@ -743,7 +734,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       Aj->data[one2_tmp] = ((Aj_tmp + 2.0) - 1.0) * d + (b_Aj_tmp + 2.0);
       Av->data[one2_tmp] = -1.0;
 
-      //  Off-diagonal entries have same value with different sign
+      /*  Off-diagonal entries have same value with different sign   */
       if (static_cast<unsigned int>((b_i + 1)) == static_cast<unsigned int>(idxR))
       {
         itrr++;
@@ -776,11 +767,11 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     }
   }
 
-  //  Zero constraints due to the adjacency matrix
+  /*  Zero constraints due to the adjacency matrix */
   i2 = qsbar->size[0];
   emxInit_real_T(&b, 2);
   for (b_i = 0; b_i < i2; b_i++) {
-    //  Diagonal terms of A_iijj, just do first column/row since a == a
+    /*  Diagonal terms of A_iijj, just do first column/row since a == a */
     loop_ub = Qt->size[0];
     t2_n = static_cast<int>((2.0 * (static_cast<double>(one1->data[b_i]) - 1.0)
       + 1.0));
@@ -829,7 +820,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       }
     }
 
-    //  Off-diagonal terms of A_iijj
+    /*  Off-diagonal terms of A_iijj */
     loop_ub = Qt->size[0];
     bi_idx_0 = Z0_d->size[0];
     Z0_d->size[0] = Qt->size[0];
@@ -875,7 +866,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     }
   }
 
-  //  Trace of gain materix must be the specified value in 'trVal'
+  /*  Trace of gain materix must be the specified value in 'trVal' */
   itrr++;
   i2 = (adj->size[0] - 2) << 1;
   for (b_i = 0; b_i < i2; b_i++) {
@@ -894,14 +885,14 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   bi->data[bi_idx_0] = itrr;
   bv->data[bi_idx_0] = trVal;
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Symmetry
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Symmetry */
   i2 = (adj->size[0] - 2) << 2;
   for (b_i = 0; b_i <= i2 - 2; b_i++) {
     t2_n = (m << 2) - b_i;
     for (Z0_n = 0; Z0_n <= t2_n - 2; Z0_n++) {
       idxR = ((static_cast<double>(b_i) + 1.0) + 1.0) + static_cast<double>(Z0_n);
 
-      //  Symmetric entries should be equal
+      /*  Symmetric entries should be equal */
       itrr++;
       itra++;
       one2_tmp = static_cast<int>(itra) - 1;
@@ -919,20 +910,20 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_real_T(&A_d, 1);
 
-  //  Last element set to fix the size of b
+  /*  Last element set to fix the size of b */
   itrb++;
   bi_idx_0 = static_cast<int>(itrb) - 1;
   bi->data[bi_idx_0] = itrr;
   bv->data[bi_idx_0] = 0.0;
 
-  //  % Remove any additional entries
-  //  Ai(itra+1:end) = [];
-  //  Aj(itra+1:end) = [];
-  //  Av(itra+1:end) = [];
-  //
-  //  bi(itrb+1:end) = [];
-  //  bv(itrb+1:end) = [];
-  //  Make sparse matrices
+  /*  % Remove any additional entries */
+  /*  Ai(itra+1:end) = []; */
+  /*  Aj(itra+1:end) = []; */
+  /*  Av(itra+1:end) = []; */
+  /*  */
+  /*  bi(itrb+1:end) = []; */
+  /*  bv(itrb+1:end) = []; */
+  /*  Make sparse matrices */
   b_sparse(one2, Aj, Av, &expl_temp);
   i2 = A_d->size[0];
   A_d->size[0] = expl_temp.d->size[0];
@@ -1001,10 +992,10 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   b_m = expl_temp.m;
   b_n = expl_temp.n;
 
-  //  Size of optimization variable
+  /*  Size of optimization variable */
   sizX = 4.0 * (static_cast<double>(adj->size[0]) - 2.0);
 
-  //  ADMM algorithm--full eigendecomposition
+  /*  ADMM algorithm--full eigendecomposition */
   sparse_transpose(A_d, A_colidx, A_rowidx, A_m, bi_idx_0, &expl_temp);
   i2 = As_d->size[0];
   As_d->size[0] = expl_temp.d->size[0];
@@ -1035,7 +1026,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_real_T(&AAs_d, 1);
   m = expl_temp.m;
 
-  //  Dual operator
+  /*  Dual operator */
   sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, As_d, As_colidx, As_rowidx,
                 expl_temp.n, &expl_temp);
   i2 = AAs_d->size[0];
@@ -1067,13 +1058,13 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   AAs_m = expl_temp.m;
   AAs_n = expl_temp.n;
 
-  //  Penalty
-  //  Precision for positive eig vals
-  //  Stop criteria
-  //  Threshold based on change in X updates
-  //  Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. 
-  //  Maximum # of iterations
-  //  Initialize:
+  /*  Penalty     */
+  /*  Precision for positive eig vals */
+  /*  Stop criteria */
+  /*  Threshold based on change in X updates */
+  /*  Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. */
+  /*  Maximum # of iterations */
+  /*  Initialize: */
   sparse_horzcat(I0_d, I0_colidx, I0_rowidx, I0_m, I0_n, I0_d, I0_colidx,
                  I0_rowidx, I0_m, I0_n, &expl_temp);
   i2 = one2->size[0];
@@ -1174,7 +1165,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_creal_T(&c_d, 1);
   exitg1 = false;
   while ((!exitg1) && (b_i < 10)) {
-    // %%%%%% Update for y
+    /* %%%%%% Update for y */
     sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
     i2 = I0_d->size[0];
     I0_d->size[0] = expl_temp.d->size[0];
@@ -1287,7 +1278,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       t2_rowidx->data[i2] = b_expl_temp.rowidx->data[i2];
     }
 
-    // %%%%%% Update for S
+    /* %%%%%% Update for S */
     sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
     i2 = I0_d->size[0];
     I0_d->size[0] = expl_temp.d->size[0];
@@ -1559,7 +1550,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
     c_sparse(Q, Z_d, Z_colidx, Z_rowidx, &Z_m, &Z_n);
 
-    // %%%%%% Update for X
+    /* %%%%%% Update for X */
     i2 = Z0_d->size[0];
     Z0_d->size[0] = X_d->size[0];
     emxEnsureCapacity_real_T(Z0_d, i2);
@@ -1616,7 +1607,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     X_m = expl_temp.m;
     X_n = expl_temp.n;
 
-    // %%%%%% Stop criteria
+    /* %%%%%% Stop criteria */
     b_sparse_parenReference(Z0_d, Z0_colidx, Z0_rowidx, bi_idx_0, Z0_n, bi,
       t4_colidx, t4_rowidx, &one2_tmp);
     b_sparse_parenReference(X_d, X_colidx, X_rowidx, expl_temp.m, expl_temp.n,
@@ -1643,10 +1634,10 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     sum(bi, t4_colidx, b_expl_temp.m, qsbar, ii, t2_colidx);
     sparse_lt(qsbar, ii, t6_d, one1, t2_colidx);
     if (b_sparse_full(t6_d, one1)) {
-      //  change in X is small
+      /*  change in X is small */
       exitg1 = true;
     } else {
-      //  trace of sparse matrix for MATLAB Coder
+      /*  trace of sparse matrix for MATLAB Coder */
       idxR = 2.0 * (static_cast<double>(n) - 2.0) + 1.0;
       if (expl_temp.m < idxR) {
         b->size[0] = 1;
@@ -1687,7 +1678,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
                   t4_rowidx, &one2_tmp);
       sum(bi, t4_colidx, one2_tmp, qsbar, ii, t2_colidx);
       if (std::abs(c_sparse_full(qsbar, ii) - trVal) / trVal * 100.0 < 10.0) {
-        //  trace of X is close to the desired value
+        /*  trace of X is close to the desired value */
         exitg1 = true;
       } else {
         b_i++;
@@ -1707,7 +1698,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxFree_creal_T(&D);
   emxFree_creal_T(&V);
 
-  //  Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix 
+  /*  Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix */
   b_sparse_times(Z_d, Z_colidx, Z_rowidx, Z_m, Z_n, &expl_temp);
   i2 = Av->size[0];
   Av->size[0] = expl_temp.d->size[0];
@@ -2050,7 +2041,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   sparse_full(X_d, X_colidx, X_rowidx, expl_temp.m, expl_temp.n, QQ);
 
-  //  Transform X from sparse to full representation
+  /*  Transform X from sparse to full representation  */
   d = 2.0 * (static_cast<double>(adj->size[0]) - 2.0) + 1.0;
   c_emxFreeStruct_coder_internal_(&expl_temp);
   emxFree_int32_T(&X_rowidx);
@@ -2073,7 +2064,7 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     bi_idx_0 = QQ->size[1];
   }
 
-  //  The componenet of X corresponding to the gain matrix
+  /*  The componenet of X corresponding to the gain matrix */
   loop_ub = t2_n - i2;
   t2_n = Q->size[0] * Q->size[1];
   Q->size[0] = loop_ub;
@@ -2165,127 +2156,123 @@ void ADMMGainDesign2D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxFree_real_T(&Qt);
   emxFree_real_T(&Q);
 
-  //  The formation gain matrix
-  //  i
-  //  eig(X2)
-  //  trace(X2)
-  //  ADMM algorithm--sparse eigendecomposition (use for very large-size problems n>1000) 
-  //  As = A'; % Dual operator
-  //  AAs = A * As;
-  //
-  //  mu = 1; % Penalty
-  //  epsEig = 1e-5;  % Precision for positive eig vals
-  //
-  //  % Stop criteria
-  //  thresh = 1e-4; % Threshold based on change in X updates
-  //  threshTr = 10; % Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. 
-  //  maxItr = 10; % Maximum # of iterations
-  //
-  //  % Initialize:
-  //  X = [I0 I0; I0 I0];
-  //  S = Z;
-  //  y = sparse(length(b),1);
-  //
-  //  for i = 1 : maxItr
-  //
-  //      %%%%%%% Update for y
-  //      y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
-  //
-  //
-  //      %%%%%%% Update for S
-  //      W = C - reshape(As*y, [sizX,sizX]) - mu * X;
-  //      W = (W + W')/2;
-  //
-  //      % Find positive eigenvalues of W using an iterative technique
-  //      V = zeros(sizX);
-  //      d = zeros(sizX, 1);
-  //
-  //      % Eigenvalues are repeated in paris. We find the corresponding eigvector,  
-  //      % then find the other eigenvector by rotating the first one 90 degrees 
-  //      [vw1, dw1] = eigs(W,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  
-  //      dw2 = dw1; % The second eigenvalue
-  //      % The second eigenvector
-  //      vw2 = zeros(4*m,1);
-  //      for j = 1 : 2*m
-  //          vw2(j*2-1:j*2) = [0 -1; 1 0] * vw1(j*2-1:j*2);
-  //      end
-  //
-  //      numPos = 0; % Number of positive eigenvalues
-  //      Wold = W;
-  //      while dw1 > 10*epsEig %dw(1) > epsEig
-  //          % Save positive eigenvalues and eigenvectors
-  //          numPos = numPos + 1;
-  //          d(numPos*2-1:numPos*2) = [dw1; dw2];
-  //          V(:, numPos*2-1:numPos*2) = [vw1, vw2];
-  //
-  //          % Remove positive eigenvalue components from matrix W
-  //          Wnew = Wold - dw1*vw1*vw1' - dw2*vw2*vw2.';
-  //
-  //          % Find most positive eigenvalues of the new W matrix
-  //          [vw1, dw1] = eigs(Wnew,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  
-  //          dw2 = dw1; % The second eigenvalue
-  //          % The second eigenvector
-  //          vw2 = zeros(4*m,1);
-  //          for j = 1 : 2*m
-  //              vw2(j*2-1:j*2) = [0 -1; 1 0] * vw1(j*2-1:j*2);
-  //          end
-  //
-  //          Wold = Wnew;
-  //      end
-  //
-  //      S =  V(:,1:numPos*2) * diag(d(1:numPos*2)) * V(:,1:numPos*2).';
-  //
-  //      %%%%%%% Update for X
-  //      Xold = X;
-  //      X = sparse((S - W) / mu);
-  //
-  //
-  //      %%%%%%% Stop criteria
-  //      difX = sum(abs(Xold(:) - X(:)));
-  //      if difX < thresh % change in X is small
-  //          break
-  //      end
-  //
-  //      trPerc = abs(trace( X(2*m+1:end, 2*m+1:end) ) - trVal) / trVal * 100;
-  //      if trPerc < threshTr % trace of X is close to the desired value
-  //          break
-  //      end
-  //
-  //  end
-  //
-  //  % Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix 
-  //  S = 0 * S;
-  //  y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
-  //  W = C - reshape(As*y, [sizX,sizX]) - mu * X;
-  //  W = (W + W') / 2;
-  //  X = (S - W) / mu;
-  //
-  //  X = full(X); % Transform X from sparse to full representation
-  //
-  //  X2 = X(2*m+1:end,2*m+1:end); % The componenet of X corresponding to the gain matrix 
-  //  Aopt = Q * (-X2) * Qt; % The formation gain matrix
-  //
-  //  % i
-  //  % eig(X2)
-  //  % trace(X2)
-  //  Test solution
-  //  eig(X2)
-  //  eig(Aopt)
-  //  % Enforce zero-gain constraint for non-neighbor agents
-  //  Atrim = Aopt;
-  //  for i = 1 : n
-  //      for j = 1 : n
-  //          if (i~=j) && ~adj(i,j)
-  //              Atrim(2*i-1:2*i, 2*j-1:2*j) = zeros(2);
-  //          end
-  //      end
-  //  end
-  //
-  //  eig(Atrim)
+  /*  The formation gain matrix */
+  /*  i */
+  /*  eig(X2) */
+  /*  trace(X2) */
+  /*  ADMM algorithm--sparse eigendecomposition (use for very large-size problems n>1000) */
+  /*  As = A'; % Dual operator */
+  /*  AAs = A * As; */
+  /*   */
+  /*  mu = 1; % Penalty     */
+  /*  epsEig = 1e-5;  % Precision for positive eig vals */
+  /*   */
+  /*  % Stop criteria */
+  /*  thresh = 1e-4; % Threshold based on change in X updates */
+  /*  threshTr = 10; % Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. */
+  /*  maxItr = 10; % Maximum # of iterations */
+  /*   */
+  /*  % Initialize: */
+  /*  X = [I0 I0; I0 I0]; */
+  /*  S = Z; */
+  /*  y = sparse(length(b),1); */
+  /*   */
+  /*  for i = 1 : maxItr */
+  /*       */
+  /*      %%%%%%% Update for y */
+  /*      y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b); */
+  /*       */
+  /*       */
+  /*      %%%%%%% Update for S */
+  /*      W = C - reshape(As*y, [sizX,sizX]) - mu * X; */
+  /*      W = (W + W')/2; */
+  /*       */
+  /*      % Find positive eigenvalues of W using an iterative technique */
+  /*      V = zeros(sizX); */
+  /*      d = zeros(sizX, 1); */
+  /*       */
+  /*      % Eigenvalues are repeated in paris. We find the corresponding eigvector,  */
+  /*      % then find the other eigenvector by rotating the first one 90 degrees */
+  /*      [vw1, dw1] = eigs(W,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  */
+  /*      dw2 = dw1; % The second eigenvalue */
+  /*      % The second eigenvector */
+  /*      vw2 = zeros(4*m,1); */
+  /*      for j = 1 : 2*m */
+  /*          vw2(j*2-1:j*2) = [0 -1; 1 0] * vw1(j*2-1:j*2); */
+  /*      end */
+  /*       */
+  /*      numPos = 0; % Number of positive eigenvalues */
+  /*      Wold = W; */
+  /*      while dw1 > 10*epsEig %dw(1) > epsEig */
+  /*          % Save positive eigenvalues and eigenvectors */
+  /*          numPos = numPos + 1; */
+  /*          d(numPos*2-1:numPos*2) = [dw1; dw2]; */
+  /*          V(:, numPos*2-1:numPos*2) = [vw1, vw2]; */
+  /*           */
+  /*          % Remove positive eigenvalue components from matrix W         */
+  /*          Wnew = Wold - dw1*vw1*vw1' - dw2*vw2*vw2.'; */
+  /*           */
+  /*          % Find most positive eigenvalues of the new W matrix */
+  /*          [vw1, dw1] = eigs(Wnew,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  */
+  /*          dw2 = dw1; % The second eigenvalue */
+  /*          % The second eigenvector */
+  /*          vw2 = zeros(4*m,1); */
+  /*          for j = 1 : 2*m */
+  /*              vw2(j*2-1:j*2) = [0 -1; 1 0] * vw1(j*2-1:j*2); */
+  /*          end */
+  /*           */
+  /*          Wold = Wnew; */
+  /*      end */
+  /*       */
+  /*      S =  V(:,1:numPos*2) * diag(d(1:numPos*2)) * V(:,1:numPos*2).'; */
+  /*       */
+  /*      %%%%%%% Update for X */
+  /*      Xold = X; */
+  /*      X = sparse((S - W) / mu); */
+  /*       */
+  /*   */
+  /*      %%%%%%% Stop criteria */
+  /*      difX = sum(abs(Xold(:) - X(:))); */
+  /*      if difX < thresh % change in X is small */
+  /*          break  */
+  /*      end */
+  /*       */
+  /*      trPerc = abs(trace( X(2*m+1:end, 2*m+1:end) ) - trVal) / trVal * 100; */
+  /*      if trPerc < threshTr % trace of X is close to the desired value */
+  /*          break */
+  /*      end */
+  /*       */
+  /*  end */
+  /*   */
+  /*  % Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix */
+  /*  S = 0 * S; */
+  /*  y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b); */
+  /*  W = C - reshape(As*y, [sizX,sizX]) - mu * X; */
+  /*  W = (W + W') / 2; */
+  /*  X = (S - W) / mu; */
+  /*   */
+  /*  X = full(X); % Transform X from sparse to full representation  */
+  /*   */
+  /*  X2 = X(2*m+1:end,2*m+1:end); % The componenet of X corresponding to the gain matrix */
+  /*  Aopt = Q * (-X2) * Qt; % The formation gain matrix */
+  /*   */
+  /*  % i */
+  /*  % eig(X2) */
+  /*  % trace(X2) */
+  /*  Test solution */
+  /*  eig(X2) */
+  /*  eig(Aopt) */
+  /*  % Enforce zero-gain constraint for non-neighbor agents */
+  /*  Atrim = Aopt; */
+  /*  for i = 1 : n */
+  /*      for j = 1 : n */
+  /*          if (i~=j) && ~adj(i,j) */
+  /*              Atrim(2*i-1:2*i, 2*j-1:2*j) = zeros(2);             */
+  /*          end */
+  /*      end */
+  /*  end */
+  /*   */
+  /*  eig(Atrim) */
 }
 
-//
-// File trailer for ADMMGainDesign2D.cpp
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign2D.cpp) */

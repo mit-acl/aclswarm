@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: mtimes.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * mtimes.cpp
+ *
+ * Code generation for function 'mtimes'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "mtimes.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -17,19 +18,7 @@
 #include "rt_nonfinite.h"
 #include "sparse.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                int a_m
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                coder_internal_sparse_1 *c
-// Return Type  : void
-//
+/* Function Definitions */
 void b_sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T
                      *a_colidx, const emxArray_int32_T *a_rowidx, int a_m, const
                      emxArray_real_T *b_d, const emxArray_int32_T *b_colidx,
@@ -166,18 +155,6 @@ void b_sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T
   c_sparse_fillIn(c);
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                int a_m
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_n
-//                coder_internal_sparse *c
-// Return Type  : void
-//
 void sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                    const emxArray_int32_T *a_rowidx, int a_m, const
                    emxArray_real_T *b_d, const emxArray_int32_T *b_colidx, const
@@ -371,8 +348,4 @@ void sparse_mtimes(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
   b_sparse_fillIn(c);
 }
 
-//
-// File trailer for mtimes.cpp
-//
-// [EOF]
-//
+/* End of code generation (mtimes.cpp) */

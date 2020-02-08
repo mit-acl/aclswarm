@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xdhseqr.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xdhseqr.cpp
+ *
+ * Code generation for function 'xdhseqr'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xdhseqr.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
@@ -16,13 +17,7 @@
 #include "xzlarfg.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : emxArray_real_T *h
-//                emxArray_real_T *z
-// Return Type  : int
-//
+/* Function Definitions */
 int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
 {
   int info;
@@ -391,8 +386,4 @@ int eml_dlahqr(emxArray_real_T *h, emxArray_real_T *z)
   return info;
 }
 
-//
-// File trailer for xdhseqr.cpp
-//
-// [EOF]
-//
+/* End of code generation (xdhseqr.cpp) */

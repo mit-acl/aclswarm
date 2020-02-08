@@ -1,21 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: introsort.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * introsort.cpp
+ *
+ * Code generation for function 'introsort'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "introsort.h"
 #include "ADMMGainDesign3D.h"
 #include "heapsort.h"
 #include "insertionsort.h"
 #include "rt_nonfinite.h"
 
-// Type Definitions
+/* Type Definitions */
 struct struct_T
 {
   int xstart;
@@ -23,14 +24,7 @@ struct struct_T
   int depth;
 };
 
-// Function Definitions
-
-//
-// Arguments    : emxArray_int32_T *x
-//                int xstart
-//                int xend
-// Return Type  : void
-//
+/* Function Definitions */
 void b_introsort(emxArray_int32_T *x, int xstart, int xend)
 {
   int nsort;
@@ -149,12 +143,6 @@ void b_introsort(emxArray_int32_T *x, int xstart, int xend)
   }
 }
 
-//
-// Arguments    : emxArray_int32_T *x
-//                int xend
-//                const cell_wrap_3 cmp_tunableEnvironment[2]
-// Return Type  : void
-//
 void introsort(emxArray_int32_T *x, int xend, const cell_wrap_3
                cmp_tunableEnvironment[2])
 {
@@ -323,8 +311,4 @@ void introsort(emxArray_int32_T *x, int xend, const cell_wrap_3
   }
 }
 
-//
-// File trailer for introsort.cpp
-//
-// [EOF]
-//
+/* End of code generation (introsort.cpp) */

@@ -1,26 +1,21 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: diag1.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * diag1.cpp
+ *
+ * Code generation for function 'diag1'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "diag1.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_boolean_T *v
-//                emxArray_boolean_T *d
-// Return Type  : void
-//
+/* Function Definitions */
 void b_diag(const emxArray_boolean_T *v, emxArray_boolean_T *d)
 {
   int nv;
@@ -41,11 +36,6 @@ void b_diag(const emxArray_boolean_T *v, emxArray_boolean_T *d)
   }
 }
 
-//
-// Arguments    : const emxArray_creal_T *v
-//                emxArray_creal_T *d
-// Return Type  : void
-//
 void c_diag(const emxArray_creal_T *v, emxArray_creal_T *d)
 {
   int u0;
@@ -78,11 +68,6 @@ void c_diag(const emxArray_creal_T *v, emxArray_creal_T *d)
   }
 }
 
-//
-// Arguments    : const emxArray_creal_T *v
-//                emxArray_creal_T *d
-// Return Type  : void
-//
 void d_diag(const emxArray_creal_T *v, emxArray_creal_T *d)
 {
   int nv;
@@ -104,11 +89,6 @@ void d_diag(const emxArray_creal_T *v, emxArray_creal_T *d)
   }
 }
 
-//
-// Arguments    : const emxArray_boolean_T *v
-//                emxArray_boolean_T *d
-// Return Type  : void
-//
 void diag(const emxArray_boolean_T *v, emxArray_boolean_T *d)
 {
   int u0;
@@ -141,8 +121,4 @@ void diag(const emxArray_boolean_T *v, emxArray_boolean_T *d)
   }
 }
 
-//
-// File trailer for diag1.cpp
-//
-// [EOF]
-//
+/* End of code generation (diag1.cpp) */

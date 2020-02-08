@@ -1,33 +1,25 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D_initialize.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D_initialize.cpp
+ *
+ * Code generation for function 'ADMMGainDesign3D_initialize'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "ADMMGainDesign3D_initialize.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_data.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : void
-// Return Type  : void
-//
+/* Function Definitions */
 void ADMMGainDesign3D_initialize()
 {
   rt_InitInfAndNaN();
   isInitialized_ADMMGainDesign3D = true;
 }
 
-//
-// File trailer for ADMMGainDesign3D_initialize.cpp
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D_initialize.cpp) */

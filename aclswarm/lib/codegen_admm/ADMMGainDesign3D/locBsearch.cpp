@@ -1,29 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: locBsearch.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * locBsearch.cpp
+ *
+ * Code generation for function 'locBsearch'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "locBsearch.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_int32_T *x
-//                int xi
-//                int xstart
-//                int xend
-//                int *n
-//                bool *found
-// Return Type  : void
-//
+/* Function Definitions */
 void sparse_locBsearch(const emxArray_int32_T *x, int xi, int xstart, int xend,
   int *n, bool *found)
 {
@@ -63,8 +54,4 @@ void sparse_locBsearch(const emxArray_int32_T *x, int xi, int xstart, int xend,
   }
 }
 
-//
-// File trailer for locBsearch.cpp
-//
-// [EOF]
-//
+/* End of code generation (locBsearch.cpp) */

@@ -3,14 +3,14 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * xzlarf.h
+ * abs.h
  *
- * Code generation for function 'xzlarf'
+ * Code generation for function 'abs'
  *
  */
 
-#ifndef XZLARF_H
-#define XZLARF_H
+#ifndef ABS_H
+#define ABS_H
 
 /* Include files */
 #include <cstddef>
@@ -19,9 +19,8 @@
 #include "ADMMGainDesign3D_types.h"
 
 /* Function Declarations */
-extern void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int
-                   ic0, int ldc, emxArray_real_T *work);
+extern void b_abs(const emxArray_real_T *x, emxArray_real_T *y);
 
 #endif
 
-/* End of code generation (xzlarf.h) */
+/* End of code generation (abs.h) */

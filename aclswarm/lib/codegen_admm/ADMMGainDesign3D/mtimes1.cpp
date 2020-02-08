@@ -1,27 +1,21 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: mtimes1.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * mtimes1.cpp
+ *
+ * Code generation for function 'mtimes1'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "mtimes1.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *A
-//                const emxArray_real_T *B
-//                emxArray_real_T *C
-// Return Type  : void
-//
+/* Function Definitions */
 void b_mtimes(const emxArray_real_T *A, const emxArray_real_T *B,
               emxArray_real_T *C)
 {
@@ -61,12 +55,6 @@ void b_mtimes(const emxArray_real_T *A, const emxArray_real_T *B,
   }
 }
 
-//
-// Arguments    : const emxArray_creal_T *A
-//                const emxArray_creal_T *B
-//                emxArray_creal_T *C
-// Return Type  : void
-//
 void mtimes(const emxArray_creal_T *A, const emxArray_creal_T *B,
             emxArray_creal_T *C)
 {
@@ -116,8 +104,4 @@ void mtimes(const emxArray_creal_T *A, const emxArray_creal_T *B,
   }
 }
 
-//
-// File trailer for mtimes1.cpp
-//
-// [EOF]
-//
+/* End of code generation (mtimes1.cpp) */

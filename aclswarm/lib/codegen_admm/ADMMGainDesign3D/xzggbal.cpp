@@ -1,28 +1,21 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xzggbal.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xzggbal.cpp
+ *
+ * Code generation for function 'xzggbal'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xzggbal.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : emxArray_creal_T *A
-//                int *ilo
-//                int *ihi
-//                emxArray_int32_T *rscale
-// Return Type  : void
-//
+/* Function Definitions */
 void xzggbal(emxArray_creal_T *A, int *ilo, int *ihi, emxArray_int32_T *rscale)
 {
   int nzcount;
@@ -199,8 +192,4 @@ void xzggbal(emxArray_creal_T *A, int *ilo, int *ihi, emxArray_int32_T *rscale)
   }
 }
 
-//
-// File trailer for xzggbal.cpp
-//
-// [EOF]
-//
+/* End of code generation (xzggbal.cpp) */

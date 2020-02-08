@@ -1,28 +1,21 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xrotg.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xrotg.cpp
+ *
+ * Code generation for function 'xrotg'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xrotg.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : double *a
-//                double *b
-//                double *c
-//                double *s
-// Return Type  : void
-//
+/* Function Definitions */
 void xrotg(double *a, double *b, double *c, double *s)
 {
   double roe;
@@ -66,8 +59,4 @@ void xrotg(double *a, double *b, double *c, double *s)
   }
 }
 
-//
-// File trailer for xrotg.cpp
-//
-// [EOF]
-//
+/* End of code generation (xrotg.cpp) */

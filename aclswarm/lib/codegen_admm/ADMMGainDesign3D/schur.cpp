@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: schur.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * schur.cpp
+ *
+ * Code generation for function 'schur'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "schur.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -20,14 +21,7 @@
 #include "xzlarf.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *A
-//                emxArray_real_T *V
-//                emxArray_real_T *T
-// Return Type  : void
-//
+/* Function Definitions */
 void schur(const emxArray_real_T *A, emxArray_real_T *V, emxArray_real_T *T)
 {
   int nx;
@@ -388,8 +382,4 @@ void schur(const emxArray_real_T *A, emxArray_real_T *V, emxArray_real_T *T)
   }
 }
 
-//
-// File trailer for schur.cpp
-//
-// [EOF]
-//
+/* End of code generation (schur.cpp) */

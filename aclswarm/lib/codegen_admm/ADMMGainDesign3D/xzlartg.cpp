@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xzlartg.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xzlartg.cpp
+ *
+ * Code generation for function 'xzlartg'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xzlartg.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_rtwutil.h"
@@ -16,15 +17,7 @@
 #include "xdlanv2.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : const creal_T f
-//                const creal_T g
-//                double *cs
-//                creal_T *sn
-// Return Type  : void
-//
+/* Function Definitions */
 void b_xzlartg(const creal_T f, const creal_T g, double *cs, creal_T *sn)
 {
   double scale_tmp;
@@ -135,14 +128,6 @@ void b_xzlartg(const creal_T f, const creal_T g, double *cs, creal_T *sn)
   }
 }
 
-//
-// Arguments    : const creal_T f
-//                const creal_T g
-//                double *cs
-//                creal_T *sn
-//                creal_T *r
-// Return Type  : void
-//
 void xzlartg(const creal_T f, const creal_T g, double *cs, creal_T *sn, creal_T *
              r)
 {
@@ -282,8 +267,4 @@ void xzlartg(const creal_T f, const creal_T g, double *cs, creal_T *sn, creal_T 
   }
 }
 
-//
-// File trailer for xzlartg.cpp
-//
-// [EOF]
-//
+/* End of code generation (xzlartg.cpp) */

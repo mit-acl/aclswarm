@@ -1,30 +1,57 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: sum.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * sum.cpp
+ *
+ * Code generation for function 'sum'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "sum.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
+/* Function Definitions */
+void b_sum(const emxArray_real_T *x, emxArray_real_T *y)
+{
+  int vlen;
+  int vstride;
+  unsigned int sz_idx_0;
+  int k;
+  int j;
+  int xoffset;
+  vlen = x->size[1];
+  if ((x->size[0] == 0) || (x->size[1] == 0)) {
+    sz_idx_0 = static_cast<unsigned int>(x->size[0]);
+    k = y->size[0];
+    y->size[0] = static_cast<int>(sz_idx_0);
+    emxEnsureCapacity_real_T(y, k);
+    j = static_cast<int>(sz_idx_0);
+    for (k = 0; k < j; k++) {
+      y->data[k] = 0.0;
+    }
+  } else {
+    vstride = x->size[0];
+    k = y->size[0];
+    y->size[0] = x->size[0];
+    emxEnsureCapacity_real_T(y, k);
+    for (j = 0; j < vstride; j++) {
+      y->data[j] = x->data[j];
+    }
 
-//
-// Arguments    : const emxArray_real_T *x_d
-//                const emxArray_int32_T *x_colidx
-//                int x_m
-//                emxArray_real_T *y_d
-//                emxArray_int32_T *y_colidx
-//                emxArray_int32_T *y_rowidx
-// Return Type  : void
-//
+    for (k = 2; k <= vlen; k++) {
+      xoffset = (k - 1) * vstride;
+      for (j = 0; j < vstride; j++) {
+        y->data[j] += x->data[xoffset + j];
+      }
+    }
+  }
+}
+
 void sum(const emxArray_real_T *x_d, const emxArray_int32_T *x_colidx, int x_m,
          emxArray_real_T *y_d, emxArray_int32_T *y_colidx, emxArray_int32_T
          *y_rowidx)
@@ -79,8 +106,4 @@ void sum(const emxArray_real_T *x_d, const emxArray_int32_T *x_colidx, int x_m,
   }
 }
 
-//
-// File trailer for sum.cpp
-//
-// [EOF]
-//
+/* End of code generation (sum.cpp) */

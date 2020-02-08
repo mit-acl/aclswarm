@@ -9,7 +9,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 file(GLOB cxsparse_srcs "ADMMGainDesign3D/CXSparse/Source/*.cpp" "ADMMGainDesign3D/CXSparse/CXSparseSupport/*.cpp")
-set_source_files_properties(${cxsparse_srcs} PROPERTIES LANGUAGE C)
+set_source_files_properties(${cxsparse_srcs} PROPERTIES LANGUAGE CXX)
 file(GLOB admm_srcs "ADMMGainDesign3D/*.cpp")
 set_source_files_properties(${admm_srcs} PROPERTIES LANGUAGE CXX)
 

@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: sparse.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * sparse.cpp
+ *
+ * Code generation for function 'sparse'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "sparse.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -22,13 +23,7 @@
 #include "solve_from_lu.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_boolean_T *this_d
-//                const emxArray_int32_T *this_colidx
-// Return Type  : bool
-//
+/* Function Definitions */
 bool b_sparse_full(const emxArray_boolean_T *this_d, const emxArray_int32_T
                    *this_colidx)
 {
@@ -46,20 +41,6 @@ bool b_sparse_full(const emxArray_boolean_T *this_d, const emxArray_int32_T
   return y;
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-// Return Type  : void
-//
 void b_sparse_minus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                     const emxArray_int32_T *a_rowidx, const emxArray_real_T *b_d,
                     const emxArray_int32_T *b_colidx, const emxArray_int32_T
@@ -133,18 +114,6 @@ void b_sparse_minus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx
   s_colidx->data[1] = numalloc;
 }
 
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-//                const emxArray_int32_T *this_rowidx
-//                int this_m
-//                int this_n
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-// Return Type  : void
-//
 void b_sparse_parenReference(const emxArray_real_T *this_d, const
   emxArray_int32_T *this_colidx, const emxArray_int32_T *this_rowidx, int this_m,
   int this_n, emxArray_real_T *s_d, emxArray_int32_T *s_colidx, emxArray_int32_T
@@ -193,22 +162,6 @@ void b_sparse_parenReference(const emxArray_real_T *this_d, const
   }
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                int b_n
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-//                int *s_n
-// Return Type  : void
-//
 void b_sparse_plus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                    const emxArray_int32_T *a_rowidx, const emxArray_real_T *b_d,
                    const emxArray_int32_T *b_colidx, const emxArray_int32_T
@@ -311,15 +264,6 @@ void b_sparse_plus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
   }
 }
 
-//
-// Arguments    : const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                int b_n
-//                coder_internal_sparse *s
-// Return Type  : void
-//
 void b_sparse_times(const emxArray_real_T *b_d, const emxArray_int32_T *b_colidx,
                     const emxArray_int32_T *b_rowidx, int b_m, int b_n,
                     coder_internal_sparse *s)
@@ -400,11 +344,6 @@ void b_sparse_times(const emxArray_real_T *b_d, const emxArray_int32_T *b_colidx
   b_sparse_fillIn(s);
 }
 
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-// Return Type  : double
-//
 double c_sparse_full(const emxArray_real_T *this_d, const emxArray_int32_T
                      *this_colidx)
 {
@@ -422,19 +361,6 @@ double c_sparse_full(const emxArray_real_T *this_d, const emxArray_int32_T
   return y;
 }
 
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-//                const emxArray_int32_T *this_rowidx
-//                const emxArray_real_T *varargin_1
-//                const emxArray_real_T *varargin_2
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-//                int *s_n
-// Return Type  : void
-//
 void c_sparse_parenReference(const emxArray_real_T *this_d, const
   emxArray_int32_T *this_colidx, const emxArray_int32_T *this_rowidx, const
   emxArray_real_T *varargin_1, const emxArray_real_T *varargin_2,
@@ -511,14 +437,6 @@ void c_sparse_parenReference(const emxArray_real_T *this_d, const
   *s_n = varargin_2->size[1];
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                int a_m
-//                coder_internal_sparse_1 *s
-// Return Type  : void
-//
 void sparse_abs(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                 const emxArray_int32_T *a_rowidx, int a_m,
                 coder_internal_sparse_1 *s)
@@ -570,15 +488,6 @@ void sparse_abs(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
   c_sparse_fillIn(s);
 }
 
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-//                const emxArray_int32_T *this_rowidx
-//                int this_m
-//                int this_n
-//                emxArray_real_T *y
-// Return Type  : void
-//
 void sparse_full(const emxArray_real_T *this_d, const emxArray_int32_T
                  *this_colidx, const emxArray_int32_T *this_rowidx, int this_m,
                  int this_n, emxArray_real_T *y)
@@ -606,14 +515,6 @@ void sparse_full(const emxArray_real_T *this_d, const emxArray_int32_T
   }
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                emxArray_boolean_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-// Return Type  : void
-//
 void sparse_lt(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                emxArray_boolean_T *s_d, emxArray_int32_T *s_colidx,
                emxArray_int32_T *s_rowidx)
@@ -646,22 +547,6 @@ void sparse_lt(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
   }
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                int b_n
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-//                int *s_n
-// Return Type  : void
-//
 void sparse_minus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                   const emxArray_int32_T *a_rowidx, const emxArray_real_T *b_d,
                   const emxArray_int32_T *b_colidx, const emxArray_int32_T
@@ -764,19 +649,6 @@ void sparse_minus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
   }
 }
 
-//
-// Arguments    : const emxArray_real_T *A_d
-//                const emxArray_int32_T *A_colidx
-//                const emxArray_int32_T *A_rowidx
-//                int A_m
-//                int A_n
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                coder_internal_sparse_1 *y
-// Return Type  : void
-//
 void sparse_mldivide(const emxArray_real_T *A_d, const emxArray_int32_T
                      *A_colidx, const emxArray_int32_T *A_rowidx, int A_m, int
                      A_n, const emxArray_real_T *b_d, const emxArray_int32_T
@@ -963,17 +835,6 @@ void sparse_mldivide(const emxArray_real_T *A_d, const emxArray_int32_T
   emxFree_real_T(&tmp);
 }
 
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-//                const emxArray_int32_T *this_rowidx
-//                int this_m
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-// Return Type  : void
-//
 void sparse_parenReference(const emxArray_real_T *this_d, const emxArray_int32_T
   *this_colidx, const emxArray_int32_T *this_rowidx, int this_m, emxArray_real_T
   *s_d, emxArray_int32_T *s_colidx, emxArray_int32_T *s_rowidx, int *s_m)
@@ -999,20 +860,6 @@ void sparse_parenReference(const emxArray_real_T *this_d, const emxArray_int32_T
   }
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-// Return Type  : void
-//
 void sparse_plus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                  const emxArray_int32_T *a_rowidx, const emxArray_real_T *b_d,
                  const emxArray_int32_T *b_colidx, const emxArray_int32_T
@@ -1086,15 +933,6 @@ void sparse_plus(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
   s_colidx->data[1] = numalloc;
 }
 
-//
-// Arguments    : const emxArray_real_T *a_d
-//                const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *a_rowidx
-//                int a_m
-//                int a_n
-//                coder_internal_sparse *s
-// Return Type  : void
-//
 void sparse_rdivide(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx,
                     const emxArray_int32_T *a_rowidx, int a_m, int a_n,
                     coder_internal_sparse *s)
@@ -1175,16 +1013,6 @@ void sparse_rdivide(const emxArray_real_T *a_d, const emxArray_int32_T *a_colidx
   b_sparse_fillIn(s);
 }
 
-//
-// Arguments    : int m
-//                int nzmax
-//                emxArray_real_T *s_d
-//                emxArray_int32_T *s_colidx
-//                emxArray_int32_T *s_rowidx
-//                int *s_m
-//                int *s_maxnz
-// Return Type  : void
-//
 void sparse_spallocLike(int m, int nzmax, emxArray_real_T *s_d, emxArray_int32_T
   *s_colidx, emxArray_int32_T *s_rowidx, int *s_m, int *s_maxnz)
 {
@@ -1219,15 +1047,6 @@ void sparse_spallocLike(int m, int nzmax, emxArray_real_T *s_d, emxArray_int32_T
   *s_maxnz = numalloc;
 }
 
-//
-// Arguments    : const emxArray_real_T *b_d
-//                const emxArray_int32_T *b_colidx
-//                const emxArray_int32_T *b_rowidx
-//                int b_m
-//                int b_n
-//                coder_internal_sparse *s
-// Return Type  : void
-//
 void sparse_times(const emxArray_real_T *b_d, const emxArray_int32_T *b_colidx,
                   const emxArray_int32_T *b_rowidx, int b_m, int b_n,
                   coder_internal_sparse *s)
@@ -1292,15 +1111,6 @@ void sparse_times(const emxArray_real_T *b_d, const emxArray_int32_T *b_colidx,
   b_sparse_fillIn(s);
 }
 
-//
-// Arguments    : const emxArray_real_T *this_d
-//                const emxArray_int32_T *this_colidx
-//                const emxArray_int32_T *this_rowidx
-//                int this_m
-//                int this_n
-//                coder_internal_sparse *y
-// Return Type  : void
-//
 void sparse_transpose(const emxArray_real_T *this_d, const emxArray_int32_T
                       *this_colidx, const emxArray_int32_T *this_rowidx, int
                       this_m, int this_n, coder_internal_sparse *y)
@@ -1382,8 +1192,4 @@ void sparse_transpose(const emxArray_real_T *this_d, const emxArray_int32_T
   }
 }
 
-//
-// File trailer for sparse.cpp
-//
-// [EOF]
-//
+/* End of code generation (sparse.cpp) */

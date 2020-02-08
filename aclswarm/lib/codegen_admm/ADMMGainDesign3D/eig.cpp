@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: eig.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * eig.cpp
+ *
+ * Code generation for function 'eig'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "eig.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -19,14 +20,7 @@
 #include "xzggev.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *A
-//                emxArray_creal_T *V
-//                emxArray_creal_T *D
-// Return Type  : void
-//
+/* Function Definitions */
 void eig(const emxArray_real_T *A, emxArray_creal_T *V, emxArray_creal_T *D)
 {
   int nx;
@@ -371,8 +365,4 @@ void eig(const emxArray_real_T *A, emxArray_creal_T *V, emxArray_creal_T *D)
   }
 }
 
-//
-// File trailer for eig.cpp
-//
-// [EOF]
-//
+/* End of code generation (eig.cpp) */

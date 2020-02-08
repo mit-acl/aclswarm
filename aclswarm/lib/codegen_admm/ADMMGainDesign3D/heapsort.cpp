@@ -1,32 +1,25 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: heapsort.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * heapsort.cpp
+ *
+ * Code generation for function 'heapsort'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "heapsort.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Declarations
+/* Function Declarations */
 static void b_heapify(emxArray_int32_T *x, int idx, int xstart, int xend);
 static void heapify(emxArray_int32_T *x, int idx, int xstart, int xend, const
                     cell_wrap_3 cmp_tunableEnvironment[2]);
 
-// Function Definitions
-
-//
-// Arguments    : emxArray_int32_T *x
-//                int idx
-//                int xstart
-//                int xend
-// Return Type  : void
-//
+/* Function Definitions */
 static void b_heapify(emxArray_int32_T *x, int idx, int xstart, int xend)
 {
   bool changed;
@@ -71,14 +64,6 @@ static void b_heapify(emxArray_int32_T *x, int idx, int xstart, int xend)
   }
 }
 
-//
-// Arguments    : emxArray_int32_T *x
-//                int idx
-//                int xstart
-//                int xend
-//                const cell_wrap_3 cmp_tunableEnvironment[2]
-// Return Type  : void
-//
 static void heapify(emxArray_int32_T *x, int idx, int xstart, int xend, const
                     cell_wrap_3 cmp_tunableEnvironment[2])
 {
@@ -141,13 +126,6 @@ static void heapify(emxArray_int32_T *x, int idx, int xstart, int xend, const
   }
 }
 
-//
-// Arguments    : emxArray_int32_T *x
-//                int xstart
-//                int xend
-//                const cell_wrap_3 cmp_tunableEnvironment[2]
-// Return Type  : void
-//
 void b_heapsort(emxArray_int32_T *x, int xstart, int xend, const cell_wrap_3
                 cmp_tunableEnvironment[2])
 {
@@ -168,12 +146,6 @@ void b_heapsort(emxArray_int32_T *x, int xstart, int xend, const cell_wrap_3
   }
 }
 
-//
-// Arguments    : emxArray_int32_T *x
-//                int xstart
-//                int xend
-// Return Type  : void
-//
 void c_heapsort(emxArray_int32_T *x, int xstart, int xend)
 {
   int n;
@@ -193,8 +165,4 @@ void c_heapsort(emxArray_int32_T *x, int xstart, int xend)
   }
 }
 
-//
-// File trailer for heapsort.cpp
-//
-// [EOF]
-//
+/* End of code generation (heapsort.cpp) */

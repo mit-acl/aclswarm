@@ -1,31 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xzlarf.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xzlarf.cpp
+ *
+ * Code generation for function 'xzlarf'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xzlarf.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : int m
-//                int n
-//                int iv0
-//                double tau
-//                emxArray_real_T *C
-//                int ic0
-//                int ldc
-//                emxArray_real_T *work
-// Return Type  : void
-//
+/* Function Definitions */
 void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int ic0, int
             ldc, emxArray_real_T *work)
 {
@@ -119,8 +108,4 @@ void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int ic0, int
   }
 }
 
-//
-// File trailer for xzlarf.cpp
-//
-// [EOF]
-//
+/* End of code generation (xzlarf.cpp) */

@@ -1,36 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: horzcat.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * horzcat.cpp
+ *
+ * Code generation for function 'horzcat'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "horzcat.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "fillIn.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *varargin_1_d
-//                const emxArray_int32_T *varargin_1_colidx
-//                const emxArray_int32_T *varargin_1_rowidx
-//                int varargin_1_m
-//                int varargin_1_n
-//                const emxArray_real_T *varargin_2_d
-//                const emxArray_int32_T *varargin_2_colidx
-//                const emxArray_int32_T *varargin_2_rowidx
-//                int varargin_2_m
-//                int varargin_2_n
-//                coder_internal_sparse *c
-// Return Type  : void
-//
+/* Function Definitions */
 void sparse_horzcat(const emxArray_real_T *varargin_1_d, const emxArray_int32_T *
                     varargin_1_colidx, const emxArray_int32_T *varargin_1_rowidx,
                     int varargin_1_m, int varargin_1_n, const emxArray_real_T
@@ -141,8 +127,4 @@ void sparse_horzcat(const emxArray_real_T *varargin_1_d, const emxArray_int32_T 
   }
 }
 
-//
-// File trailer for horzcat.cpp
-//
-// [EOF]
-//
+/* End of code generation (horzcat.cpp) */

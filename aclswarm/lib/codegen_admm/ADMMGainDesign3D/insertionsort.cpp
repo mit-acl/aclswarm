@@ -1,26 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: insertionsort.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * insertionsort.cpp
+ *
+ * Code generation for function 'insertionsort'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "insertionsort.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : emxArray_int32_T *x
-//                int xstart
-//                int xend
-// Return Type  : void
-//
+/* Function Definitions */
 void b_insertionsort(emxArray_int32_T *x, int xstart, int xend)
 {
   int i;
@@ -40,13 +34,6 @@ void b_insertionsort(emxArray_int32_T *x, int xstart, int xend)
   }
 }
 
-//
-// Arguments    : emxArray_int32_T *x
-//                int xstart
-//                int xend
-//                const cell_wrap_3 cmp_tunableEnvironment[2]
-// Return Type  : void
-//
 void insertionsort(emxArray_int32_T *x, int xstart, int xend, const cell_wrap_3
                    cmp_tunableEnvironment[2])
 {
@@ -80,8 +67,4 @@ void insertionsort(emxArray_int32_T *x, int xstart, int xend, const cell_wrap_3
   }
 }
 
-//
-// File trailer for insertionsort.cpp
-//
-// [EOF]
-//
+/* End of code generation (insertionsort.cpp) */

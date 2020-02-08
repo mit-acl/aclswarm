@@ -1,28 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xdotc.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xdotc.cpp
+ *
+ * Code generation for function 'xdotc'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xdotc.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : int n
-//                const double x[16]
-//                int ix0
-//                const double y[16]
-//                int iy0
-// Return Type  : double
-//
+/* Function Definitions */
 double xdotc(int n, const double x[16], int ix0, const double y[16], int iy0)
 {
   double d;
@@ -41,8 +33,4 @@ double xdotc(int n, const double x[16], int ix0, const double y[16], int iy0)
   return d;
 }
 
-//
-// File trailer for xdotc.cpp
-//
-// [EOF]
-//
+/* End of code generation (xdotc.cpp) */

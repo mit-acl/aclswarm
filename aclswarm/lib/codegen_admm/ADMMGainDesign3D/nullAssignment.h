@@ -3,14 +3,14 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * xzlarf.h
+ * nullAssignment.h
  *
- * Code generation for function 'xzlarf'
+ * Code generation for function 'nullAssignment'
  *
  */
 
-#ifndef XZLARF_H
-#define XZLARF_H
+#ifndef NULLASSIGNMENT_H
+#define NULLASSIGNMENT_H
 
 /* Include files */
 #include <cstddef>
@@ -19,9 +19,8 @@
 #include "ADMMGainDesign3D_types.h"
 
 /* Function Declarations */
-extern void xzlarf(int m, int n, int iv0, double tau, emxArray_real_T *C, int
-                   ic0, int ldc, emxArray_real_T *work);
+extern void nullAssignment(emxArray_real_T *x, const emxArray_boolean_T *idx);
 
 #endif
 
-/* End of code generation (xzlarf.h) */
+/* End of code generation (nullAssignment.h) */

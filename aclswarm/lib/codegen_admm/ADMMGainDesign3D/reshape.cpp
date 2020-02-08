@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: reshape.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * reshape.cpp
+ *
+ * Code generation for function 'reshape'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "reshape.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
@@ -16,16 +17,7 @@
 #include "fillIn.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_real_T *A_d
-//                const emxArray_int32_T *A_colidx
-//                const emxArray_int32_T *A_rowidx
-//                const double varargin_1[2]
-//                coder_internal_sparse *B
-// Return Type  : void
-//
+/* Function Definitions */
 void sparse_reshape(const emxArray_real_T *A_d, const emxArray_int32_T *A_colidx,
                     const emxArray_int32_T *A_rowidx, const double varargin_1[2],
                     coder_internal_sparse *B)
@@ -105,8 +97,4 @@ void sparse_reshape(const emxArray_real_T *A_d, const emxArray_int32_T *A_colidx
   }
 }
 
-//
-// File trailer for reshape.cpp
-//
-// [EOF]
-//
+/* End of code generation (reshape.cpp) */

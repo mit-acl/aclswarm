@@ -1,12 +1,13 @@
-//
-//  Academic License - for use in teaching, academic research, and meeting
-//  course requirements at degree granting institutions only.  Not for
-//  government, commercial, or other organizational use.
-//  File: rtGetInf.h
-//
-//  MATLAB Coder version            : 4.3
-//  C/C++ source code generated on  : 02-Feb-2020 11:20:18
-
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * rtGetInf.h
+ *
+ * Code generation for function 'ADMMGainDesign3D'
+ *
+ */
 
 #ifndef RTGETINF_H
 #define RTGETINF_H
@@ -29,8 +30,4 @@ extern "C" {
 #endif
 #endif
 
-//
-//  File trailer for rtGetInf.h
-//
-//  [EOF]
-
+/* End of code generation (rtGetInf.h) */

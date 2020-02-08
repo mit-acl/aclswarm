@@ -1,26 +1,21 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D_rtwutil.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D_rtwutil.cpp
+ *
+ * Code generation for function 'ADMMGainDesign3D_rtwutil'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "ADMMGainDesign3D_rtwutil.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : int numerator
-//                int denominator
-// Return Type  : int
-//
+/* Function Definitions */
 int div_s32(int numerator, int denominator)
 {
   int quotient;
@@ -56,11 +51,6 @@ int div_s32(int numerator, int denominator)
   return quotient;
 }
 
-//
-// Arguments    : double u0
-//                double u1
-// Return Type  : double
-//
 double rt_hypotd_snf(double u0, double u1)
 {
   double y;
@@ -82,8 +72,4 @@ double rt_hypotd_snf(double u0, double u1)
   return y;
 }
 
-//
-// File trailer for ADMMGainDesign3D_rtwutil.cpp
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D_rtwutil.cpp) */

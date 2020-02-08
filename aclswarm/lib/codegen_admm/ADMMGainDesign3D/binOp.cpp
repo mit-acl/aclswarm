@@ -1,30 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: binOp.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * binOp.cpp
+ *
+ * Code generation for function 'binOp'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "binOp.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "fillIn.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : const emxArray_int32_T *a_colidx
-//                const emxArray_int32_T *b_colidx
-//                int sn
-//                int sm
-//                coder_internal_sparse *s
-// Return Type  : void
-//
+/* Function Definitions */
 void allocEqsizeBinop(const emxArray_int32_T *a_colidx, const emxArray_int32_T
                       *b_colidx, int sn, int sm, coder_internal_sparse *s)
 {
@@ -68,8 +60,4 @@ void allocEqsizeBinop(const emxArray_int32_T *a_colidx, const emxArray_int32_T
   sparse_fillIn(s);
 }
 
-//
-// File trailer for binOp.cpp
-//
-// [EOF]
-//
+/* End of code generation (binOp.cpp) */

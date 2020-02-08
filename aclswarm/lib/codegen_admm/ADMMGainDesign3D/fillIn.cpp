@@ -1,24 +1,20 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: fillIn.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * fillIn.cpp
+ *
+ * Code generation for function 'fillIn'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "fillIn.h"
 #include "ADMMGainDesign3D.h"
 #include "rt_nonfinite.h"
 
-// Function Definitions
-
-//
-// Arguments    : coder_internal_sparse *b_this
-// Return Type  : void
-//
+/* Function Definitions */
 void b_sparse_fillIn(coder_internal_sparse *b_this)
 {
   int idx;
@@ -47,10 +43,6 @@ void b_sparse_fillIn(coder_internal_sparse *b_this)
   b_this->colidx->data[b_this->colidx->size[0] - 1] = idx;
 }
 
-//
-// Arguments    : coder_internal_sparse_1 *b_this
-// Return Type  : void
-//
 void c_sparse_fillIn(coder_internal_sparse_1 *b_this)
 {
   int idx;
@@ -79,10 +71,6 @@ void c_sparse_fillIn(coder_internal_sparse_1 *b_this)
   b_this->colidx->data[b_this->colidx->size[0] - 1] = idx;
 }
 
-//
-// Arguments    : coder_internal_sparse *b_this
-// Return Type  : void
-//
 void sparse_fillIn(coder_internal_sparse *b_this)
 {
   int idx;
@@ -124,8 +112,4 @@ void sparse_fillIn(coder_internal_sparse *b_this)
   b_this->colidx->data[b_this->colidx->size[0] - 1] = idx;
 }
 
-//
-// File trailer for fillIn.cpp
-//
-// [EOF]
-//
+/* End of code generation (fillIn.cpp) */

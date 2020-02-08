@@ -1,27 +1,22 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D_emxAPI.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D_emxAPI.cpp
+ *
+ * Code generation for function 'ADMMGainDesign3D_emxAPI'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "ADMMGainDesign3D_emxAPI.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "rt_nonfinite.h"
 #include <cstdlib>
 
-// Function Definitions
-
-//
-// Arguments    : int numDimensions
-//                const int *size
-// Return Type  : emxArray_real_T *
-//
+/* Function Definitions */
 emxArray_real_T *emxCreateND_real_T(int numDimensions, const int *size)
 {
   emxArray_real_T *emx;
@@ -41,12 +36,6 @@ emxArray_real_T *emxCreateND_real_T(int numDimensions, const int *size)
   return emx;
 }
 
-//
-// Arguments    : double *data
-//                int numDimensions
-//                const int *size
-// Return Type  : emxArray_real_T *
-//
 emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions,
   const int *size)
 {
@@ -67,12 +56,6 @@ emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions,
   return emx;
 }
 
-//
-// Arguments    : double *data
-//                int rows
-//                int cols
-// Return Type  : emxArray_real_T *
-//
 emxArray_real_T *emxCreateWrapper_real_T(double *data, int rows, int cols)
 {
   emxArray_real_T *emx;
@@ -86,11 +69,6 @@ emxArray_real_T *emxCreateWrapper_real_T(double *data, int rows, int cols)
   return emx;
 }
 
-//
-// Arguments    : int rows
-//                int cols
-// Return Type  : emxArray_real_T *
-//
 emxArray_real_T *emxCreate_real_T(int rows, int cols)
 {
   emxArray_real_T *emx;
@@ -106,27 +84,14 @@ emxArray_real_T *emxCreate_real_T(int rows, int cols)
   return emx;
 }
 
-//
-// Arguments    : emxArray_real_T *emxArray
-// Return Type  : void
-//
 void emxDestroyArray_real_T(emxArray_real_T *emxArray)
 {
   emxFree_real_T(&emxArray);
 }
 
-//
-// Arguments    : emxArray_real_T **pEmxArray
-//                int numDimensions
-// Return Type  : void
-//
 void emxInitArray_real_T(emxArray_real_T **pEmxArray, int numDimensions)
 {
   emxInit_real_T(pEmxArray, numDimensions);
 }
 
-//
-// File trailer for ADMMGainDesign3D_emxAPI.cpp
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D_emxAPI.cpp) */

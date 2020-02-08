@@ -1,19 +1,21 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: ADMMGainDesign3D.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * ADMMGainDesign3D.cpp
+ *
+ * Code generation for function 'ADMMGainDesign3D'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign2D.h"
 #include "ADMMGainDesign3D_data.h"
 #include "ADMMGainDesign3D_emxutil.h"
 #include "ADMMGainDesign3D_initialize.h"
+#include "abs.h"
 #include "diag.h"
 #include "diag1.h"
 #include "eig.h"
@@ -21,6 +23,7 @@
 #include "horzcat.h"
 #include "mtimes.h"
 #include "mtimes1.h"
+#include "nullAssignment.h"
 #include "reshape.h"
 #include "rt_nonfinite.h"
 #include "sparse.h"
@@ -34,15 +37,7 @@
 #include "vertcat.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// print out size information
-// Arguments    : const emxArray_real_T *Qs
-//                const emxArray_real_T *adj
-//                emxArray_real_T *Aopt
-// Return Type  : void
-//
+/* Function Definitions */
 void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
                       emxArray_real_T *Aopt)
 {
@@ -51,12 +46,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   int i;
   emxArray_real_T *Axy;
   emxArray_real_T *qz;
-  emxArray_real_T *b_qz;
+  emxArray_real_T *N;
   int dimkerAz;
-  int m;
   emxArray_real_T *U;
   emxArray_real_T *unusedU0;
-  double unusedU1[4];
+  int m;
+  double unusedU1_data[4];
+  int unusedU1_size[2];
   emxArray_real_T *Qt;
   int b_loop_ub;
   int i1;
@@ -70,8 +66,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxArray_real_T *Z_d;
   emxArray_int32_T *Z_colidx;
   emxArray_int32_T *Z_rowidx;
-  emxArray_real_T *Ai;
-  emxArray_real_T *bi;
+  emxArray_real_T *idxRow;
+  emxArray_real_T *Av;
   int I0_m;
   int I0_n;
   int Z0_m;
@@ -80,7 +76,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   int Z_n;
   emxArray_int32_T *t7_colidx;
   emxArray_int32_T *t7_rowidx;
-  emxArray_real_T *Aj;
+  emxArray_real_T *idxCol;
   int t7_n;
   emxArray_int32_T *t8_colidx;
   emxArray_int32_T *t8_rowidx;
@@ -88,25 +84,26 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxArray_int32_T *C_colidx;
   emxArray_int32_T *C_rowidx;
   emxArray_boolean_T *S;
+  emxArray_boolean_T *idxRmv;
   emxArray_real_T *QQ;
   emxArray_boolean_T *r;
-  emxArray_boolean_T *t11_d;
   emxArray_int32_T *ii;
   emxArray_int32_T *jj;
+  emxArray_real_T *b_U;
+  int b_i;
   double idxR;
   double numElmAtot_tmp;
-  emxArray_real_T *Av;
+  emxArray_real_T *Aj;
+  emxArray_real_T *bi;
   emxArray_real_T *bv;
   double itrr;
   unsigned int itra;
   unsigned int itrb;
-  int b_i;
   int kj;
   emxArray_real_T *A_d;
   emxArray_int32_T *A_colidx;
   emxArray_int32_T *A_rowidx;
   int A_m;
-  emxArray_real_T *b_d;
   emxArray_int32_T *b_colidx;
   emxArray_int32_T *b_rowidx;
   emxArray_real_T *As_d;
@@ -138,7 +135,6 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxArray_int32_T *t9_rowidx;
   coder_internal_sparse_1 b_expl_temp;
   emxArray_creal_T *b_dd;
-  emxArray_real_T *b_D;
   bool exitg1;
   double sizX[2];
   double d;
@@ -148,23 +144,24 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_real_T(&b_Qs, 2);
 
-  //  ADMM for computing gain matrix.
-  //  --> Speeded up by using sparse matrix representation
-  //  --> Set trace to a fixed value
-  //
-  //
-  //  Inputs:
-  //
-  //        - Qs :  Desired formation coordinates (2*n matrix, each column representing coordinate of formation point) 
-  //        - adj:  Graph adjacency matrix (n*n logical matrix)
-  //
-  //  Outputs:
-  //
-  //        - Aopt : Gain matrix
-  //
-  //
-  //  Gain design for 2D component of the formation
-  //  (2D component is defined as the projection of the 3D formation on the x-y plane) 
+  /*  ADMM for computing gain matrix.   */
+  /*  --> Speeded up by using sparse matrix representation */
+  /*  --> Set trace to a fixed value */
+  /*  */
+  /*   */
+  /*  Inputs: */
+  /*  */
+  /*        - Qs :  Desired formation coordinates (2*n matrix, each column representing coordinate of formation point) */
+  /*        - adj:  Graph adjacency matrix (n*n logical matrix) */
+  /*  */
+  /*  Outputs: */
+  /*  */
+  /*        - Aopt : Gain matrix */
+  /*  */
+  /*  */
+  /*  print out size information */
+  /*  Gain design for 2D component of the formation  */
+  /*  (2D component is defined as the projection of the 3D formation on the x-y plane) */
   loop_ub = Qs->size[1];
   i = b_Qs->size[0] * b_Qs->size[1];
   b_Qs->size[0] = 2;
@@ -179,9 +176,9 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_real_T(&qz, 1);
   ADMMGainDesign2D(b_Qs, adj, Axy);
 
-  //  Gain design for the altitude
-  //  Number of agents
-  //  Vector of ones
+  /*  Gain design for the altitude */
+  /*  Number of agents */
+  /*  Vector of ones */
   loop_ub = Qs->size[1];
   i = qz->size[0];
   qz->size[0] = Qs->size[1];
@@ -191,43 +188,57 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     qz->data[i] = Qs->data[3 * i + 2];
   }
 
-  emxInit_real_T(&b_qz, 2);
-
-  //  Vector of z-coordinates
-  //  ambient dimension of problem
-  //  Kernel of gain matrix
-  //  Determine if desired formation is actually 2D
-  //  Reduced problem dimension
+  /*  Vector of z-coordinates */
+  /*  ambient dimension of problem */
+  /*  Determine if desired formation is actually 2D */
+  /*  Set problem dimension */
+  emxInit_real_T(&N, 2);
   if (b_std(qz) < 0.01) {
+    /*  Planar formation */
     dimkerAz = 1;
+
+    /*  Dimension of kernel */
+    i = N->size[0] * N->size[1];
+    N->size[0] = adj->size[0];
+    N->size[1] = 1;
+    emxEnsureCapacity_real_T(N, i);
+    loop_ub = adj->size[0];
+    for (i = 0; i < loop_ub; i++) {
+      N->data[i] = 1.0;
+    }
+
+    /*  Kernel of gain matrix  */
   } else {
     dimkerAz = 2;
-  }
 
-  m = adj->size[0] - dimkerAz;
+    /*  Dimension of kernel */
+    i = N->size[0] * N->size[1];
+    N->size[0] = qz->size[0];
+    N->size[1] = 2;
+    emxEnsureCapacity_real_T(N, i);
+    loop_ub = qz->size[0];
+    for (i = 0; i < loop_ub; i++) {
+      N->data[i] = qz->data[i];
+    }
 
-  //  Get orthogonal complement of N
-  i = b_qz->size[0] * b_qz->size[1];
-  b_qz->size[0] = qz->size[0];
-  b_qz->size[1] = 2;
-  emxEnsureCapacity_real_T(b_qz, i);
-  loop_ub = qz->size[0];
-  for (i = 0; i < loop_ub; i++) {
-    b_qz->data[i] = qz->data[i];
-  }
+    loop_ub = adj->size[0];
+    for (i = 0; i < loop_ub; i++) {
+      N->data[i + N->size[0]] = 1.0;
+    }
 
-  loop_ub = adj->size[0];
-  for (i = 0; i < loop_ub; i++) {
-    b_qz->data[i + b_qz->size[0]] = 1.0;
+    /*  Kernel of gain matrix  */
   }
 
   emxInit_real_T(&U, 2);
   emxInit_real_T(&unusedU0, 2);
-  c_svd(b_qz, U, unusedU0, unusedU1);
+  m = adj->size[0] - dimkerAz;
 
-  //  Qbar = U(:,1:dimkerAz);
-  emxFree_real_T(&b_qz);
+  /*  Get orthogonal complement of N */
+  c_svd(N, U, unusedU0, unusedU1_data, unusedU1_size);
+
+  /*  Qbar = U(:,1:dimkerAz); */
   emxFree_real_T(&unusedU0);
+  emxFree_real_T(&N);
   if (dimkerAz + 1 > adj->size[0]) {
     dimkerAz = 0;
     i = -1;
@@ -253,7 +264,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_real_T(&I0_d, 1);
   c_emxInitStruct_coder_internal_(&expl_temp);
 
-  //  Preallocate variables
+  /*  Preallocate variables */
   speye(static_cast<double>(m), &expl_temp);
   i1 = I0_d->size[0];
   I0_d->size[0] = expl_temp.d->size[0];
@@ -286,24 +297,24 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_real_T(&Z_d, 1);
   emxInit_int32_T(&Z_colidx, 1);
   emxInit_int32_T(&Z_rowidx, 1);
-  emxInit_real_T(&Ai, 1);
-  emxInit_real_T(&bi, 1);
+  emxInit_real_T(&idxRow, 1);
+  emxInit_real_T(&Av, 1);
   I0_m = expl_temp.m;
   I0_n = expl_temp.n;
-  sparse(static_cast<double>(m), static_cast<double>(m), bi, Z0_colidx,
+  sparse(static_cast<double>(m), static_cast<double>(m), Av, Z0_colidx,
          Z0_rowidx, &Z0_m, &Z0_n);
   sparse(2.0 * static_cast<double>(m), 2.0 * static_cast<double>(m), Z_d,
          Z_colidx, Z_rowidx, &Z_m, &Z_n);
 
-  //  Cost function's coefficient matrix: f = <C,X>
-  sparse_horzcat(I0_d, I0_colidx, I0_rowidx, expl_temp.m, expl_temp.n, bi,
+  /*  Cost function's coefficient matrix: f = <C,X> */
+  sparse_horzcat(I0_d, I0_colidx, I0_rowidx, expl_temp.m, expl_temp.n, Av,
                  Z0_colidx, Z0_rowidx, Z0_m, Z0_n, &expl_temp);
-  i1 = Ai->size[0];
-  Ai->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Ai, i1);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
   loop_ub = expl_temp.d->size[0];
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = expl_temp.d->data[i1];
+    idxRow->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&t7_colidx, 1);
@@ -324,17 +335,17 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  emxInit_real_T(&Aj, 1);
+  emxInit_real_T(&idxCol, 1);
   t7_m = expl_temp.m;
   t7_n = expl_temp.n;
-  sparse_horzcat(bi, Z0_colidx, Z0_rowidx, Z0_m, Z0_n, bi, Z0_colidx, Z0_rowidx,
+  sparse_horzcat(Av, Z0_colidx, Z0_rowidx, Z0_m, Z0_n, Av, Z0_colidx, Z0_rowidx,
                  Z0_m, Z0_n, &expl_temp);
-  i1 = Aj->size[0];
-  Aj->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Aj, i1);
+  i1 = idxCol->size[0];
+  idxCol->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxCol, i1);
   loop_ub = expl_temp.d->size[0];
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Aj->data[i1] = expl_temp.d->data[i1];
+    idxCol->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&t8_colidx, 1);
@@ -356,8 +367,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   }
 
   emxInit_real_T(&C_d, 1);
-  sparse_vertcat(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, Aj, t8_colidx, t8_rowidx,
-                 expl_temp.m, expl_temp.n, &expl_temp);
+  sparse_vertcat(idxRow, t7_colidx, t7_rowidx, t7_m, t7_n, idxCol, t8_colidx,
+                 t8_rowidx, expl_temp.m, expl_temp.n, &expl_temp);
   i1 = C_d->size[0];
   C_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(C_d, i1);
@@ -386,12 +397,12 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_boolean_T(&S, 2);
 
-  //  Trace of gain matrix must be the specified value in 'trVal'
-  //  fixed value for trace
-  // %%%%%%%%%%%%%%%%%%%%% Find total number of nonzero elements in A and b matrices 
-  //  Number of elements in block [X]_11
-  //  Number of elements in block [X]_12
-  //  Zero-gain constraints for the given adjacency graph
+  /*  Trace of gain matrix must be the specified value in 'trVal' */
+  /*  fixed value for trace */
+  /* %%%%%%%%%%%%%%%%%%%%% Find total number of nonzero elements in A and b matrices */
+  /*  Number of elements in block [X]_11 */
+  /*  Number of elements in block [X]_12 */
+  /*  Zero-gain constraints for the given adjacency graph */
   i1 = S->size[0] * S->size[1];
   S->size[0] = adj->size[0];
   S->size[1] = adj->size[1];
@@ -401,13 +412,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     S->data[i1] = !(adj->data[i1] != 0.0);
   }
 
+  emxInit_boolean_T(&idxRmv, 1);
   emxInit_real_T(&QQ, 2);
   emxInit_boolean_T(&r, 2);
-  emxInit_boolean_T(&t11_d, 1);
 
-  //  Upper triangular part
-  diag(S, t11_d);
-  b_diag(t11_d, r);
+  /*  Upper triangular part */
+  diag(S, idxRmv);
+  b_diag(idxRmv, r);
   i1 = QQ->size[0] * QQ->size[1];
   QQ->size[0] = S->size[0];
   QQ->size[1] = S->size[1];
@@ -424,6 +435,49 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_int32_T(&jj, 1);
   triu(QQ);
   eml_find(QQ, ii, jj);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = ii->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
+  loop_ub = ii->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    idxRow->data[i1] = ii->data[i1];
+  }
+
+  i1 = idxCol->size[0];
+  idxCol->size[0] = jj->size[0];
+  emxEnsureCapacity_real_T(idxCol, i1);
+  loop_ub = jj->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    idxCol->data[i1] = jj->data[i1];
+  }
+
+  emxInit_real_T(&b_U, 2);
+
+  /*  Find location of nonzero entries */
+  /*  Discard any linear constraint that is trivial (i.e., all zeros) */
+  loop_ub = U->size[0];
+  i1 = b_U->size[0] * b_U->size[1];
+  b_U->size[0] = U->size[0];
+  b_U->size[1] = i;
+  emxEnsureCapacity_real_T(b_U, i1);
+  for (i1 = 0; i1 <= b_loop_ub; i1++) {
+    for (t7_m = 0; t7_m < loop_ub; t7_m++) {
+      b_U->data[t7_m + b_U->size[0] * i1] = U->data[t7_m + U->size[0] *
+        (dimkerAz + i1)];
+    }
+  }
+
+  b_abs(b_U, QQ);
+  b_sum(QQ, qz);
+  i1 = idxRmv->size[0];
+  idxRmv->size[0] = qz->size[0];
+  emxEnsureCapacity_boolean_T(idxRmv, i1);
+  loop_ub = qz->size[0];
+  for (i1 = 0; i1 < loop_ub; i1++) {
+    idxRmv->data[i1] = (qz->data[i1] < 2.2204460492503131E-14);
+  }
+
+  b_eml_find(idxRmv, ii);
   i1 = qz->size[0];
   qz->size[0] = ii->size[0];
   emxEnsureCapacity_real_T(qz, i1);
@@ -432,33 +486,49 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     qz->data[i1] = ii->data[i1];
   }
 
-  //  Find location of nonzero entries
-  //  Number of constraints
-  //  Number of elements in block [X]_22
-  //  Number of elements for trace of [X]_22
-  //  Number of elements for symmetry
-  //  Number of elements for pinning down the b-vector
-  //  Total number of elements
+  i1 = qz->size[0];
+  for (b_i = 0; b_i < i1; b_i++) {
+    idxR = qz->data[b_i];
+    loop_ub = idxRow->size[0];
+    t7_m = idxRmv->size[0];
+    idxRmv->size[0] = idxRow->size[0];
+    emxEnsureCapacity_boolean_T(idxRmv, t7_m);
+    for (t7_m = 0; t7_m < loop_ub; t7_m++) {
+      idxRmv->data[t7_m] = ((idxRow->data[t7_m] == idxR) || (idxCol->data[t7_m] ==
+        idxR));
+    }
+
+    nullAssignment(idxRow, idxRmv);
+    nullAssignment(idxCol, idxRmv);
+  }
+
+  /*  Number of constraints */
+  /*  Number of elements in block [X]_22 */
+  /*  Number of elements for trace of [X]_22 */
+  /*  Number of elements for symmetry */
+  /*  Number of elements for pinning down the b-vector */
+  /*  Total number of elements */
   idxR = static_cast<double>(m) * (static_cast<double>(m) - 1.0);
   numElmAtot_tmp = 2.0 * static_cast<double>(m);
 
-  // %%%%%%%%%%%%%%%%%%%%% Preallocate sparse matrices A & b
-  //
-  //  Constraint: A * vec(X) = b
-  //
-  //  Indices of A: entry [Ai(k), Aj(k)] takes value of Av(k)
-  //  Each row of matrix A will represent a constraint
+  /* %%%%%%%%%%%%%%%%%%%%% Preallocate sparse matrices A & b */
+  /*  */
+  /*  Constraint: A * vec(X) = b */
+  /*  */
+  /*  Indices of A: entry [Ai(k), Aj(k)] takes value of Av(k)  */
+  /*  Each row of matrix A will represent a constraint */
   loop_ub = static_cast<int>(((((((static_cast<double>(m) - 1.0) * 2.0 + idxR /
-    2.0) + (static_cast<double>(m) + idxR)) + static_cast<double>(qz->size[0]) *
-    (static_cast<double>(m) * static_cast<double>(m))) + static_cast<double>(m))
+    2.0) + (static_cast<double>(m) + idxR)) + static_cast<double>(idxRow->size[0])
+    * (static_cast<double>(m) * static_cast<double>(m))) + static_cast<double>(m))
     + numElmAtot_tmp * (numElmAtot_tmp - 1.0)));
-  i1 = Ai->size[0];
-  Ai->size[0] = loop_ub;
-  emxEnsureCapacity_real_T(Ai, i1);
+  i1 = qz->size[0];
+  qz->size[0] = loop_ub;
+  emxEnsureCapacity_real_T(qz, i1);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = 0.0;
+    qz->data[i1] = 0.0;
   }
 
+  emxInit_real_T(&Aj, 1);
   i1 = Aj->size[0];
   Aj->size[0] = loop_ub;
   emxEnsureCapacity_real_T(Aj, i1);
@@ -466,7 +536,6 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     Aj->data[i1] = 0.0;
   }
 
-  emxInit_real_T(&Av, 1);
   i1 = Av->size[0];
   Av->size[0] = loop_ub;
   emxEnsureCapacity_real_T(Av, i1);
@@ -474,6 +543,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     Av->data[i1] = 0.0;
   }
 
+  emxInit_real_T(&bi, 1);
   loop_ub = static_cast<int>(((static_cast<double>(m) + 1.0) + 1.0));
   i1 = bi->size[0];
   bi->size[0] = loop_ub;
@@ -490,57 +560,57 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     bv->data[i1] = 0.0;
   }
 
-  //  Generate the constraint matrix
-  //
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  // %%%%%%%%%%%%%%%%%   Constraints: A . vec(X) = b  %%%%%%%%%%%%%%%%%%%%%%%%%
+  /*  Generate the constraint matrix */
+  /*  */
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+  /* %%%%%%%%%%%%%%%%%   Constraints: A . vec(X) = b  %%%%%%%%%%%%%%%%%%%%%%%%% */
   itrr = 0.0;
 
-  //  Counter for rows in A constraint
+  /*  Counter for rows in A constraint */
   itra = 0U;
 
-  //  Counter for entries in A constraint
+  /*  Counter for entries in A constraint */
   itrb = 0U;
 
-  //  Counter for entries in b constraint
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_11
-  //  The diagonal entries of X should be equal to the first diagonal entry
+  /*  Counter for entries in b constraint */
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_11 */
+  /*  The diagonal entries of X should be equal to the first diagonal entry */
   for (b_i = 0; b_i <= m - 2; b_i++) {
     itrr++;
     itra++;
     Z0_n = static_cast<int>(itra) - 1;
-    Ai->data[Z0_n] = itrr;
+    qz->data[Z0_n] = itrr;
     Aj->data[Z0_n] = 1.0;
     Av->data[Z0_n] = 1.0;
     itra++;
-    Ai->data[static_cast<int>(itra) - 1] = itrr;
+    qz->data[static_cast<int>(itra) - 1] = itrr;
     i1 = static_cast<int>(itra) - 1;
     Aj->data[i1] = ((static_cast<double>(b_i) + 2.0) - 1.0) * numElmAtot_tmp + (
       static_cast<double>(b_i) + 2.0);
     Av->data[i1] = -1.0;
   }
 
-  //  Off-diagonal entries should be zero
+  /*  Off-diagonal entries should be zero */
   for (b_i = 0; b_i <= m - 2; b_i++) {
     i1 = m - b_i;
     for (loop_ub = 0; loop_ub <= i1 - 2; loop_ub++) {
       itrr++;
       itra++;
       Z0_n = static_cast<int>(itra) - 1;
-      Ai->data[Z0_n] = itrr;
+      qz->data[Z0_n] = itrr;
       Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) * numElmAtot_tmp
         + static_cast<double>(((static_cast<unsigned int>(b_i) + loop_ub) + 2U));
       Av->data[Z0_n] = 1.0;
     }
   }
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_12
-  //  Diagonal entries should be 1
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_12 */
+  /*  Diagonal entries should be 1 */
   for (b_i = 0; b_i < m; b_i++) {
     itrr++;
     itra++;
     Z0_n = static_cast<int>(itra) - 1;
-    Ai->data[Z0_n] = itrr;
+    qz->data[Z0_n] = itrr;
     Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) * numElmAtot_tmp +
       ((static_cast<double>(b_i) + 1.0) + static_cast<double>(m));
     Av->data[Z0_n] = 1.0;
@@ -550,14 +620,14 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     bv->data[Z0_m] = 1.0;
   }
 
-  //  Other entries should be 0
+  /*  Other entries should be 0 */
   for (b_i = 0; b_i < m; b_i++) {
     for (loop_ub = 0; loop_ub < m; loop_ub++) {
       if (b_i + 1 != loop_ub + 1) {
         itrr++;
         itra++;
         Z0_n = static_cast<int>(itra) - 1;
-        Ai->data[Z0_n] = itrr;
+        qz->data[Z0_n] = itrr;
         Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) *
           numElmAtot_tmp + ((static_cast<double>(loop_ub) + 1.0) + static_cast<
                             double>(m));
@@ -566,11 +636,11 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     }
   }
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_22
-  //  Zero constraints due to the adjacency matrix
-  i1 = qz->size[0];
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Block [X]_22 */
+  /*  Zero constraints due to the adjacency matrix */
+  i1 = idxRow->size[0];
   for (b_i = 0; b_i < i1; b_i++) {
-    //  Term corresponding to row ii and column jj
+    /*  Term corresponding to row ii and column jj */
     loop_ub = Qt->size[0];
     t7_m = QQ->size[0] * QQ->size[1];
     QQ->size[0] = Qt->size[0];
@@ -579,9 +649,9 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     for (t7_m = 0; t7_m <= b_loop_ub; t7_m++) {
       for (Z0_n = 0; Z0_n < loop_ub; Z0_n++) {
         QQ->data[Z0_n + QQ->size[0] * t7_m] = Qt->data[Z0_n + Qt->size[0] * (
-          static_cast<int>(((static_cast<double>(jj->data[b_i]) - 1.0) + 1.0)) -
-          1)] * U->data[(static_cast<int>(((qz->data[b_i] - 1.0) + 1.0)) +
-                         U->size[0] * (dimkerAz + t7_m)) - 1];
+          static_cast<int>(((idxCol->data[b_i] - 1.0) + 1.0)) - 1)] * U->data[(
+          static_cast<int>(((idxRow->data[b_i] - 1.0) + 1.0)) + U->size[0] *
+          (dimkerAz + t7_m)) - 1];
       }
     }
 
@@ -590,7 +660,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       for (kj = 0; kj < m; kj++) {
         itra++;
         Z0_n = static_cast<int>(itra) - 1;
-        Ai->data[Z0_n] = itrr;
+        qz->data[Z0_n] = itrr;
         Aj->data[Z0_n] = ((static_cast<double>(m) + (static_cast<double>(Z0_m) +
           1.0)) - 1.0) * numElmAtot_tmp + (static_cast<double>(m) + (
           static_cast<double>(kj) + 1.0));
@@ -599,13 +669,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     }
   }
 
-  //  Trace of gain matrix must be the specified value in 'trVal'
+  /*  Trace of gain matrix must be the specified value in 'trVal' */
   itrr++;
   for (b_i = 0; b_i < m; b_i++) {
     itra++;
     idxR = static_cast<double>(m) + (static_cast<double>(b_i) + 1.0);
     Z0_n = static_cast<int>(itra) - 1;
-    Ai->data[Z0_n] = itrr;
+    qz->data[Z0_n] = itrr;
     Aj->data[Z0_n] = (idxR - 1.0) * numElmAtot_tmp + idxR;
     Av->data[Z0_n] = 1.0;
   }
@@ -615,7 +685,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   bi->data[Z0_m] = itrr;
   bv->data[Z0_m] = m;
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%% Symmetry
+  /* %%%%%%%%%%%%%%%%%%%%%%%%%%%% Symmetry */
   i1 = m << 1;
   for (b_i = 0; b_i <= i1 - 2; b_i++) {
     t7_m = i1 - b_i;
@@ -623,17 +693,17 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       idxR = ((static_cast<double>(b_i) + 1.0) + 1.0) + static_cast<double>
         (loop_ub);
 
-      //  Symmetric entries should be equal
+      /*  Symmetric entries should be equal */
       itrr++;
       itra++;
       Z0_n = static_cast<int>(itra) - 1;
-      Ai->data[Z0_n] = itrr;
+      qz->data[Z0_n] = itrr;
       Aj->data[Z0_n] = ((static_cast<double>(b_i) + 1.0) - 1.0) * numElmAtot_tmp
         + idxR;
       Av->data[Z0_n] = 1.0;
       itra++;
       Z0_n = static_cast<int>(itra) - 1;
-      Ai->data[Z0_n] = itrr;
+      qz->data[Z0_n] = itrr;
       Aj->data[Z0_n] = (idxR - 1.0) * numElmAtot_tmp + (static_cast<double>(b_i)
         + 1.0);
       Av->data[Z0_n] = -1.0;
@@ -642,21 +712,21 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   emxInit_real_T(&A_d, 1);
 
-  //  Last element set to fix the size of b
+  /*  Last element set to fix the size of b */
   itrb++;
   Z0_m = static_cast<int>(itrb) - 1;
   bi->data[Z0_m] = itrr;
   bv->data[Z0_m] = 0.0;
 
-  //  % Remove any additional entries
-  //  Ai(itra+1:end) = [];
-  //  Aj(itra+1:end) = [];
-  //  Av(itra+1:end) = [];
-  //
-  //  bi(itrb+1:end) = [];
-  //  bv(itrb+1:end) = [];
-  //  Make sparse matrices
-  b_sparse(Ai, Aj, Av, &expl_temp);
+  /*  % Remove any additional entries */
+  /*  Ai(itra+1:end) = []; */
+  /*  Aj(itra+1:end) = []; */
+  /*  Av(itra+1:end) = []; */
+  /*  */
+  /*  bi(itrb+1:end) = []; */
+  /*  bv(itrb+1:end) = []; */
+  /*  Make sparse matrices */
+  b_sparse(qz, Aj, Av, &expl_temp);
   i1 = A_d->size[0];
   A_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(A_d, i1);
@@ -693,14 +763,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     qz->data[i1] = 1.0;
   }
 
-  emxInit_real_T(&b_d, 1);
   b_sparse(bi, qz, bv, &expl_temp);
-  i1 = b_d->size[0];
-  b_d->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(b_d, i1);
+  i1 = bv->size[0];
+  bv->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(bv, i1);
   loop_ub = expl_temp.d->size[0];
   for (i1 = 0; i1 < loop_ub; i1++) {
-    b_d->data[i1] = expl_temp.d->data[i1];
+    bv->data[i1] = expl_temp.d->data[i1];
   }
 
   emxInit_int32_T(&b_colidx, 1);
@@ -725,8 +794,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   b_m = expl_temp.m;
   b_n = expl_temp.n;
 
-  //  Size of optimization variable
-  //  ADMM algorithm--full eigendecomposition
+  /*  Size of optimization variable */
+  /*  ADMM algorithm--full eigendecomposition */
   sparse_transpose(A_d, A_colidx, A_rowidx, A_m, Z0_m, &expl_temp);
   i1 = As_d->size[0];
   As_d->size[0] = expl_temp.d->size[0];
@@ -757,7 +826,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_real_T(&AAs_d, 1);
   As_m = expl_temp.m;
 
-  //  Dual operator
+  /*  Dual operator */
   sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, As_d, As_colidx, As_rowidx,
                 expl_temp.n, &expl_temp);
   i1 = AAs_d->size[0];
@@ -789,21 +858,21 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   AAs_m = expl_temp.m;
   AAs_n = expl_temp.n;
 
-  //  Penalty
-  //  Precision for positive eig vals
-  //  Stop criteria
-  //  Threshold based on change in X updates
-  //  Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. 
-  //  Maximum # of iterations
-  //  Initialize:
+  /*  Penalty     */
+  /*  Precision for positive eig vals */
+  /*  Stop criteria */
+  /*  Threshold based on change in X updates */
+  /*  Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. */
+  /*  Maximum # of iterations */
+  /*  Initialize: */
   sparse_horzcat(I0_d, I0_colidx, I0_rowidx, I0_m, I0_n, I0_d, I0_colidx,
                  I0_rowidx, I0_m, I0_n, &expl_temp);
-  i1 = Ai->size[0];
-  Ai->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Ai, i1);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
   loop_ub = expl_temp.d->size[0];
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = expl_temp.d->data[i1];
+    idxRow->data[i1] = expl_temp.d->data[i1];
   }
 
   i1 = t7_colidx->size[0];
@@ -826,12 +895,12 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   t7_n = expl_temp.n;
   sparse_horzcat(I0_d, I0_colidx, I0_rowidx, I0_m, I0_n, I0_d, I0_colidx,
                  I0_rowidx, I0_m, I0_n, &expl_temp);
-  i1 = Aj->size[0];
-  Aj->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Aj, i1);
+  i1 = idxCol->size[0];
+  idxCol->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxCol, i1);
   loop_ub = expl_temp.d->size[0];
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Aj->data[i1] = expl_temp.d->data[i1];
+    idxCol->data[i1] = expl_temp.d->data[i1];
   }
 
   i1 = t8_colidx->size[0];
@@ -851,8 +920,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   }
 
   emxInit_real_T(&X_d, 1);
-  sparse_vertcat(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, Aj, t8_colidx, t8_rowidx,
-                 expl_temp.m, expl_temp.n, &expl_temp);
+  sparse_vertcat(idxRow, t7_colidx, t7_rowidx, t7_m, t7_n, idxCol, t8_colidx,
+                 t8_rowidx, expl_temp.m, expl_temp.n, &expl_temp);
   i1 = X_d->size[0];
   X_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(X_d, i1);
@@ -895,10 +964,9 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxInit_int32_T(&t9_rowidx, 1);
   d_emxInitStruct_coder_internal_(&b_expl_temp);
   emxInit_creal_T(&b_dd, 1);
-  emxInit_real_T(&b_D, 2);
   exitg1 = false;
   while ((!exitg1) && (b_i < 10)) {
-    // %%%%%% Update for y
+    /* %%%%%% Update for y */
     sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
     i1 = I0_d->size[0];
     I0_d->size[0] = expl_temp.d->size[0];
@@ -926,13 +994,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
     I0_m = expl_temp.m;
     I0_n = expl_temp.n;
-    sparse_times(b_d, b_colidx, b_rowidx, b_m, b_n, &expl_temp);
-    i1 = bi->size[0];
-    bi->size[0] = expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(bi, i1);
+    sparse_times(bv, b_colidx, b_rowidx, b_m, b_n, &expl_temp);
+    i1 = Av->size[0];
+    Av->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(Av, i1);
     loop_ub = expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      bi->data[i1] = expl_temp.d->data[i1];
+      Av->data[i1] = expl_temp.d->data[i1];
     }
 
     i1 = Z0_colidx->size[0];
@@ -951,19 +1019,19 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       Z0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    sparse_minus(C_d, C_colidx, C_rowidx, Z_d, Z_colidx, Z_rowidx, Z_m, Z_n, Ai,
-                 t7_colidx, t7_rowidx, &t7_m, &t7_n);
-    sparse_minus(Ai, t7_colidx, t7_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
-                 I0_n, Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
-    vec(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, bv, t9_colidx, t9_rowidx, &kj);
-    b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bv, t9_colidx, t9_rowidx,
+    sparse_minus(C_d, C_colidx, C_rowidx, Z_d, Z_colidx, Z_rowidx, Z_m, Z_n,
+                 idxRow, t7_colidx, t7_rowidx, &t7_m, &t7_n);
+    sparse_minus(idxRow, t7_colidx, t7_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
+                 I0_n, idxCol, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+    vec(idxCol, t8_colidx, t8_rowidx, Z0_m, t7_n, bi, t9_colidx, t9_rowidx, &kj);
+    b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bi, t9_colidx, t9_rowidx,
                     &b_expl_temp);
-    i1 = Ai->size[0];
-    Ai->size[0] = b_expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(Ai, i1);
+    i1 = idxRow->size[0];
+    idxRow->size[0] = b_expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(idxRow, i1);
     loop_ub = b_expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      Ai->data[i1] = b_expl_temp.d->data[i1];
+      idxRow->data[i1] = b_expl_temp.d->data[i1];
     }
 
     i1 = t7_colidx->size[0];
@@ -982,16 +1050,16 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
     }
 
-    sparse_plus(Ai, t7_colidx, t7_rowidx, bi, Z0_colidx, Z0_rowidx, expl_temp.m,
-                bv, t9_colidx, t9_rowidx, &kj);
-    sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, bv, t9_colidx,
+    sparse_plus(idxRow, t7_colidx, t7_rowidx, Av, Z0_colidx, Z0_rowidx,
+                expl_temp.m, bi, t9_colidx, t9_rowidx, &kj);
+    sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, bi, t9_colidx,
                     t9_rowidx, kj, &b_expl_temp);
-    i1 = Ai->size[0];
-    Ai->size[0] = b_expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(Ai, i1);
+    i1 = idxRow->size[0];
+    idxRow->size[0] = b_expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(idxRow, i1);
     loop_ub = b_expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      Ai->data[i1] = b_expl_temp.d->data[i1];
+      idxRow->data[i1] = b_expl_temp.d->data[i1];
     }
 
     i1 = t7_colidx->size[0];
@@ -1010,7 +1078,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
     }
 
-    // %%%%%% Update for S
+    /* %%%%%% Update for S */
     sparse_times(X_d, X_colidx, X_rowidx, X_m, X_n, &expl_temp);
     i1 = I0_d->size[0];
     I0_d->size[0] = expl_temp.d->size[0];
@@ -1038,14 +1106,14 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
     I0_m = expl_temp.m;
     I0_n = expl_temp.n;
-    b_sparse_mtimes(As_d, As_colidx, As_rowidx, As_m, Ai, t7_colidx, t7_rowidx,
-                    &b_expl_temp);
-    i1 = bv->size[0];
-    bv->size[0] = b_expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(bv, i1);
+    b_sparse_mtimes(As_d, As_colidx, As_rowidx, As_m, idxRow, t7_colidx,
+                    t7_rowidx, &b_expl_temp);
+    i1 = bi->size[0];
+    bi->size[0] = b_expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(bi, i1);
     loop_ub = b_expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      bv->data[i1] = b_expl_temp.d->data[i1];
+      bi->data[i1] = b_expl_temp.d->data[i1];
     }
 
     i1 = t9_colidx->size[0];
@@ -1066,13 +1134,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
     sizX[0] = numElmAtot_tmp;
     sizX[1] = numElmAtot_tmp;
-    sparse_reshape(bv, t9_colidx, t9_rowidx, sizX, &expl_temp);
-    i1 = Ai->size[0];
-    Ai->size[0] = expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(Ai, i1);
+    sparse_reshape(bi, t9_colidx, t9_rowidx, sizX, &expl_temp);
+    i1 = idxRow->size[0];
+    idxRow->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(idxRow, i1);
     loop_ub = expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      Ai->data[i1] = expl_temp.d->data[i1];
+      idxRow->data[i1] = expl_temp.d->data[i1];
     }
 
     i1 = t7_colidx->size[0];
@@ -1091,17 +1159,18 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    sparse_minus(C_d, C_colidx, C_rowidx, Ai, t7_colidx, t7_rowidx, expl_temp.m,
-                 expl_temp.n, Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
-    sparse_minus(Aj, t8_colidx, t8_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
+    sparse_minus(C_d, C_colidx, C_rowidx, idxRow, t7_colidx, t7_rowidx,
+                 expl_temp.m, expl_temp.n, idxCol, t8_colidx, t8_rowidx, &Z0_m,
+                 &t7_n);
+    sparse_minus(idxCol, t8_colidx, t8_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
                  I0_n, qz, ii, jj, &Z0_m, &t7_m);
     sparse_transpose(qz, ii, jj, Z0_m, t7_m, &expl_temp);
-    i1 = Ai->size[0];
-    Ai->size[0] = expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(Ai, i1);
+    i1 = idxRow->size[0];
+    idxRow->size[0] = expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(idxRow, i1);
     loop_ub = expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      Ai->data[i1] = expl_temp.d->data[i1];
+      idxRow->data[i1] = expl_temp.d->data[i1];
     }
 
     i1 = t7_colidx->size[0];
@@ -1120,9 +1189,9 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    b_sparse_plus(qz, ii, jj, Ai, t7_colidx, t7_rowidx, expl_temp.m, expl_temp.n,
-                  Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
-    sparse_rdivide(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, &expl_temp);
+    b_sparse_plus(qz, ii, jj, idxRow, t7_colidx, t7_rowidx, expl_temp.m,
+                  expl_temp.n, idxCol, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+    sparse_rdivide(idxCol, t8_colidx, t8_rowidx, Z0_m, t7_n, &expl_temp);
     i1 = qz->size[0];
     qz->size[0] = expl_temp.d->size[0];
     emxEnsureCapacity_real_T(qz, i1);
@@ -1147,8 +1216,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       jj->data[i1] = expl_temp.rowidx->data[i1];
     }
 
-    sparse_full(qz, ii, jj, expl_temp.m, expl_temp.n, b_D);
-    eig(b_D, V, D);
+    sparse_full(qz, ii, jj, expl_temp.m, expl_temp.n, QQ);
+    eig(QQ, V, D);
     c_diag(D, dd);
     Z0_n = dd->size[0] - 1;
     t7_m = 0;
@@ -1270,24 +1339,24 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       mtimes(y, b, D);
     }
 
-    i1 = b_D->size[0] * b_D->size[1];
-    b_D->size[0] = D->size[0];
-    b_D->size[1] = D->size[1];
-    emxEnsureCapacity_real_T(b_D, i1);
+    i1 = b_U->size[0] * b_U->size[1];
+    b_U->size[0] = D->size[0];
+    b_U->size[1] = D->size[1];
+    emxEnsureCapacity_real_T(b_U, i1);
     loop_ub = D->size[0] * D->size[1];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      b_D->data[i1] = D->data[i1].re;
+      b_U->data[i1] = D->data[i1].re;
     }
 
-    c_sparse(b_D, Z_d, Z_colidx, Z_rowidx, &Z_m, &Z_n);
+    c_sparse(b_U, Z_d, Z_colidx, Z_rowidx, &Z_m, &Z_n);
 
-    // %%%%%% Update for X
-    i1 = bi->size[0];
-    bi->size[0] = X_d->size[0];
-    emxEnsureCapacity_real_T(bi, i1);
+    /* %%%%%% Update for X */
+    i1 = Av->size[0];
+    Av->size[0] = X_d->size[0];
+    emxEnsureCapacity_real_T(Av, i1);
     loop_ub = X_d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      bi->data[i1] = X_d->data[i1];
+      Av->data[i1] = X_d->data[i1];
     }
 
     i1 = Z0_colidx->size[0];
@@ -1309,8 +1378,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     Z0_m = X_m;
     Z0_n = X_n;
     sparse_minus(Z_d, Z_colidx, Z_rowidx, qz, ii, jj, expl_temp.m, expl_temp.n,
-                 Ai, t7_colidx, t7_rowidx, &t7_m, &t7_n);
-    sparse_times(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, &expl_temp);
+                 idxRow, t7_colidx, t7_rowidx, &t7_m, &t7_n);
+    sparse_times(idxRow, t7_colidx, t7_rowidx, t7_m, t7_n, &expl_temp);
     i1 = X_d->size[0];
     X_d->size[0] = expl_temp.d->size[0];
     emxEnsureCapacity_real_T(X_d, i1);
@@ -1338,20 +1407,20 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     X_m = expl_temp.m;
     X_n = expl_temp.n;
 
-    // %%%%%% Stop criteria
-    b_sparse_parenReference(bi, Z0_colidx, Z0_rowidx, Z0_m, Z0_n, bv, t9_colidx,
+    /* %%%%%% Stop criteria */
+    b_sparse_parenReference(Av, Z0_colidx, Z0_rowidx, Z0_m, Z0_n, bi, t9_colidx,
       t9_rowidx, &kj);
     b_sparse_parenReference(X_d, X_colidx, X_rowidx, expl_temp.m, expl_temp.n,
-      Ai, t7_colidx, t7_rowidx, &Z0_m);
-    b_sparse_minus(bv, t9_colidx, t9_rowidx, Ai, t7_colidx, t7_rowidx, Z0_m, qz,
-                   ii, jj, &I0_m);
+      idxRow, t7_colidx, t7_rowidx, &Z0_m);
+    b_sparse_minus(bi, t9_colidx, t9_rowidx, idxRow, t7_colidx, t7_rowidx, Z0_m,
+                   qz, ii, jj, &I0_m);
     sparse_abs(qz, ii, jj, I0_m, &b_expl_temp);
-    i1 = bv->size[0];
-    bv->size[0] = b_expl_temp.d->size[0];
-    emxEnsureCapacity_real_T(bv, i1);
+    i1 = bi->size[0];
+    bi->size[0] = b_expl_temp.d->size[0];
+    emxEnsureCapacity_real_T(bi, i1);
     loop_ub = b_expl_temp.d->size[0];
     for (i1 = 0; i1 < loop_ub; i1++) {
-      bv->data[i1] = b_expl_temp.d->data[i1];
+      bi->data[i1] = b_expl_temp.d->data[i1];
     }
 
     i1 = t9_colidx->size[0];
@@ -1362,13 +1431,13 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       t9_colidx->data[i1] = b_expl_temp.colidx->data[i1];
     }
 
-    sum(bv, t9_colidx, b_expl_temp.m, qz, jj, t7_colidx);
-    sparse_lt(qz, jj, t11_d, ii, t7_colidx);
-    if (b_sparse_full(t11_d, ii)) {
-      //  change in X is small
+    sum(bi, t9_colidx, b_expl_temp.m, qz, jj, t7_colidx);
+    sparse_lt(qz, jj, idxRmv, ii, t7_colidx);
+    if (b_sparse_full(idxRmv, ii)) {
+      /*  change in X is small */
       exitg1 = true;
     } else {
-      //  trace of sparse matrix for MATLAB Coder
+      /*  trace of sparse matrix for MATLAB Coder */
       if (expl_temp.m < m + 1) {
         b_y->size[0] = 1;
         b_y->size[1] = 0;
@@ -1397,14 +1466,14 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
         }
       }
 
-      c_sparse_parenReference(X_d, X_colidx, X_rowidx, b_y, c_y, Ai, t7_colidx,
-        t7_rowidx, &t7_m, &t7_n);
-      sparse_diag(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, bv, t9_colidx, t9_rowidx,
-                  &kj);
-      sum(bv, t9_colidx, kj, qz, jj, t7_colidx);
+      c_sparse_parenReference(X_d, X_colidx, X_rowidx, b_y, c_y, idxRow,
+        t7_colidx, t7_rowidx, &t7_m, &t7_n);
+      sparse_diag(idxRow, t7_colidx, t7_rowidx, t7_m, t7_n, bi, t9_colidx,
+                  t9_rowidx, &kj);
+      sum(bi, t9_colidx, kj, qz, jj, t7_colidx);
       if (std::abs(c_sparse_full(qz, jj) - static_cast<double>(m)) /
           static_cast<double>(m) * 100.0 < 10.0) {
-        //  trace of X is close to the desired value
+        /*  trace of X is close to the desired value */
         exitg1 = true;
       } else {
         b_i++;
@@ -1413,7 +1482,6 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   }
 
   emxFree_creal_T(&b_dd);
-  emxFree_boolean_T(&t11_d);
   emxFree_real_T(&c_y);
   emxFree_real_T(&b_y);
   emxFree_creal_T(&b);
@@ -1423,16 +1491,17 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxFree_creal_T(&D);
   emxFree_creal_T(&V);
   emxFree_creal_T(&dd);
+  emxFree_boolean_T(&idxRmv);
 
-  //  Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix 
+  /*  Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix */
   b_sparse_times(Z_d, Z_colidx, Z_rowidx, Z_m, Z_n, &expl_temp);
-  i1 = Av->size[0];
-  Av->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Av, i1);
+  i1 = Aj->size[0];
+  Aj->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Aj, i1);
   loop_ub = expl_temp.d->size[0];
   emxFree_real_T(&Z_d);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Av->data[i1] = expl_temp.d->data[i1];
+    Aj->data[i1] = expl_temp.d->data[i1];
   }
 
   i1 = Z_colidx->size[0];
@@ -1480,16 +1549,16 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   I0_m = expl_temp.m;
   I0_n = expl_temp.n;
-  sparse_times(b_d, b_colidx, b_rowidx, b_m, b_n, &expl_temp);
-  i1 = bi->size[0];
-  bi->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(bi, i1);
+  sparse_times(bv, b_colidx, b_rowidx, b_m, b_n, &expl_temp);
+  i1 = Av->size[0];
+  Av->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(Av, i1);
   loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&b_rowidx);
   emxFree_int32_T(&b_colidx);
-  emxFree_real_T(&b_d);
+  emxFree_real_T(&bv);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    bi->data[i1] = expl_temp.d->data[i1];
+    Av->data[i1] = expl_temp.d->data[i1];
   }
 
   i1 = Z0_colidx->size[0];
@@ -1508,22 +1577,22 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     Z0_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  sparse_minus(C_d, C_colidx, C_rowidx, Av, Z_colidx, Z_rowidx, Z0_m, kj, Ai,
+  sparse_minus(C_d, C_colidx, C_rowidx, Aj, Z_colidx, Z_rowidx, Z0_m, kj, idxRow,
                t7_colidx, t7_rowidx, &t7_m, &t7_n);
-  sparse_minus(Ai, t7_colidx, t7_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m, I0_n,
-               Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
-  vec(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, bv, t9_colidx, t9_rowidx, &kj);
-  b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bv, t9_colidx, t9_rowidx,
+  sparse_minus(idxRow, t7_colidx, t7_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
+               I0_n, idxCol, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+  vec(idxCol, t8_colidx, t8_rowidx, Z0_m, t7_n, bi, t9_colidx, t9_rowidx, &kj);
+  b_sparse_mtimes(A_d, A_colidx, A_rowidx, A_m, bi, t9_colidx, t9_rowidx,
                   &b_expl_temp);
-  i1 = Ai->size[0];
-  Ai->size[0] = b_expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Ai, i1);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = b_expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
   loop_ub = b_expl_temp.d->size[0];
   emxFree_int32_T(&A_rowidx);
   emxFree_int32_T(&A_colidx);
   emxFree_real_T(&A_d);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = b_expl_temp.d->data[i1];
+    idxRow->data[i1] = b_expl_temp.d->data[i1];
   }
 
   i1 = t7_colidx->size[0];
@@ -1542,22 +1611,22 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     t7_rowidx->data[i1] = b_expl_temp.rowidx->data[i1];
   }
 
-  sparse_plus(Ai, t7_colidx, t7_rowidx, bi, Z0_colidx, Z0_rowidx, expl_temp.m,
-              bv, t9_colidx, t9_rowidx, &kj);
-  sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, bv, t9_colidx,
+  sparse_plus(idxRow, t7_colidx, t7_rowidx, Av, Z0_colidx, Z0_rowidx,
+              expl_temp.m, bi, t9_colidx, t9_rowidx, &kj);
+  sparse_mldivide(AAs_d, AAs_colidx, AAs_rowidx, AAs_m, AAs_n, bi, t9_colidx,
                   t9_rowidx, kj, &b_expl_temp);
-  i1 = Ai->size[0];
-  Ai->size[0] = b_expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Ai, i1);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = b_expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
   loop_ub = b_expl_temp.d->size[0];
   emxFree_int32_T(&AAs_rowidx);
   emxFree_int32_T(&AAs_colidx);
   emxFree_real_T(&AAs_d);
-  emxFree_real_T(&bi);
+  emxFree_real_T(&Av);
   emxFree_int32_T(&Z0_rowidx);
   emxFree_int32_T(&Z0_colidx);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = b_expl_temp.d->data[i1];
+    idxRow->data[i1] = b_expl_temp.d->data[i1];
   }
 
   i1 = t7_colidx->size[0];
@@ -1603,17 +1672,17 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   I0_m = expl_temp.m;
   I0_n = expl_temp.n;
-  b_sparse_mtimes(As_d, As_colidx, As_rowidx, As_m, Ai, t7_colidx, t7_rowidx,
+  b_sparse_mtimes(As_d, As_colidx, As_rowidx, As_m, idxRow, t7_colidx, t7_rowidx,
                   &b_expl_temp);
-  i1 = bv->size[0];
-  bv->size[0] = b_expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(bv, i1);
+  i1 = bi->size[0];
+  bi->size[0] = b_expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(bi, i1);
   loop_ub = b_expl_temp.d->size[0];
   emxFree_int32_T(&As_rowidx);
   emxFree_int32_T(&As_colidx);
   emxFree_real_T(&As_d);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    bv->data[i1] = b_expl_temp.d->data[i1];
+    bi->data[i1] = b_expl_temp.d->data[i1];
   }
 
   i1 = t9_colidx->size[0];
@@ -1635,16 +1704,16 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   d_emxFreeStruct_coder_internal_(&b_expl_temp);
   sizX[0] = numElmAtot_tmp;
   sizX[1] = numElmAtot_tmp;
-  sparse_reshape(bv, t9_colidx, t9_rowidx, sizX, &expl_temp);
-  i1 = Ai->size[0];
-  Ai->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Ai, i1);
+  sparse_reshape(bi, t9_colidx, t9_rowidx, sizX, &expl_temp);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
   loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&t9_rowidx);
   emxFree_int32_T(&t9_colidx);
-  emxFree_real_T(&bv);
+  emxFree_real_T(&bi);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = expl_temp.d->data[i1];
+    idxRow->data[i1] = expl_temp.d->data[i1];
   }
 
   i1 = t7_colidx->size[0];
@@ -1663,14 +1732,15 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  sparse_minus(C_d, C_colidx, C_rowidx, Ai, t7_colidx, t7_rowidx, expl_temp.m,
-               expl_temp.n, Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
-  sparse_minus(Aj, t8_colidx, t8_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m, I0_n,
-               qz, ii, jj, &Z0_m, &t7_m);
+  sparse_minus(C_d, C_colidx, C_rowidx, idxRow, t7_colidx, t7_rowidx,
+               expl_temp.m, expl_temp.n, idxCol, t8_colidx, t8_rowidx, &Z0_m,
+               &t7_n);
+  sparse_minus(idxCol, t8_colidx, t8_rowidx, I0_d, I0_colidx, I0_rowidx, I0_m,
+               I0_n, qz, ii, jj, &Z0_m, &t7_m);
   sparse_transpose(qz, ii, jj, Z0_m, t7_m, &expl_temp);
-  i1 = Ai->size[0];
-  Ai->size[0] = expl_temp.d->size[0];
-  emxEnsureCapacity_real_T(Ai, i1);
+  i1 = idxRow->size[0];
+  idxRow->size[0] = expl_temp.d->size[0];
+  emxEnsureCapacity_real_T(idxRow, i1);
   loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&C_rowidx);
   emxFree_int32_T(&C_colidx);
@@ -1679,7 +1749,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxFree_int32_T(&I0_colidx);
   emxFree_real_T(&I0_d);
   for (i1 = 0; i1 < loop_ub; i1++) {
-    Ai->data[i1] = expl_temp.d->data[i1];
+    idxRow->data[i1] = expl_temp.d->data[i1];
   }
 
   i1 = t7_colidx->size[0];
@@ -1698,16 +1768,16 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     t7_rowidx->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  b_sparse_plus(qz, ii, jj, Ai, t7_colidx, t7_rowidx, expl_temp.m, expl_temp.n,
-                Aj, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
-  sparse_rdivide(Aj, t8_colidx, t8_rowidx, Z0_m, t7_n, &expl_temp);
+  b_sparse_plus(qz, ii, jj, idxRow, t7_colidx, t7_rowidx, expl_temp.m,
+                expl_temp.n, idxCol, t8_colidx, t8_rowidx, &Z0_m, &t7_n);
+  sparse_rdivide(idxCol, t8_colidx, t8_rowidx, Z0_m, t7_n, &expl_temp);
   i1 = qz->size[0];
   qz->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(qz, i1);
   loop_ub = expl_temp.d->size[0];
   emxFree_int32_T(&t8_rowidx);
   emxFree_int32_T(&t8_colidx);
-  emxFree_real_T(&Aj);
+  emxFree_real_T(&idxCol);
   for (i1 = 0; i1 < loop_ub; i1++) {
     qz->data[i1] = expl_temp.d->data[i1];
   }
@@ -1728,9 +1798,9 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     jj->data[i1] = expl_temp.rowidx->data[i1];
   }
 
-  sparse_minus(Av, Z_colidx, Z_rowidx, qz, ii, jj, expl_temp.m, expl_temp.n, Ai,
-               t7_colidx, t7_rowidx, &t7_m, &t7_n);
-  sparse_times(Ai, t7_colidx, t7_rowidx, t7_m, t7_n, &expl_temp);
+  sparse_minus(Aj, Z_colidx, Z_rowidx, qz, ii, jj, expl_temp.m, expl_temp.n,
+               idxRow, t7_colidx, t7_rowidx, &t7_m, &t7_n);
+  sparse_times(idxRow, t7_colidx, t7_rowidx, t7_m, t7_n, &expl_temp);
   i1 = X_d->size[0];
   X_d->size[0] = expl_temp.d->size[0];
   emxEnsureCapacity_real_T(X_d, i1);
@@ -1739,8 +1809,8 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxFree_int32_T(&t7_colidx);
   emxFree_int32_T(&jj);
   emxFree_int32_T(&ii);
-  emxFree_real_T(&Av);
-  emxFree_real_T(&Ai);
+  emxFree_real_T(&Aj);
+  emxFree_real_T(&idxRow);
   emxFree_int32_T(&Z_rowidx);
   emxFree_int32_T(&Z_colidx);
   emxFree_real_T(&qz);
@@ -1766,7 +1836,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
 
   sparse_full(X_d, X_colidx, X_rowidx, expl_temp.m, expl_temp.n, QQ);
 
-  //  Transform X from sparse to full representation
+  /*  Transform X from sparse to full representation  */
   c_emxFreeStruct_coder_internal_(&expl_temp);
   emxFree_int32_T(&X_rowidx);
   emxFree_int32_T(&X_colidx);
@@ -1786,103 +1856,103 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
     Z0_n = QQ->size[1];
   }
 
-  //  The component of X corresponding to the gain matrix
+  /*  The component of X corresponding to the gain matrix */
   loop_ub = t7_m - i1;
-  t7_m = b_D->size[0] * b_D->size[1];
-  b_D->size[0] = loop_ub;
+  t7_m = b_U->size[0] * b_U->size[1];
+  b_U->size[0] = loop_ub;
   Z0_m = Z0_n - m;
-  b_D->size[1] = Z0_m;
-  emxEnsureCapacity_real_T(b_D, t7_m);
+  b_U->size[1] = Z0_m;
+  emxEnsureCapacity_real_T(b_U, t7_m);
   for (t7_m = 0; t7_m < Z0_m; t7_m++) {
     for (Z0_n = 0; Z0_n < loop_ub; Z0_n++) {
-      b_D->data[Z0_n + b_D->size[0] * t7_m] = -QQ->data[(i1 + Z0_n) + QQ->size[0]
+      b_U->data[Z0_n + b_U->size[0] * t7_m] = -QQ->data[(i1 + Z0_n) + QQ->size[0]
         * (m + t7_m)];
     }
   }
 
   i1 = QQ->size[0] * QQ->size[1];
-  QQ->size[0] = b_D->size[0];
-  QQ->size[1] = b_D->size[1];
+  QQ->size[0] = b_U->size[0];
+  QQ->size[1] = b_U->size[1];
   emxEnsureCapacity_real_T(QQ, i1);
-  loop_ub = b_D->size[0] * b_D->size[1];
+  loop_ub = b_U->size[0] * b_U->size[1];
   for (i1 = 0; i1 < loop_ub; i1++) {
-    QQ->data[i1] = b_D->data[i1];
+    QQ->data[i1] = b_U->data[i1];
   }
 
   if ((i == 1) || (QQ->size[0] == 1)) {
     loop_ub = U->size[0];
-    i = b_D->size[0] * b_D->size[1];
-    b_D->size[0] = U->size[0];
-    b_D->size[1] = QQ->size[1];
-    emxEnsureCapacity_real_T(b_D, i);
+    i = b_U->size[0] * b_U->size[1];
+    b_U->size[0] = U->size[0];
+    b_U->size[1] = QQ->size[1];
+    emxEnsureCapacity_real_T(b_U, i);
     for (i = 0; i < loop_ub; i++) {
       Z0_m = QQ->size[1];
       for (i1 = 0; i1 < Z0_m; i1++) {
-        b_D->data[i + b_D->size[0] * i1] = 0.0;
+        b_U->data[i + b_U->size[0] * i1] = 0.0;
         for (t7_m = 0; t7_m <= b_loop_ub; t7_m++) {
-          b_D->data[i + b_D->size[0] * i1] += U->data[i + U->size[0] * (dimkerAz
+          b_U->data[i + b_U->size[0] * i1] += U->data[i + U->size[0] * (dimkerAz
             + t7_m)] * QQ->data[t7_m + QQ->size[0] * i1];
         }
       }
     }
   } else {
     loop_ub = U->size[0] - 1;
-    i1 = b_D->size[0] * b_D->size[1];
-    b_D->size[0] = U->size[0];
-    b_D->size[1] = i;
-    emxEnsureCapacity_real_T(b_D, i1);
+    i1 = b_U->size[0] * b_U->size[1];
+    b_U->size[0] = U->size[0];
+    b_U->size[1] = i;
+    emxEnsureCapacity_real_T(b_U, i1);
     for (i = 0; i <= b_loop_ub; i++) {
       for (i1 = 0; i1 <= loop_ub; i1++) {
-        b_D->data[i1 + b_D->size[0] * i] = U->data[i1 + U->size[0] * (dimkerAz +
+        b_U->data[i1 + b_U->size[0] * i] = U->data[i1 + U->size[0] * (dimkerAz +
           i)];
       }
     }
 
     i = U->size[0] * U->size[1];
-    U->size[0] = b_D->size[0];
-    U->size[1] = b_D->size[1];
+    U->size[0] = b_U->size[0];
+    U->size[1] = b_U->size[1];
     emxEnsureCapacity_real_T(U, i);
-    loop_ub = b_D->size[1];
+    loop_ub = b_U->size[1];
     for (i = 0; i < loop_ub; i++) {
-      b_loop_ub = b_D->size[0];
+      b_loop_ub = b_U->size[0];
       for (i1 = 0; i1 < b_loop_ub; i1++) {
-        U->data[i1 + U->size[0] * i] = b_D->data[i1 + b_D->size[0] * i];
+        U->data[i1 + U->size[0] * i] = b_U->data[i1 + b_U->size[0] * i];
       }
     }
 
-    b_mtimes(U, QQ, b_D);
+    b_mtimes(U, QQ, b_U);
   }
 
   emxFree_real_T(&U);
-  if ((b_D->size[1] == 1) || (Qt->size[0] == 1)) {
+  if ((b_U->size[1] == 1) || (Qt->size[0] == 1)) {
     i = QQ->size[0] * QQ->size[1];
-    QQ->size[0] = b_D->size[0];
+    QQ->size[0] = b_U->size[0];
     QQ->size[1] = Qt->size[1];
     emxEnsureCapacity_real_T(QQ, i);
-    loop_ub = b_D->size[0];
+    loop_ub = b_U->size[0];
     for (i = 0; i < loop_ub; i++) {
       b_loop_ub = Qt->size[1];
       for (i1 = 0; i1 < b_loop_ub; i1++) {
         QQ->data[i + QQ->size[0] * i1] = 0.0;
-        Z0_m = b_D->size[1];
+        Z0_m = b_U->size[1];
         for (t7_m = 0; t7_m < Z0_m; t7_m++) {
-          QQ->data[i + QQ->size[0] * i1] += b_D->data[i + b_D->size[0] * t7_m] *
+          QQ->data[i + QQ->size[0] * i1] += b_U->data[i + b_U->size[0] * t7_m] *
             Qt->data[t7_m + Qt->size[0] * i1];
         }
       }
     }
   } else {
-    b_mtimes(b_D, Qt, QQ);
+    b_mtimes(b_U, Qt, QQ);
   }
 
-  emxFree_real_T(&b_D);
+  emxFree_real_T(&b_U);
   emxFree_real_T(&Qt);
 
-  //  The formation gain matrix
-  //  i
-  //  eig(X2)
-  //  trace(X2)
-  //  3D formation gain matrix
+  /*  The formation gain matrix */
+  /*  i */
+  /*  eig(X2) */
+  /*  trace(X2) */
+  /*  3D formation gain matrix */
   i = Aopt->size[0] * Aopt->size[1];
   Aopt->size[0] = 3 * adj->size[0];
   Aopt->size[1] = 3 * adj->size[0];
@@ -1896,7 +1966,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   for (b_i = 0; b_i < i; b_i++) {
     i1 = adj->size[0];
     for (loop_ub = 0; loop_ub < i1; loop_ub++) {
-      //  Component corresponding to 2D formation
+      /*  Component corresponding to 2D formation */
       idxR = 2.0 * (static_cast<double>(b_i) + 1.0);
       itrr = 2.0 * (static_cast<double>(loop_ub) + 1.0);
       numElmAtot_tmp = 3.0 * (static_cast<double>(b_i) + 1.0);
@@ -1918,7 +1988,7 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
       Aopt->data[t7_n + Aopt->size[0] * kj] = Axy->data[I0_m + Axy->size[0] *
         Z0_m];
 
-      //  Component corresponding to altitude
+      /*  Component corresponding to altitude */
       Aopt->data[(static_cast<int>(numElmAtot_tmp) + Aopt->size[0] * (
         static_cast<int>(d) - 1)) - 1] = QQ->data[b_i + QQ->size[0] * loop_ub];
     }
@@ -1927,110 +1997,106 @@ void ADMMGainDesign3D(const emxArray_real_T *Qs, const emxArray_real_T *adj,
   emxFree_real_T(&QQ);
   emxFree_real_T(&Axy);
 
-  //  ADMM algorithm--sparse eigendecomposition (use for very large-size problems n>1000) 
-  //  As = A'; % Dual operator
-  //  AAs = A * As;
-  //
-  //  mu = 1; % Penalty
-  //  epsEig = 1e-5;  % Precision for positive eig vals
-  //
-  //  % Stop criteria
-  //  thresh = 1e-4; % Threshold based on change in X updates
-  //  threshTr = 10; % Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. 
-  //  maxItr = 10; % Maximum # of iterations
-  //
-  //  % Initialize:
-  //  X = [I0 I0; I0 I0];
-  //  S = Z;
-  //  y = sparse(length(b),1);
-  //
-  //  for i = 1 : maxItr
-  //
-  //      %%%%%%% Update for y
-  //      y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
-  //
-  //
-  //      %%%%%%% Update for S
-  //      W = C - reshape(As*y, [sizX,sizX]) - mu * X;
-  //      W = (W + W')/2;
-  //
-  //      % Find positive eigenvalues of W using an iterative technique
-  //      V = zeros(sizX);
-  //      d = zeros(sizX, 1);
-  //
-  //      % Eigenvalues are repeated in paris. We find the corresponding eigvector,  
-  //      % then find the other eigenvector by rotating the first one 90 degrees 
-  //      [vw1, dw1] = eigs(W,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  
-  //
-  //      numPos = 0; % Number of positive eigenvalues
-  //      Wold = W;
-  //      while dw1 > 10*epsEig %dw(1) > epsEig
-  //          % Save positive eigenvalues and eigenvectors
-  //          numPos = numPos + 1;
-  //          d(numPos) = dw1;
-  //          V(:, numPos) = vw1;
-  //
-  //          % Remove positive eigenvalue components from matrix W
-  //          Wnew = Wold - dw1*(vw1*vw1');
-  //
-  //          % Find most positive eigenvalues of the new W matrix
-  //          [vw1, dw1] = eigs(Wnew,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  
-  //
-  //          Wold = Wnew;
-  //      end
-  //
-  //      S =  V(:,1:numPos) * diag(d(1:numPos)) * V(:,1:numPos).';
-  //
-  //      %%%%%%% Update for X
-  //      Xold = X;
-  //      X = sparse((S - W) / mu);
-  //
-  //
-  //      %%%%%%% Stop criteria
-  //      difX = sum(abs(Xold(:) - X(:)));
-  //      if difX < thresh % change in X is small
-  //          break
-  //      end
-  //
-  //      trPerc = abs(trace( X(m+1:end, m+1:end) ) - trVal) / trVal * 100;
-  //      if trPerc < threshTr % trace of X is close to the desired value
-  //          break
-  //      end
-  //
-  //  end
-  //
-  //  % Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix 
-  //  S = 0 * S;
-  //  y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
-  //  W = C - reshape(As*y, [sizX,sizX]) - mu * X;
-  //  W = (W + W') / 2;
-  //  X = (S - W) / mu;
-  //
-  //  X = full(X); % Transform X from sparse to full representation
-  //
-  //  X2 = X(m+1:end, m+1:end); % The componenet of X corresponding to the gain matrix 
-  //  Az = Q * (-X2) * Qt; % The formation gain matrix
-  //  i
-  //  eig(X2)
-  //  trace(X2)
-  //  Test solution
-  //  eig(X2)
-  //  eig(Az)
-  //  % Enforce zero-gain constraint for non-neighbor agents
-  //  Atrim = Az;
-  //  for i = 1 : n
-  //      for j = 1 : n
-  //          if (i~=j) && ~adj(i,j)
-  //              Atrim(2*i-1:2*i, 2*j-1:2*j) = zeros(2);
-  //          end
-  //      end
-  //  end
-  //
-  //  eig(Atrim)
+  /*  ADMM algorithm--sparse eigendecomposition (use for very large-size problems n>1000) */
+  /*  As = A'; % Dual operator */
+  /*  AAs = A * As; */
+  /*   */
+  /*  mu = 1; % Penalty     */
+  /*  epsEig = 1e-5;  % Precision for positive eig vals */
+  /*   */
+  /*  % Stop criteria */
+  /*  thresh = 1e-4; % Threshold based on change in X updates */
+  /*  threshTr = 10; % Percentage threshold based on the trace value. If trace of X2 reaches within the specified percentage, the algorithm stops. */
+  /*  maxItr = 10; % Maximum # of iterations */
+  /*   */
+  /*  % Initialize: */
+  /*  X = [I0 I0; I0 I0]; */
+  /*  S = Z; */
+  /*  y = sparse(length(b),1); */
+  /*   */
+  /*  for i = 1 : maxItr */
+  /*       */
+  /*      %%%%%%% Update for y */
+  /*      y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b); */
+  /*       */
+  /*       */
+  /*      %%%%%%% Update for S */
+  /*      W = C - reshape(As*y, [sizX,sizX]) - mu * X; */
+  /*      W = (W + W')/2; */
+  /*       */
+  /*      % Find positive eigenvalues of W using an iterative technique */
+  /*      V = zeros(sizX); */
+  /*      d = zeros(sizX, 1); */
+  /*       */
+  /*      % Eigenvalues are repeated in paris. We find the corresponding eigvector,  */
+  /*      % then find the other eigenvector by rotating the first one 90 degrees */
+  /*      [vw1, dw1] = eigs(W,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  */
+  /*       */
+  /*      numPos = 0; % Number of positive eigenvalues */
+  /*      Wold = W; */
+  /*      while dw1 > 10*epsEig %dw(1) > epsEig */
+  /*          % Save positive eigenvalues and eigenvectors */
+  /*          numPos = numPos + 1; */
+  /*          d(numPos) = dw1; */
+  /*          V(:, numPos) = vw1; */
+  /*           */
+  /*          % Remove positive eigenvalue components from matrix W         */
+  /*          Wnew = Wold - dw1*(vw1*vw1'); */
+  /*           */
+  /*          % Find most positive eigenvalues of the new W matrix */
+  /*          [vw1, dw1] = eigs(Wnew,1,'largestreal', 'Tolerance',epsEig, 'FailureTreatment','keep', 'Display', false);  */
+  /*           */
+  /*          Wold = Wnew; */
+  /*      end */
+  /*       */
+  /*      S =  V(:,1:numPos) * diag(d(1:numPos)) * V(:,1:numPos).'; */
+  /*       */
+  /*      %%%%%%% Update for X */
+  /*      Xold = X; */
+  /*      X = sparse((S - W) / mu); */
+  /*       */
+  /*   */
+  /*      %%%%%%% Stop criteria */
+  /*      difX = sum(abs(Xold(:) - X(:))); */
+  /*      if difX < thresh % change in X is small */
+  /*          break  */
+  /*      end */
+  /*       */
+  /*      trPerc = abs(trace( X(m+1:end, m+1:end) ) - trVal) / trVal * 100; */
+  /*      if trPerc < threshTr % trace of X is close to the desired value */
+  /*          break */
+  /*      end */
+  /*       */
+  /*  end */
+  /*   */
+  /*  % Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix */
+  /*  S = 0 * S; */
+  /*  y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b); */
+  /*  W = C - reshape(As*y, [sizX,sizX]) - mu * X; */
+  /*  W = (W + W') / 2; */
+  /*  X = (S - W) / mu; */
+  /*   */
+  /*  X = full(X); % Transform X from sparse to full representation  */
+  /*   */
+  /*  X2 = X(m+1:end, m+1:end); % The componenet of X corresponding to the gain matrix */
+  /*  Az = Q * (-X2) * Qt; % The formation gain matrix */
+  /*  i */
+  /*  eig(X2) */
+  /*  trace(X2) */
+  /*  Test solution */
+  /*  eig(X2) */
+  /*  eig(Az) */
+  /*  % Enforce zero-gain constraint for non-neighbor agents */
+  /*  Atrim = Az; */
+  /*  for i = 1 : n */
+  /*      for j = 1 : n */
+  /*          if (i~=j) && ~adj(i,j) */
+  /*              Atrim(2*i-1:2*i, 2*j-1:2*j) = zeros(2);             */
+  /*          end */
+  /*      end */
+  /*  end */
+  /*   */
+  /*  eig(Atrim) */
 }
 
-//
-// File trailer for ADMMGainDesign3D.cpp
-//
-// [EOF]
-//
+/* End of code generation (ADMMGainDesign3D.cpp) */

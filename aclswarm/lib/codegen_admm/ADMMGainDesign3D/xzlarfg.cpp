@@ -1,14 +1,15 @@
-//
-// Academic License - for use in teaching, academic research, and meeting
-// course requirements at degree granting institutions only.  Not for
-// government, commercial, or other organizational use.
-// File: xzlarfg.cpp
-//
-// MATLAB Coder version            : 4.3
-// C/C++ source code generated on  : 02-Feb-2020 11:20:18
-//
+/*
+ * Academic License - for use in teaching, academic research, and meeting
+ * course requirements at degree granting institutions only.  Not for
+ * government, commercial, or other organizational use.
+ *
+ * xzlarfg.cpp
+ *
+ * Code generation for function 'xzlarfg'
+ *
+ */
 
-// Include Files
+/* Include files */
 #include "xzlarfg.h"
 #include "ADMMGainDesign3D.h"
 #include "ADMMGainDesign3D_rtwutil.h"
@@ -17,14 +18,7 @@
 #include "xnrm2.h"
 #include <cmath>
 
-// Function Definitions
-
-//
-// Arguments    : int n
-//                double *alpha1
-//                double x[3]
-// Return Type  : double
-//
+/* Function Definitions */
 double xzlarfg(int n, double *alpha1, double x[3])
 {
   double tau;
@@ -84,8 +78,4 @@ double xzlarfg(int n, double *alpha1, double x[3])
   return tau;
 }
 
-//
-// File trailer for xzlarfg.cpp
-//
-// [EOF]
-//
+/* End of code generation (xzlarfg.cpp) */

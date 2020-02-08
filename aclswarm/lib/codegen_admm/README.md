@@ -1,7 +1,7 @@
 MATLAB Coder Generated C++ Library for ADMMGainDesign3D
 =======================================================
 
-The source code for this library was generated using MATLAB R2019b with MATLAB Coder 4.3. The test script used was `Benchmark.m`. This source code was generated from [the MATLAB code](https://github.com/mit-acl/aclswarm/tree/191adfac5353cb30ef46bb5c3e53822824d485fe/aclswarm/matlab) of commit 191adfac.
+The source code for this library was generated using MATLAB R2019b with MATLAB Coder 4.3. The test script used was `Benchmark.m`. This source code was generated from [the MATLAB code](https://github.com/mit-acl/aclswarm/tree/387c790ad576df6ecd361853008217cead7de70d/aclswarm/matlab) of commit 387c790ad.
 
 ## MATLAB Coder Settings
 
