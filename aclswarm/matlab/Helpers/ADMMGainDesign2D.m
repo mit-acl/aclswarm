@@ -73,6 +73,8 @@ S = not(adj);
 S = S - diag(diag(S));
 Su = triu(S); % Upper triangular part
 [idxRow, idxCol] = find(Su); % Find location of nonzero entries
+% TO DO: Need to check that Q does not have zero rows that result in a
+% trivial constraint (see the code for z-component).
 numConAdj = length(idxRow); % Number of constraints
 
 % Number of elements in block [X]_22. Found "-m" empirically.

@@ -81,6 +81,13 @@ S = not(adj);
 S = S - diag(diag(S));
 Su = triu(S); % Upper triangular part
 [idxRow, idxCol] = find(Su); % Find location of nonzero entries
+% Discard any linear constraint that is trivial (i.e., all zeros)
+idxZro = find( sum(abs(Q),2) < 100*eps );
+for i = 1 : length(idxZro)
+    idxRmv = ( idxRow == idxZro(i) ) | ( idxCol == idxZro(i) );
+    idxRow(idxRmv) = [];
+    idxCol(idxRmv) = [];
+end
 numConAdj = length(idxRow); % Number of constraints
 
 % Number of elements in block [X]_22
