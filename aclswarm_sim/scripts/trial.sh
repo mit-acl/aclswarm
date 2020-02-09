@@ -134,6 +134,7 @@ pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety
 pkill -f -9 static_transform_publisher
+pkill -f -9 throttle
 pkill -x -9 rosout
 pkill -x -9 roscore
 pkill -x -9 rosmaster
