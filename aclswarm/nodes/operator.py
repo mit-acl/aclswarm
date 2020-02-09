@@ -33,10 +33,7 @@ class Operator:
         self.send_gains = rospy.get_param('~send_gains', False)
         formation_group = rospy.get_param('~formation_group')
         self.formations = rospy.get_param('~{}'.format(formation_group))
-        if ('adjmat' not in self.formations # make fc if not specified
-                or type(self.formations['adjmat']) != list):
-            self.formations['adjmat'] = np.ones(self.n) - np.eye(self.n)
-            rospy.loginfo("Using fully connected formation graph")
+        self.manageAdjmat()
         if self.formations['agents'] != self.n:
             rospy.logerr('Mismatch between number of vehicles ({}) '
                          'and formation group agents ({})'.format(
@@ -88,6 +85,31 @@ class Operator:
         self.zmax = rospy.get_param('/room_bounds/z_max', 1.0)
         self.genEnvironment()
 
+    def manageAdjmat(self):
+        """Manage adjacency natrix
+        Each formation within a group can have its own adjacency matrix.
+        If a global adjacency matrix is supplied, that one will override
+        each of the (optionally in this case) supplied formation adjmat.
+        """
+
+        # check if valid, global adjmat provided
+        has_global_adjmat = ('adjmat' in self.formations
+                                and type(self.formations['adjmat']) == list)
+
+        # make sure each formation has a valid adjmat
+        for formation in self.formations['formations']:
+
+            if has_global_adjmat:
+                # set this formation's adjmat to the globally provided adjmat
+                formation['adjmat'] = self.formations['adjmat']
+
+            if ('adjmat' not in formation # make fc if not specified
+                    or type(formation['adjmat']) != list):
+                rospy.loginfo("Using fully connected formation graph for "
+                            "\033[34;1m{}\033[0m".format(formation['name']))
+                formation['adjmat'] = np.ones(self.n) - np.eye(self.n)
+
+
     def sendFlightMode(self, mode):
         msg = QuadFlightMode()
         msg.header.stamp = rospy.Time.now()
@@ -122,8 +144,7 @@ class Operator:
         formation = self.formations['formations'][self.formidx]
         rospy.loginfo('\033[34;1mFormation: {}\033[0m'.format(formation['name']))
 
-        adjmat = self.formations['adjmat']
-        msg = self.buildFormationMessage(adjmat, formation)
+        msg = self.buildFormationMessage(formation)
         self.formationPub.publish(msg)
 
         # if we are a centralized coordinator, reset the assignment
@@ -134,11 +155,11 @@ class Operator:
         scale = float(formation['scale']) if 'scale' in formation else 1.0
         return scale * np.array(formation['points'], dtype=np.float32)
 
-    def buildFormationMessage(self, adjmat, formation):
+    def buildFormationMessage(self, formation):
 
         # formation-related matrices
         pts = self.getPoints(formation)
-        adjmat = np.array(adjmat, dtype=np.uint8)
+        adjmat = np.array(formation['adjmat'], dtype=np.uint8)
 
         msg = Formation()
         msg.name = formation['name']
