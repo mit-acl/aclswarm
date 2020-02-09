@@ -93,8 +93,7 @@ class Operator:
         """
 
         # check if valid, global adjmat provided
-        has_global_adjmat = ('adjmat' in self.formations
-                                and type(self.formations['adjmat']) == list)
+        has_global_adjmat = 'adjmat' in self.formations
 
         # make sure each formation has a valid adjmat
         for formation in self.formations['formations']:
