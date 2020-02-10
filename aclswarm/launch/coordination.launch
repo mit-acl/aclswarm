@@ -3,6 +3,7 @@
   <arg name="veh" />
   <arg name="takeoff_alt" default="1.0" />
   <arg name="form_settle_time" default="1.5" />
+  <arg name="autoauction_dt" default="1.2" />
   <arg name="use_assignment" default="true" />
 
   <group ns="$(arg veh)">
@@ -20,7 +21,7 @@
     <!-- coordinated control and assignment -->
     <node name="coordination" pkg="aclswarm" type="coordination" output="screen">
       <param name="auctioneer_dt" value="0.001" />
-      <param name="autoauction_dt" value="1.2" />
+      <param name="autoauction_dt" value="$(arg autoauction_dt)" />
       <param name="control_dt" value="0.01" />
 
       <!-- auctioneer parameters -->
