@@ -185,7 +185,7 @@ class Operator:
             # pre-calculated gains may have been provided, but not required.
             # Store the gains so we do not need to redo work.
             if 'gains' not in formation:
-                formation['gains'] = createGainMatrix(adjmat, pts)
+                formation['gains'] = createGainMatrix(adjmat, pts, method='original')
 
                 # # Print gain matrix for easy copying into formations.yaml
                 # np.set_printoptions(linewidth=500, threshold=sys.maxsize)
