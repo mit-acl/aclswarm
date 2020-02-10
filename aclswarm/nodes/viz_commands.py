@@ -30,6 +30,10 @@ class VizCommands:
         self.viz_safecmds = rospy.get_param('~safecmds', True)
         self.viz_mesh = rospy.get_param('~mesh', True)
 
+        # should we subscribe to throttled or high-bandwidth topics?
+        self.use_throttled = rospy.get_param('~use_throttled_topic', True)
+        throttle = "_throttle" if self.use_throttled else ""
+
         # setup markers
         self.markers_distcmd = self.create_arrow_markers('distcmd', (0,0,1))
         self.markers_safecmd = self.create_arrow_markers('safecmd', (1,0,0))
@@ -51,12 +55,12 @@ class VizCommands:
             self.subs[veh] = {}
             if self.viz_distcmds:
                 self.subs[veh]['distcmd'] = rospy.Subscriber(
-                        "/{}/distcmd_throttle".format(veh), Vector3Stamped,
+                        "/{}/distcmd{}".format(veh, throttle), Vector3Stamped,
                         lambda msg, v=veh: self.distcmdCb(msg, 'distcmd', v),
                         queue_size=1)
             if self.viz_safecmds:
                 self.subs[veh]['safecmd'] = rospy.Subscriber(
-                        "/{}/goal_throttle".format(veh), QuadGoal,
+                        "/{}/goal{}".format(veh, throttle), QuadGoal,
                         lambda msg, v=veh: self.safecmdCb(msg, 'safecmd', v),
                         queue_size=1)
             if self.viz_mesh:

@@ -49,7 +49,7 @@ if [[ "$formation" == simform* ]]; then
   formation="simform"
 
   # this generates a formation and sets the appropriate rosparam
-  rosrun aclswarm_sim generate_random_formation.py -l 20 -w 20 -h 5 "$numAgents"
+  rosrun aclswarm_sim generate_random_formation.py -l 20 -w 20 -h 2 "$numAgents"
 fi
 
 # cheat: the launch file also does this, but there is a dependency loop unless we do this
@@ -72,12 +72,12 @@ rosparam set /vehs "[$tmp]"
 # Launch the operator with any necessary flags
 extras=""
 if [ $interactive == "false" ]; then
-  extras="$extras headless:=false"
+  extras="$extras headless:=true"
 fi
 if [ $use_leader == "true" ]; then
   extras="$extras leader:=SQ01s"
 fi
-roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false $extras &
+roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false throttle:=false $extras &
 
 rviz >/dev/null 2>&1 &
 

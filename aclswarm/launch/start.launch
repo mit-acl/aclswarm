@@ -2,12 +2,15 @@
 <launch>
   <arg name="veh" />
   <arg name="takeoff_alt" default="1.0" />
+  <arg name="form_settle_time" default="1.5" />
   <arg name="use_assignment" default="true" />
+  <arg name="throttle" default="true" />
 
   <!-- Coordination components -->
   <include file="$(find aclswarm)/launch/coordination.launch">
     <arg name="veh" value="$(arg veh)" />
     <arg name="takeoff_alt" value="$(arg takeoff_alt)" />
+    <arg name="form_settle_time" value="$(arg form_settle_time)" />
     <arg name="use_assignment" value="$(arg use_assignment)" />
   </include>
 
@@ -17,7 +20,7 @@
   </include>
 
   <!-- throttle signals for external logging -->
-  <group ns="$(arg veh)">
+  <group if="$(arg throttle)" ns="$(arg veh)">
     <node pkg="topic_tools" type="throttle" name="throttle_state"
       args="messages state 30" />
 

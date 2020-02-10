@@ -2,6 +2,7 @@
 <launch>
   <arg name="veh" />
   <arg name="takeoff_alt" default="1.0" />
+  <arg name="form_settle_time" default="1.5" />
   <arg name="use_assignment" default="true" />
 
   <group ns="$(arg veh)">
@@ -24,7 +25,7 @@
 
       <!-- auctioneer parameters -->
       <param name="use_assignment" value="$(arg use_assignment)" />
-      <param name="form_settle_time" value="1.5" />
+      <param name="form_settle_time" value="$(arg form_settle_time)" />
       <param name="verbose" value="false" />
 
       <param name="cntrl/K1_xy" value="0.1" />

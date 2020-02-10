@@ -6,6 +6,7 @@
     <arg name="central_assignment" default="false" />
     <arg name="load_vehicles" default="true" />
     <arg name="headless" default="false" />
+    <arg name="throttle" default="true" />
     <arg name="leader" default="" />
     <arg name="dev" default="js0" />
 
@@ -21,11 +22,12 @@
         <param name="central_assignment_dt" value="1" />
     </node>
 
-    <!-- Start visualization script -->
-    <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen">
+    <!-- Start visualization script (n.b. should turn off for large scale sims) -->
+    <node name="viz_commands" pkg="aclswarm" type="viz_commands.py" output="screen" if="true">
         <param name="distcmds" value="true" />
         <param name="safecmds" value="true" />
         <param name="mesh" value="true" />
+        <param name="use_throttled_topic" value="$(arg throttle)" />
     </node>
 
     <!-- Start GUI -->

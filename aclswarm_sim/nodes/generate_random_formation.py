@@ -54,7 +54,7 @@ def generate_formation_group(n, fc, l, w, h, min_dist, k, graph):
 
     adjmat = np.ones((n,n), dtype=int) - np.eye(n, dtype=int)
     if not fc:
-        # choose (at most) n-4 edges to remove (to maintain universal rigidity)
+        # choose (at most) n-4 edges to remove (to maintain 2D global rigidity)
         m = np.random.randint(1, n - 4 + 1) # uniform in [1, n-4]
 
         # choose m random numbers in [0, n)

@@ -148,7 +148,7 @@ make_tmux_session aclswarm $num
 for _sim in $(eval echo {01..$num}); do
   _pane=`echo "$_sim - 1" | bc`
   _veh="SQ${_sim}s"
-  tmux send-keys -t aclswarm:0.${_pane} "roslaunch aclswarm start.launch veh:=$_veh leader:=0" C-m
+  tmux send-keys -t aclswarm:0.${_pane} "roslaunch aclswarm start.launch veh:=$_veh throttle:=false" C-m
 done
 
 # send commands to all panes
