@@ -96,6 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('-h', '--height', type=float, help="height of formation volume", default=10)
     parser.add_argument('-m', '--min-dist', type=float, help="centroid distances", default=1.5)
     parser.add_argument('-k', '--num-formations', type=int, help="num of formations", default=2)
+    parser.add_argument('-s', '--seed', type=int, help="random seed for repeatability", default=None)
     parser.add_argument('-fc', help="complete or randomly sparse graph", action="store_true")
     parser.add_argument('-g', '--graph', help="use NetworkX to graph formation", action="store_true")
     args = parser.parse_args()
@@ -107,6 +108,11 @@ if __name__ == '__main__':
     # If there are less than five agents, the graph must be fully connected
     if not args.fc and args.n < 5:
         args.fc = True
+
+    # If requested (e.g., for Monte Carlo trials), seed the numpy random generator
+    if args.seed is not None:
+        print("Seeding with {}".format(args.seed))
+        np.random.seed(args.seed)
 
     formgroup = generate_formation_group(args.n, args.fc, args.length,
                         args.width, args.height, args.min_dist,

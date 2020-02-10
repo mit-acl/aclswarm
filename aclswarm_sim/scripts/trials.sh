@@ -16,6 +16,7 @@ usage="$(basename "$0") [-h] -m <#> -f <formation> -n <name> -i -l -- perform m 
 where:
     -h                    show this help text
     -m <#>                number of trials to simulate
+    -s                    Monte Carlo mode---use trial num as randseed
     -f <formation_group>  which formation group to use
     -n <name>             name of trials for logging
     -i                    interactive operator
@@ -28,8 +29,9 @@ fi
 
 use_leader="false"
 interactive="false"
+montecarlo="false"
 
-while getopts 'hm:f:n:il' option; do
+while getopts 'hm:sf:n:il' option; do
   case "$option" in
     h)
       echo "$usage"
@@ -37,6 +39,9 @@ while getopts 'hm:f:n:il' option; do
       ;;
     m)
       m=$OPTARG
+      ;;
+    s)
+      montecarlo="true"
       ;;
     f)
       formation_group=$OPTARG
@@ -79,7 +84,7 @@ for i in $(seq 1 $m); do
   # zero pad based on total number of trials
   printf -v j "%0${#m}d" $i
 
-  rosrun aclswarm_sim trial.sh "$name" "$j" "$formation_group" "$interactive" "$use_leader" &
+  rosrun aclswarm_sim trial.sh "$name" "$j" "$formation_group" "$interactive" "$use_leader" "$montecarlo" &
   trialpid=$!
   wait $trialpid
 

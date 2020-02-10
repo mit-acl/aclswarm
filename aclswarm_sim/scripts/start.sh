@@ -13,7 +13,7 @@ function draw_uniform {
   # n.b.: a, b must be ints
   a=$1
   b=$2
-  echo "$((a+RANDOM%(b-a))).$((RANDOM%999))"
+  retval=$((a+RANDOM%(b-a))).$((RANDOM%999))
 }
 
 function draw_nonoverlapping_circles {
@@ -34,8 +34,8 @@ function draw_nonoverlapping_circles {
 
   while [ ${#circles_x[@]} -lt $n ]; do
     # Sample a new circle
-    x=$(draw_uniform $w1 $w2)
-    y=$(draw_uniform $h1 $h2)
+    draw_uniform $w1 $w2; x=$retval
+    draw_uniform $h1 $h2; y=$retval
 
     # Compare where the new circle is w.r.t the old circles
     overlapped=false
@@ -76,6 +76,7 @@ where:
     -h              show this help text
     -n              number of vehicles to simulate
     -r <w>x<h>x<r>  random initialization in [-w/2 w/2]x[-h/2 h/2] with radius r
+    -s seed         random seed for random initialization
     -x              headless---do not attach to tmux at end"
 
 if [ "$#" -le 1 ]; then
@@ -83,7 +84,7 @@ if [ "$#" -le 1 ]; then
     exit 1
 fi
 
-while getopts 'hn:r:x' option; do
+while getopts 'hn:r:s:x' option; do
   case "$option" in
     h)
       echo "$usage"
@@ -97,6 +98,9 @@ while getopts 'hn:r:x' option; do
       h=$(echo $OPTARG | cut -d'x' -f2)
       r=$(echo $OPTARG | cut -d'x' -f3)
       rtxt=" (randomly initialized in $w x $h square; buffer radius $r)"
+      ;;
+    s)
+      RANDOM=$OPTARG
       ;;
     x)
       headless=true

@@ -17,12 +17,20 @@ trialnumber=$2
 formation=$3
 interactive=$4
 use_leader=$5
+montecarlo=$6
 
 if [ -z "$formation" ]; then
   echo
   echo "A formation group is required"
   echo
   exit 1
+fi
+
+# if in monte carlo mode, pass the random seed arg
+if [ "$montecarlo" == "true" ]; then
+  mcseed="-s$trialnumber"
+else
+  mcssed=
 fi
 
 #
@@ -49,7 +57,7 @@ if [[ "$formation" == simform* ]]; then
   formation="simform"
 
   # this generates a formation and sets the appropriate rosparam
-  rosrun aclswarm_sim generate_random_formation.py -l 20 -w 20 -h 2 "$numAgents"
+  rosrun aclswarm_sim generate_random_formation.py -l 10 -w 10 -h 2 $mcseed "$numAgents"
 fi
 
 # cheat: the launch file also does this, but there is a dependency loop unless we do this
@@ -91,7 +99,7 @@ rosparam set /room_bounds "{x_min: -100, x_max: 100, y_min: -100, y_max: 100, z_
 # Start swarm simulations
 #
 
-rosrun aclswarm_sim start.sh -n $n -r "${w}x${h}x${r}" -x
+rosrun aclswarm_sim start.sh -n $n -r "${w}x${h}x${r}" $mcseed -x
 
 sleep 5 # wait for system bring up
 
