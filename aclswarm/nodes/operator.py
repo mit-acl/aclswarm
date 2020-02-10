@@ -137,14 +137,16 @@ class Operator:
 
     def pubFormation(self):
         # Cycle through formations (starts at -1)
-        self.formidx += 1
-        self.formidx %= len(self.formations['formations'])
+        formidx = (self.formidx + 1) % len(self.formations['formations'])
 
-        formation = self.formations['formations'][self.formidx]
+        formation = self.formations['formations'][formidx]
         rospy.loginfo('\033[34;1mFormation: {}\033[0m'.format(formation['name']))
 
         msg = self.buildFormationMessage(formation)
         self.formationPub.publish(msg)
+
+        # indicate that we have moved to the next formation
+        self.formidx = formidx
 
         # if we are a centralized coordinator, reset the assignment
         if self.central_assignment:
