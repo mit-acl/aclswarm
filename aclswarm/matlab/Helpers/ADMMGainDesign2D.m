@@ -422,7 +422,7 @@ y = sparse(length(b),1);
 for i = 1 : maxItr 
     
     %%%%%%% Update for y
-    y = AAs \ (A * vec(C - S - mu * X) + mu * b);
+    y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
     
     %%%%%%% Update for S
     W = C - reshape(As*y, [sizX,sizX]) - mu * X;
@@ -453,7 +453,7 @@ end
 
 % Set S=0 to project the final solution and ensure that it satisfies the linear constraints given by the adjacency matrix
 S = 0 * S;
-y = AAs \ (A * vec(C - S - mu * X) + mu * b);
+y = AAs \ (A * reshape(C - S - mu * X, [sizX^2,1]) + mu * b);
 W = C - reshape(As*y, [sizX,sizX]) - mu * X;
 W = (W + W.') ./ 2;
 X = (S - W) ./ mu;
