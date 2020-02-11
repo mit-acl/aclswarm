@@ -2,6 +2,7 @@
 
 from __future__ import division
 
+import argparse
 import time
 import csv
 from collections import deque
@@ -49,7 +50,7 @@ class Supervisor:
     SIM_INIT_TIMEOUT = 10
     TAKE_OFF_TIMEOUT = 10
     HOVER_WAIT = 5
-    CBAA_TIMEOUT = 10
+    ASSIGNMENT_TIMEOUT = 20
     FORMATION_RECEIVED_WAIT = 1
     CONVERGED_WAIT = 1
     GRIDLOCK_TIMEOUT = 90
@@ -59,7 +60,9 @@ class Supervisor:
     ORIG_ZERO_VEL_THR = 1.00 # m/s
     AVG_ACTIVE_CA_THR = 0.95 # percent
 
-    def __init__(self):
+    def __init__(self, datafile, trial):
+        self.datafile = datafile
+        self.trial = trial
 
         # General swarm information
         self.vehs = rospy.get_param('/vehs')
@@ -186,7 +189,7 @@ class Supervisor:
             if self.has_set_assignment():
                 self.start_logging()
                 self.next_state(State.FLYING)
-            elif self.has_elapsed(self.CBAA_TIMEOUT):
+            elif self.has_elapsed(self.ASSIGNMENT_TIMEOUT):
                 self.next_state(State.TERMINATE)
 
         elif self.state is State.FLYING:
@@ -391,9 +394,10 @@ class Supervisor:
     def complete(self):
 
         # write logs to file
-        with open(r'aclswarm_trials.csv', 'a') as f:
+        with open(self.datafile, 'a') as f:
             writer = csv.writer(f)
-            writer.writerow(self.log['dist'].tolist()
+            writer.writerow([self.trial]
+                                + self.log['dist'].tolist()
                                 + self.log['time']
                                 + self.log['time_avoidance']
                                 + self.log['assignments'])
@@ -465,5 +469,13 @@ class Supervisor:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Supervise a simulation trial')
+    parser.add_argument('-n', '--name', type=str, help='filename to save data', default='aclswarm_trials')
+    parser.add_argument('-t', '--trial', type=int, help='trial number', required=True)
+    args = parser.parse_args()
+
+    # name of datafile
+    datafile = './{}.csv'.format(args.name)
+
     rospy.init_node('supervisor')
-    node = Supervisor()
+    node = Supervisor(datafile, args.trial)

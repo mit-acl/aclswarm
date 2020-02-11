@@ -107,10 +107,10 @@ sleep 5 # wait for system bring up
 # Simulation trial
 #
 
-# rosrun aclswarm_sim bag_record.sh -O "$formation$trialname$trialnumber" __name:=bagrecorder >/dev/null 2>&1 &
+# rosrun aclswarm_sim bag_record.sh -O "$formation$trialname_$trialnumber" __name:=bagrecorder >/dev/null 2>&1 &
 
 if [ $interactive == "false" ]; then
-  rosrun aclswarm_sim supervisor.py
+  rosrun aclswarm_sim supervisor.py -n $trialname -t $trialnumber
 else
   sleep 3 # wait for snapstack sim to initialize
   echo -e "\e[97;1mSimulation initialized. You may now press '\e[32;1mSTART\e[97;1m'.\e[0m"
@@ -138,6 +138,7 @@ pkill -x -9 roslaunch
 pkill -x -9 snap_sim
 pkill -x -9 snap
 pkill -f -9 outer_loop
+pkill -f -9 comm_monitor
 pkill -x -9 localization
 pkill -x -9 coordination
 pkill -x -9 safety
@@ -146,3 +147,10 @@ pkill -f -9 throttle
 pkill -x -9 rosout
 pkill -x -9 roscore
 pkill -x -9 rosmaster
+
+# potentially dangerous pattern match: clean up shared memory segments
+# if snap_sim (which uses shared memory) is killed unexpectedly, shmem
+# will be left behind, causing those vehicles to have subsequent problems
+# taking off.
+ipcs | grep " 104 " | cut -d' ' -f 2 | xargs -L 1 -r ipcrm -m
+ipcs | grep " 128 " | cut -d' ' -f 2 | xargs -L 1 -r ipcrm -m

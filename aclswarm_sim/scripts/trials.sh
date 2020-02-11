@@ -47,7 +47,7 @@ while getopts 'hm:sf:n:il' option; do
       formation_group=$OPTARG
       ;;
     n)
-      name=${OPTARG}_
+      name=${OPTARG}
       ;;
     i)
       interactive="true"
@@ -64,15 +64,15 @@ while getopts 'hm:sf:n:il' option; do
 done
 
 if [[ -z $name ]]; then
-  name=
+  name=aclswarm_trials
 fi
 
 if [ "$interactive" == "true" ]; then
   m=1
 fi
 
-if [ -f aclswarm_trials.csv ]; then
-  mv aclswarm_trials.csv aclswarm_trials.csv.bak
+if [ -f "$name.csv" ]; then
+  mv "$name.csv" "$name.csv.bak"
 fi
 
 for i in $(seq 1 $m); do
