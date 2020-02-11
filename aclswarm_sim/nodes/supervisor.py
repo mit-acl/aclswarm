@@ -54,6 +54,7 @@ class Supervisor:
     FORMATION_RECEIVED_WAIT = 1
     CONVERGED_WAIT = 1
     GRIDLOCK_TIMEOUT = 90
+    TRIAL_TIMEOUT = 600
 
     # thresholds
     ZERO_POS_THR = 0.05 # m
@@ -119,6 +120,7 @@ class Supervisor:
         self.received_assignment = False
         self.tick_rate = 50
         self.is_logging = False
+        self.watchdog_expiration = rospy.Time.now() + rospy.Duration(self.TRIAL_TIMEOUT)
 
         # ring buffers for checking windowed signal averages
         self.BUFFLEN = self.BUFFER_SECONDS * self.tick_rate
@@ -224,6 +226,14 @@ class Supervisor:
 
         if self.is_logging:
             self.log_signals()
+
+        #
+        # Trial Watchdog
+        #
+
+        if rospy.Time.now() > self.watchdog_expiration:
+            rospy.logerr('Timeout')
+            self.next_state(State.TERMINATE)
 
     def next_state(self, state, reset=True):
         self.last_state = self.state
