@@ -10,8 +10,9 @@ This is due to our collision avoidance strategy.
 
 from __future__ import division
 
-import sys
 import argparse
+import time
+import sys
 
 import rospy
 import numpy as np; np.set_printoptions(linewidth=500)
@@ -30,6 +31,9 @@ def generate_formation(name, n, l, w, h, min_dist):
 
     pts = np.array([])
 
+    # timeout for generating the formation
+    timeout = time.time() + 5 # seconds
+
     while np.atleast_2d(pts).shape[0] < n:
         overlapped = False
 
@@ -46,6 +50,10 @@ def generate_formation(name, n, l, w, h, min_dist):
 
         if overlapped is False:
             pts = pt if pts.shape[0] == 0 else np.vstack((pts, pt))
+
+        # if too much time has passed, return an empty formation
+        if time.time() > timeout:
+            return { }
 
     return { 'name': name, 'points': pts.tolist() }
 
@@ -111,7 +119,6 @@ if __name__ == '__main__':
 
     # If requested (e.g., for Monte Carlo trials), seed the numpy random generator
     if args.seed is not None:
-        print("Seeding with {}".format(args.seed))
         np.random.seed(args.seed)
 
     formgroup = generate_formation_group(args.n, args.fc, args.length,
