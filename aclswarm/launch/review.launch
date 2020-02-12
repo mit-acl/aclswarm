@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="bag" />
+  <arg name="s" default="0" />
+  <arg name="r" default="1" />
+
+  <param name="use_sim_time" value="true" />
+
+  <!-- Connect world and vicon coordinate frames (legacy compatibility) -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world2vicon" args="0 0 0 0 0 0 world vicon" />
+
+  <!-- review the experiment -->
+  <node pkg="aclswarm" type="review_bag.py" name="reviewer" output="screen" />
+
+  <!-- rviz visualization -->
+  <node pkg="rviz" type="rviz" name="rviz" />
+
+  <!-- play the bag in a new window -->
+  <node pkg="rosbag" type="play" name="bagplay" args="--clock --pause $(arg bag) -s $(arg s) -r $(arg r)" launch-prefix="xterm -hold -geometry 100x20 -e" />
+
+</launch>
