@@ -16,6 +16,6 @@
   <node pkg="rviz" type="rviz" name="rviz" />
 
   <!-- play the bag in a new window -->
-  <node pkg="rosbag" type="play" name="bagplay" args="--clock --pause $(arg bag) -s $(arg s) -r $(arg r)" launch-prefix="xterm -hold -geometry 100x20 -e" />
+  <node pkg="rosbag" type="play" name="bagplay" args="--clock $(arg bag) -s $(arg s) -r $(arg r)" launch-prefix="xterm -hold -geometry 100x20 -e" />
 
 </launch>

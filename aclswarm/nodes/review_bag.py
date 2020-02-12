@@ -196,7 +196,7 @@ class Reviewer:
 
         elif self.state is State.FLYING:
             if self.has_converged():
-                self.next_state(State.IN_FORMATION)
+                self.next_state(State.IN_FORMATION, reset=True)
             elif self.has_gridlocked():
                 self.next_state(State.GRIDLOCK)
 
