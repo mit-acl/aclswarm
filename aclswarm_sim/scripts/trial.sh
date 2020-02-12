@@ -57,7 +57,7 @@ if [[ "$formation" == simform* ]]; then
   formation="simform"
 
   # this generates a formation and sets the appropriate rosparam
-  rosrun aclswarm_sim generate_random_formation.py -l 15 -w 15 -h 2 $mcseed "$numAgents"
+  rosrun aclswarm_sim generate_random_formation.py -l 15 -w 15 -h 2 -fc $mcseed "$numAgents"
 fi
 
 # cheat: the launch file also does this, but there is a dependency loop unless we do this

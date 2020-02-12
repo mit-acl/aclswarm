@@ -348,8 +348,8 @@ class Supervisor:
         return not gridlocked
 
     def has_cycled_through_formations(self):
-        # We want to cycle through formations and end up converged to first one
-        return self.curr_formation_idx == len(self.formations['formations'])
+        # We want to cycle through formations and end up converged to last one
+        return self.curr_formation_idx == len(self.formations['formations'])-1
 
     #
     # Actions

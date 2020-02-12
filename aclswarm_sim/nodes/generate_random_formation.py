@@ -102,7 +102,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--length', type=float, help="length of formation volume", default=10)
     parser.add_argument('-w', '--width', type=float, help="width of formation volume", default=10)
     parser.add_argument('-h', '--height', type=float, help="height of formation volume", default=10)
-    parser.add_argument('-m', '--min-dist', type=float, help="centroid distances", default=1.5)
+    parser.add_argument('-m', '--min-dist', type=float, help="centroid distances", default=2)
     parser.add_argument('-k', '--num-formations', type=int, help="num of formations", default=2)
     parser.add_argument('-s', '--seed', type=int, help="random seed for repeatability", default=None)
     parser.add_argument('-fc', help="complete or randomly sparse graph", action="store_true")
