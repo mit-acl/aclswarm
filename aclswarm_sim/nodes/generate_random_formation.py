@@ -40,7 +40,7 @@ def generate_formation(name, n, l, w, h, min_dist):
         # uniformly sample a point
         pt = sample_point(l, w, h)
 
-        if np.atleast_2d(pts).shape[0] > 1:
+        if np.atleast_2d(pts).shape[1] > 0: # cols are zero when pts empty
             # check if this sampled cylinder collides with any other cylinder
             for p in np.atleast_2d(pts):
                 d = np.linalg.norm(pt[0:2] - p[0:2])
