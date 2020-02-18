@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+Reviewing a bagged hardware experiment
+
+Run `roslaunch aclswarm review.launch bag:=<...>`
+Use `rosservice call /in_formation` once formation has converged.
+If `rosservice call /in_formation` is called during gridlock, trial is aborted.
+"""
 
 from __future__ import division
 
@@ -11,6 +18,8 @@ import rospy
 import numpy as np; np.set_printoptions(linewidth=500)
 
 import tf2_ros
+
+from std_srvs.srv import Trigger, TriggerResponse
 
 from std_msgs.msg import UInt8MultiArray
 from geometry_msgs.msg import PoseStamped, Vector3Stamped, TransformStamped
@@ -25,6 +34,7 @@ class State:
     IN_FORMATION = 6
     GRIDLOCK = 7
     COMPLETE = 8
+    TERMINATE = 9
 
 
 def S(state):
@@ -36,6 +46,7 @@ def S(state):
     if state == State.IN_FORMATION: return "IN_FORMATION"
     if state == State.GRIDLOCK: return "GRIDLOCK"
     if state == State.COMPLETE: return "\033[32;1mCOMPLETE\033[0m"
+    if state == State.TERMINATE: return "\033[31;1mTERMINATE\033[0m"
 
 
 class Reviewer:
@@ -43,17 +54,16 @@ class Reviewer:
     BUFFER_SECONDS = 1
 
     # times for state machine---in units of seconds
-    CONVERGED_WAIT = 0
     FORMATION_WAIT = 1
 
     # thresholds
-    ZERO_POS_THR = 0.05 # m
-    ORIG_ZERO_VEL_THR = 0.125 # m/s
     AVG_ACTIVE_CA_THR = 0.95 # percent
 
-    NUM_FORMATIONS_IN_TRIAL = 3
+    NUM_TRIALS = 6
+    NUM_FORMATIONS_IN_TRIAL = 1
 
     def __init__(self):
+        self.datafile = './aclswarm_review.csv'
 
         # find out which vehicles are in the swarm
         topics = [t for t,tt in rospy.get_published_topics()]
@@ -67,8 +77,6 @@ class Reviewer:
 
         self.log = {}
         self.vstates = {}
-        self.voriggoal = {}
-        self.vsafegoal = {}
         self.vstatus = {}
 
         for idx, veh in enumerate(self.vehs):
@@ -78,12 +86,6 @@ class Reviewer:
             # imu/vio state of each vehicle
             rospy.Subscriber('/{}/state_throttle'.format(veh), SnapState,
                     lambda msg, v=veh: self.stateCb(msg, v), queue_size=1)
-            # the desired velocity goal from the distributed motion planner
-            rospy.Subscriber('/{}/distcmd_throttle'.format(veh), Vector3Stamped,
-                    lambda msg, v=veh: self.origGoalCb(msg, v), queue_size=1)
-            # the safe, collision-free version of the motion planner vel goal
-            rospy.Subscriber('/{}/goal_throttle'.format(veh), QuadGoal,
-                    lambda msg, v=veh: self.safeGoalCb(msg, v), queue_size=1)
             # status flags from Safety goal (i.e., collision avoidance active)
             rospy.Subscriber('/{}/safety/status_throttle'.format(veh), SafetyStatus,
                     lambda msg, v=veh: self.statusCb(msg, v), queue_size=1)
@@ -95,14 +97,18 @@ class Reviewer:
                     lambda msg, v=veh: self.assignmentCb(msg, v), queue_size=1)
 
         rospy.Subscriber('/formation', Formation, self.formationCb, queue_size=1)
+        rospy.Service('/in_formation', Trigger, self.inFormationCb)
 
         # initialize state machine variables
         self.state = State.WAITING_ON_FORMATION
         self.last_state = None
         self.timer_ticks = -1
+        self.trial_num = 1
         self.curr_formation_idx = -1
         self.received_formation = False
         self.received_assignment = False
+        self.converged = False
+        self.abort = False
         self.tick_rate = 50
         self.is_logging = False
 
@@ -147,12 +153,6 @@ class Reviewer:
         t.transform.rotation.w = msg.quat.w
         self.tf.sendTransform(t)
 
-    def origGoalCb(self, msg, veh):
-        self.voriggoal[veh] = msg
-
-    def safeGoalCb(self, msg, veh):
-        self.vsafegoal[veh] = msg
-
     def formationCb(self, msg):
         self.received_formation = True
 
@@ -164,6 +164,14 @@ class Reviewer:
 
     def statusCb(self, msg, veh):
         self.vstatus[veh] = msg
+
+    def inFormationCb(self, req):
+        if self.state is State.GRIDLOCK:
+            self.abort = True
+            return TriggerResponse(success=False, message='aborted')
+
+        self.converged = True
+        return TriggerResponse(success=True, message='converged')
 
     #
     # State Machine
@@ -180,16 +188,19 @@ class Reviewer:
 
         if self.state is State.WAITING_ON_FORMATION:
             if self.has_completed_trial():
-                self.next_state(State.COMPLETE)
+                if self.abort:
+                    self.abort = False
+                    self.next_state(State.TERMINATE)
+                else:
+                    self.next_state(State.COMPLETE)
             elif self.has_received_formation() and self.has_elapsed(self.FORMATION_WAIT):
-                self.clear_signals()
                 self.received_formation = False
                 self.received_assignment = False
                 self.curr_formation_idx += 1
                 self.next_state(State.WAITING_ON_ASSIGNMENT)
 
         elif self.state is State.WAITING_ON_ASSIGNMENT:
-            if self.has_set_assignment() and self.has_started_flying():
+            if self.has_set_assignment():
                 self.received_assignment = False
                 self.start_logging()
                 self.next_state(State.FLYING)
@@ -201,18 +212,23 @@ class Reviewer:
                 self.next_state(State.GRIDLOCK)
 
         elif self.state is State.IN_FORMATION:
-            if self.has_elapsed(self.CONVERGED_WAIT):
-                self.stop_logging()
-                self.next_state(State.WAITING_ON_FORMATION)
-            elif not self.has_converged():
-                self.next_state(State.FLYING)
+            self.stop_logging()
+            self.converged = False
+            self.next_state(State.WAITING_ON_FORMATION)
 
         elif self.state is State.GRIDLOCK:
             if self.has_left_gridlock():
                 self.next_state(State.FLYING)
+            elif self.has_aborted():
+                self.stop_logging()
+                self.next_state(State.WAITING_ON_FORMATION)
 
         elif self.state is State.COMPLETE:
             self.complete()
+            self.next_trial()
+
+        elif self.state is State.TERMINATE:
+            self.next_trial()
 
         #
         # Log signals
@@ -259,7 +275,7 @@ class Reviewer:
         return elapsed >= secs
 
     def has_completed_trial(self):
-        return self.curr_formation_idx >= self.NUM_FORMATIONS_IN_TRIAL
+        return self.curr_formation_idx >= (self.NUM_FORMATIONS_IN_TRIAL-1)
 
     def has_received_formation(self):
         return self.received_formation
@@ -267,30 +283,11 @@ class Reviewer:
     def has_set_assignment(self):
         return self.received_assignment
 
-    def has_started_flying(self):
-        c = [veh for (veh,msg) in self.voriggoal.items() if rospy.Time.now() - msg.header.stamp < rospy.Duration(0.1)]
-        return len(c) == len(self.vehs)
-
     def has_converged(self):
-        if 'converged_orig_vel' not in self.buffers:
-            self.buffers['converged_orig_vel'] = deque(maxlen=self.BUFFLEN)
+        return self.converged
 
-        # for convenience (note, deque is mutable---'by ref')
-        buff_orig_vel = self.buffers['converged_orig_vel']
-
-        # sample signals we need to determine predicate
-        buff_orig_vel.append(self.sample_origgoal_speed_heading())
-
-        # If we don't have enough data, we can't know the answer
-        if len(buff_orig_vel) < self.BUFFLEN:
-            return False
-
-        # average each sample over vehicles
-        avg_orig_mag, avg_orig_ang = np.array(buff_orig_vel).mean(axis=0).T
-
-        # the swarm has converged to the desired formation
-        # if the original motion planning goal is zero.
-        return (avg_orig_mag < self.ORIG_ZERO_VEL_THR).all()
+    def has_aborted(self):
+        return self.abort
 
     def has_gridlocked(self):
         if 'gridlocked_active_ca' not in self.buffers:
@@ -328,10 +325,14 @@ class Reviewer:
     # Actions
     #
 
-    def clear_signals(self):
-        self.voriggoal = {}
-        self.vsafegoal = {}
-        self.vstatus = {}
+    def next_trial(self):
+        if self.trial_num < self.NUM_TRIALS:
+            self.trial_num += 1
+            self.curr_formation_idx = -1
+            self.log = {}
+            self.next_state(State.WAITING_ON_FORMATION)
+        else:
+            rospy.signal_shutdown('Trials completed.')
 
     def start_logging(self):
         if self.is_logging: return
@@ -363,31 +364,18 @@ class Reviewer:
         rospy.loginfo("Convergence time: {:.2f}".format(self.log['time'][-1]))
 
     def complete(self):
-
-        # # write logs to file
-        # with open(self.datafile, 'a') as f:
-        #     writer = csv.writer(f)
-        #     writer.writerow([self.trial]
-        #                         + self.log['dist'].tolist()
-        #                         + self.log['time']
-        #                         + self.log['time_avoidance']
-        #                         + self.log['assignments'])
-
-        return
+        # write logs to file
+        with open(self.datafile, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow([self.trial_num]
+                                + self.log['dist'].tolist()
+                                + self.log['time']
+                                + self.log['time_avoidance']
+                                + self.log['assignments'])
 
     #
     # Helpers
     #
-
-    def sample_origgoal_speed_heading(self):
-        return [(np.linalg.norm((msg.vector.x, msg.vector.y, msg.vector.z)),
-                    np.arctan2(msg.vector.y, msg.vector.x))
-                for (veh,msg) in self.voriggoal.items()]
-
-    def sample_safegoal_speed_heading(self):
-        return [(np.linalg.norm((msg.vel.x, msg.vel.y, msg.vel.z)),
-                    np.arctan2(msg.vel.y, msg.vel.x))
-                for (veh,msg) in self.vsafegoal.items()]
 
     def sample_collision_avoidance_active(self):
         return [msg.collision_avoidance_active
@@ -400,12 +388,6 @@ class Reviewer:
     def sample_position_y(self):
         return [msg.pose.position.y
                 for (veh,msg) in self.vstates.items()]
-
-    def wrapToPi(self, x):
-        return (x + np.pi) % (2 * np.pi) - np.pi
-
-    def wrapTo2Pi(self, x):
-        return x % (2 * np.pi)
 
     def log_signals(self):
         # sample the necessary signals

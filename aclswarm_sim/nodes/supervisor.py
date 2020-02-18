@@ -39,7 +39,7 @@ def S(state):
     if state == State.IN_FORMATION: return "IN_FORMATION"
     if state == State.GRIDLOCK: return "GRIDLOCK"
     if state == State.COMPLETE: return "\033[32;1mCOMPLETE\033[0m"
-    if state == State.TERMINATE: return "\033[31;1mTERMINATE\033m"
+    if state == State.TERMINATE: return "\033[31;1mTERMINATE\033[0m"
 
 
 class Supervisor:
