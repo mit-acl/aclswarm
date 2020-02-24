@@ -14,7 +14,8 @@ cvx_startup;
 
 numAgt = [3 10 50 100 150 200];
 % numAgt = [3 5 10];
-numAgt = 4;
+% numAgt = 4;
+numAgt = round(linspace(60,200,15));
 
 % Number of tests
 numTst = length(numAgt);
@@ -36,13 +37,13 @@ n = numAgt(i); % Number of agents
 % Random desired formation cooridnates
 Qs = rand(3,n) * 5;
 
-Qs = [0 2 2 0; 0 0 2 2; 2.5 3.5 4.5 1.5];
+% Qs = [0 2 2 0; 0 0 2 2; 2.5 3.5 4.5 1.5];
 
 % Random adjacency matrix
 adj = ones(n) - diag(ones(n,1));  % Complete graph
 
 % Choose (at most) k edges to remove:
-k = 0;
+k = n-3;
 rowIdx = randi(n, 1,k);
 colIdx = randi(n, 1,k);    
 for j = 1 : k
@@ -50,21 +51,21 @@ for j = 1 : k
     adj(colIdx(j),rowIdx(j)) = 0;
 end
 
-% SDP approach via CVX
-fprintf('Running SDP solver for n = %i ...\n', i);
-tic
-Asdp = SDPGainDesign3D(Qs, adj);
-Tsdp(i) = toc
+% % SDP approach via CVX
+% fprintf('Running SDP solver for n = %i ...\n', n);
+% tic
+% Asdp = SDPGainDesign3D_Original(Qs, adj);
+% Tsdp(i) = toc
 
 % % Eigenvalues of the gain matrix
-% eigSdp = sort( abs(eig(Asdp)) )'
+% eigSdp = sort( abs(eig(Asdp)) )
 % trace(Asdp)
 
 
 % Customized ADMM approach 
-fprintf('Running ADMM solver for n = %i ...\n', i);
+fprintf('Running ADMM solver for n = %i ...\n', n);
 tic
-Aadmm = ADMMGainDesign3D(Qs, adj)
+Aadmm = ADMMGainDesign3D(Qs, adj);
 Tadmm(i) = toc
 
 % % Eigenvalues of  the gain matrix
