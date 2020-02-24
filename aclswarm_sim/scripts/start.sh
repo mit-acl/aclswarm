@@ -128,7 +128,7 @@ if [ ! -z "$rtxt" ]; then
   # echo "Y: ${circles_y[@]}"
 fi
 
-for _sim in $(eval echo {01..$num}); do
+for _sim in $(seq -f "%02g" 1 $num); do
   _pane=`echo "$_sim - 1" | bc`
   if [ -z "$rtxt" ]; then
     x=$(echo "($_pane % 5) * 1.5 - 4" | bc)
@@ -149,7 +149,7 @@ tmux set-window-option -t sims:0 synchronize-panes on
 
 make_tmux_session aclswarm $num
 
-for _sim in $(eval echo {01..$num}); do
+for _sim in $(seq -f "%02g" 1 $num); do
   _pane=`echo "$_sim - 1" | bc`
   _veh="SQ${_sim}s"
   tmux send-keys -t aclswarm:0.${_pane} "roslaunch aclswarm start.launch veh:=$_veh throttle:=false" C-m
