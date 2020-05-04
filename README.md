@@ -1,7 +1,13 @@
 ACL Swarm
 =========
 
-ROS implementation of a formation flying pipeline with distributed motion planning, decentralized task assignment, and onboard localization.
+ROS implementation of a formation flying pipeline with distributed motion planning, decentralized task assignment, and onboard localization---*all running onboard each vehicle*.
+
+In this pipeline, an operator dispatches a desired formation shape to a team of multirotors. Each multirotor needs only the relative translation to each of its neighbors, a subset of the team defined by the desired formation. These relative translations make up a vehicle's local knowledge and can be measured using methods such as RGB-D sensors or communication.
+
+Upon receiving a desired formation (or to break gridlocks), we would like multirotors to assign themselves to a point in the formation that is closest to their current position. Because each vehicle only has *local* knowledge of the team, we present a decentralized task assignment algorithm wherein each vechicle auctions on its preferred formation points using only its understanding of its neighbors positions. Using consensus, global convergence is achieved with limited communication.
+
+Using these techniques with an off-the-shelf VIO/SLAM system, large aerial formations can be achieved without external infrastructure or global knowledge.
 
 ## Video
 
