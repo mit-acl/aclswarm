@@ -1,0 +1,21 @@
+- git:
+    local-name: aclswarm
+    uri: https://github.com/mit-acl/aclswarm.git
+- git:
+    local-name: behavior_selector
+    uri: https://gitlab.com/mit-acl/fsw/behavior_selector.git
+- git:
+    local-name: comm_monitor
+    uri: https://gitlab.com/mit-acl/fsw/snap-stack/comm_monitor.git
+- git:
+    local-name: outer_loop
+    uri: https://gitlab.com/mit-acl/fsw/snap-stack/outer_loop.git
+- git:
+    local-name: snap
+    uri: https://gitlab.com/mit-acl/fsw/snap-stack/snap.git
+- git:
+    local-name: snap_sim
+    uri: https://gitlab.com/mit-acl/fsw/snap-stack/snap_sim.git
+- git:
+    local-name: snapstack_msgs
+    uri: https://gitlab.com/mit-acl/fsw/snap-stack/snapstack_msgs.git
