@@ -41,13 +41,13 @@ $ catkin build
 $ source ../devel/setup.bash
 ```
 
-To run a simulation (referred to as a *trial*) use the following incantation. **There must not be a `roscore` running** before you run this step.
+To run a simulation (referred to as a *trial*) use the following incantation. There must **not** be a `roscore` running before you run this step.
 
 ```bash
 $ rosrun aclswarm_sim trials.sh -f swarm6_3d -i
 ```
 
-This will spin up a simulation and open an `rviz` window and an `rqt_gui` window. Wait for the following message in the terminal (depending on your machine you may need to wait a few seconds after this message for good measure):
+This will spin up a simulation and open an `rviz` window (see **Visualization** section below) and an `rqt_gui` window. Wait for the following message in the terminal (depending on your machine you may need to wait a few seconds after this message for good measure):
 
 ```bash
 Simulation initialized. You may now press 'START'.
@@ -68,3 +68,15 @@ To run an experiment, follow this sequence:
 4. Press **END** to gracefully land the vehicles in their current x-y position.
 5. Press **E-STOP** to emergency stop, which immediately kills the motors.
 
+### Visualization
+
+We use rviz to visualize the formation. In the image below, the elements represented are as follows
+
+  - **Quadrotor meshes**: the position of each vehicle in the (unknown) global frame
+  - **Black spheres**: the desired formation aligned to the swarm via centralized Arun's method. These are **only for debugging** and this data is not used in the pipeline. That is why the UAVs often do not end up at these points; instead, they serve to give a rough indication of what the swarm is doing.
+  - **Blue lines**: Desired command calculated by the distributed motion planning on-board each UAV.
+  - **Red lines**: Output of `safety` node --- takes the desired command (blue lines) and implements collision avoidance if needed.
+
+<p align="center">
+  <img src=".github/aclswarm_sim.png" alt="ACL swarm rviz visualization" />
+</p>
