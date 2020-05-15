@@ -87,7 +87,7 @@ if [ $use_leader == "true" ]; then
 fi
 roslaunch aclswarm operator.launch "formations:=$formation" load_vehicles:=false throttle:=false $extras &
 
-rviz >/dev/null 2>&1 &
+rviz -d $(rospack find aclswarm_sim)/config/aclswarm.rviz >/dev/null 2>&1 &
 
 #
 # Set room bounds for simulation
