@@ -9,6 +9,24 @@ Upon receiving a desired formation (or to break gridlocks), we would like multir
 
 Using these techniques with an off-the-shelf VIO/SLAM system, large aerial formations can be achieved without external infrastructure or global knowledge.
 
+## Citation
+
+If you use this code in your research, please cite our paper:
+
+- P. C. Lusk, X. Cai, S. Wadhwania, A. Paris, K. Fathian and J. P. How, "[A Distributed Pipeline for Scalable, Deconflicted Formation Flying](https://arxiv.org/abs/2003.01851)," in IEEE Robotics and Automation Letters, vol. 5, no. 4, pp. 5213-5220, Oct. 2020, doi: 10.1109/LRA.2020.3006823.
+
+```bibtex
+@ARTICLE{Lusk2020formation,
+  author={P. C. {Lusk} and X. {Cai} and S. {Wadhwania} and A. {Paris} and K. {Fathian} and J. P. {How}},
+  journal={IEEE Robotics and Automation Letters}, 
+  title={A Distributed Pipeline for Scalable, Deconflicted Formation Flying}, 
+  year={2020},
+  volume={5},
+  number={4},
+  pages={5213-5220}
+}
+```
+
 ## Video
 
 <p align="center">
