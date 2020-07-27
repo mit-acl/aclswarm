@@ -112,8 +112,8 @@ void CoordinationROS::spin()
       if (formation_->gains.size() == 0) {
         // solve for gains
         auto timestart = ros::Time::now();
-        formation_->gains = admm_->calculateFormationGains(formation_->qdes,
-                                                          formation_->adjmat);
+        formation_->gains = admm_->solve(formation_->qdes.transpose(),
+                                          formation_->adjmat.cast<double>());
         ROS_INFO_STREAM("Generated gains in " <<
                           (ros::Time::now() - timestart).toSec() << " secs.");
       }
@@ -173,7 +173,7 @@ void CoordinationROS::init()
   // Instantiate module objects for tasks
   //
 
-  admm_.reset(new ADMM(n_));
+  admm_.reset(new admm::Solver());
   controller_.reset(new DistCntrl(vehid_, n_));
   auctioneer_.reset(new Auctioneer(vehid_, n_, verbose));
 

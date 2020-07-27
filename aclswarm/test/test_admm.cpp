@@ -2,7 +2,7 @@
 
 #include <eigen3/unsupported/Eigen/KroneckerProduct>
 
-#include <aclswarm/admm.h>
+#include <admm/solver.h>
 #include <aclswarm/utils.h>
 
 using namespace acl::aclswarm;
@@ -10,7 +10,7 @@ using namespace acl::aclswarm;
 TEST(ADMMTest, fourAgentSquareFullyConnected)
 {
   static constexpr size_t n = 4;
-  ADMM admm(n);
+  admm::Solver admm;
 
   AdjMat adj = AdjMat::Ones(n, n) - AdjMat::Identity(n, n);
   PtsMat p = PtsMat::Zero(n, 3);
@@ -20,21 +20,21 @@ TEST(ADMMTest, fourAgentSquareFullyConnected)
   p(2,0) = 2.0; p(2,1) = 2.0; p(2,2) = 4.5;
   p(3,0) = 0.0; p(3,1) = 2.0; p(3,2) = 1.5;
 
-  GainMat A = admm.calculateFormationGains(p, adj);
+  GainMat A = admm.solve(p.transpose(), adj.cast<double>());
 
   Eigen::MatrixXd Amatlab(A.rows(), A.cols());
-  Amatlab << -0.50, 0.00, 0.00, 0.25, 0.25, 0.00, 0.00, 0.00, 0.00, 0.25,-0.25, 0.00,
-             -0.00,-0.50, 0.00,-0.25, 0.25, 0.00, 0.00, 0.00, 0.00, 0.25, 0.25, 0.00,
-              0.00, 0.00,-0.70, 0.00, 0.00, 0.20, 0.00, 0.00, 0.10, 0.00, 0.00, 0.40,
-              0.25,-0.25, 0.00,-0.50, 0.00, 0.00, 0.25, 0.25, 0.00, 0.00, 0.00, 0.00,
-              0.25, 0.25, 0.00, 0.00,-0.50, 0.00,-0.25, 0.25, 0.00,-0.00,-0.00, 0.00,
-              0.00, 0.00, 0.20, 0.00, 0.00,-0.70, 0.00, 0.00, 0.40, 0.00, 0.00, 0.10,
-             -0.00, 0.00, 0.00, 0.25,-0.25, 0.00,-0.50,-0.00, 0.00, 0.25, 0.25, 0.00,
-             -0.00, 0.00, 0.00, 0.25, 0.25, 0.00,-0.00,-0.50, 0.00,-0.25, 0.25, 0.00,
-              0.00, 0.00, 0.10, 0.00, 0.00, 0.40, 0.00, 0.00,-0.30, 0.00, 0.00,-0.20,
-              0.25, 0.25, 0.00, 0.00,-0.00, 0.00, 0.25,-0.25, 0.00,-0.50,-0.00, 0.00,
-             -0.25, 0.25, 0.00, 0.00,-0.00, 0.00, 0.25, 0.25, 0.00,-0.00,-0.50, 0.00,
-              0.00, 0.00, 0.40, 0.00, 0.00, 0.10, 0.00, 0.00,-0.20, 0.00, 0.00,-0.30;
+  Amatlab << -0.50,    0,    0, 0.25, 0.25,    0,    0,    0,    0, 0.25,-0.25,    0,
+                 0,-0.50,    0,-0.25, 0.25,    0,    0,    0,    0, 0.25, 0.25,    0,
+                 0,    0,-0.70,    0,    0, 0.20,    0,    0, 0.10,    0,    0, 0.40,
+              0.25,-0.25,    0,-0.50,    0,    0, 0.25, 0.25,    0,    0,    0,    0,
+              0.25, 0.25,    0,    0,-0.50,    0,-0.25, 0.25,    0,    0,    0,    0,
+                 0,    0, 0.20,    0,    0,-0.70,    0,    0, 0.40,    0,    0, 0.10,
+                 0,    0,    0, 0.25,-0.25,    0,-0.50,    0,    0, 0.25, 0.25,    0,
+                 0,    0,    0, 0.25, 0.25,    0,    0,-0.50,    0,-0.25, 0.25,    0,
+                 0,    0, 0.10,    0,    0, 0.40,    0,    0,-0.30,    0,    0,-0.20,
+              0.25, 0.25,    0,    0,    0,    0, 0.25,-0.25,    0,-0.50,    0,    0,
+             -0.25, 0.25,    0,    0,-   0,    0, 0.25, 0.25,    0,-   0,-0.50,    0,
+                 0,    0, 0.40,    0,    0, 0.10,    0,    0,-0.20,    0,    0,-0.30;
 
   double err = (A - Amatlab).norm();
 
@@ -43,10 +43,48 @@ TEST(ADMMTest, fourAgentSquareFullyConnected)
 
 // ----------------------------------------------------------------------------
 
-TEST(ADMMTest, fourAgentSquareNonCompleteZeroBlocks)
+TEST(ADMMTest, fourAgentSquareNonComplete)
+{
+  static constexpr size_t n = 4;
+  admm::Solver admm;
+
+  AdjMat adj = AdjMat::Ones(n, n) - AdjMat::Identity(n, n);
+  adj(0,2) = 0; adj(2,0) = 0;
+  adj(1,3) = 0; adj(3,1) = 0;
+  PtsMat p = PtsMat::Zero(n, 3);
+
+  p(0,0) = 0.0; p(0,1) = 0.0; p(0,2) = 2.5;
+  p(1,0) = 2.0; p(1,1) = 0.0; p(1,2) = 3.5;
+  p(2,0) = 2.0; p(2,1) = 2.0; p(2,2) = 4.5;
+  p(3,0) = 0.0; p(3,1) = 2.0; p(3,2) = 1.5;
+
+  GainMat A = admm.solve(p.transpose(), adj.cast<double>());
+
+  Eigen::MatrixXd Amatlab(A.rows(), A.cols());
+  Amatlab << -0.500,     0,     0, 0.250, 0.250,     0,     0,     0,     0, 0.250,-0.250,     0,
+                  0,-0.500,     0,-0.250, 0.250,     0,     0,     0,     0, 0.250, 0.250,     0,
+                  0,     0,-0.750,     0,     0, 0.375,     0,     0,     0,     0,     0, 0.375,
+              0.250,-0.250,     0,-0.500,     0,     0, 0.250, 0.250,     0,     0,     0,     0,
+              0.250, 0.250,     0,     0,-0.500,     0,-0.250, 0.250,     0,     0,     0,     0,
+                  0,     0, 0.375,     0,     0,-0.750,     0,     0, 0.375,     0,     0,     0,
+                  0,     0,     0, 0.250,-0.250,     0,-0.500,     0,     0, 0.250, 0.250,     0,
+                  0,     0,     0, 0.250, 0.250,     0,     0,-0.500,     0,-0.250, 0.250,     0,
+                  0,     0,     0,     0,     0, 0.375,     0,     0,-0.250,     0,     0,-0.125,
+              0.250, 0.250,     0,     0,     0,     0, 0.250,-0.250,     0,-0.500,     0,     0,
+             -0.250, 0.250,     0,     0,     0,     0, 0.250, 0.250,     0,     0,-0.500,     0,
+                  0,     0, 0.375,     0,     0,     0,     0,     0,-0.125,     0,     0,-0.250;
+
+  double err = (A - Amatlab).norm();
+
+  EXPECT_NEAR(err, 0, 1e-8);
+}
+
+// ----------------------------------------------------------------------------
+
+TEST(ADMMTest, nineAgentSquareNonCompleteZeroBlocks)
 {
   static constexpr size_t n = 9;
-  ADMM admm(n);
+  admm::Solver admm;
 
   AdjMat adj = AdjMat::Ones(n, n) - AdjMat::Identity(n, n);
   adj(0,6) = 0;
@@ -70,13 +108,7 @@ TEST(ADMMTest, fourAgentSquareNonCompleteZeroBlocks)
   p(7,0) =  0.4370445360276376; p(7,1) = -5.7714142992744755; p(7,2) = 0.2531727259898202;
   p(8,0) = -6.1065377928157310; p(8,1) = -5.7852241311701940; p(8,2) = 1.7663507973073431;
 
-  GainMat A = admm.calculateFormationGains(p, adj);
-
-  std::cout << std::endl << std::endl;
-  std::cout << adj.cast<int>() << std::endl;
-  std::cout << std::endl << std::endl;
-  std::cout << A << std::endl;
-  std::cout << std::endl << std::endl;
+  GainMat A = admm.solve(p.transpose(), adj.cast<double>());
 
   // boolean not of adjmat
   Eigen::Matrix<double, n, n> adjbar = (adj.cast<double>().array() - 1.0).cwiseAbs();
@@ -86,19 +118,16 @@ TEST(ADMMTest, fourAgentSquareNonCompleteZeroBlocks)
   GainMat Asel = Eigen::kroneckerProduct(adjbar, Eigen::Matrix3d::Ones());
   GainMat Azero = Asel.cwiseProduct(A);
 
-  std::cout << Asel << std::endl;
-  std::cout << Azero << std::endl;
-
   // check if all elements of 3x3 supposed zero blocks are actually zero
   EXPECT_NEAR(Azero.sum(), 0, 1e-8);
 }
 
 // ----------------------------------------------------------------------------
 
-TEST(ADMMTest, fourAgentSquareNonCompleteBlockStructure)
+TEST(ADMMTest, nineAgentSquareNonCompleteBlockStructure)
 {
   static constexpr size_t n = 9;
-  ADMM admm(n);
+  admm::Solver admm;
 
   AdjMat adj = AdjMat::Ones(n, n) - AdjMat::Identity(n, n);
   adj(0,6) = 0;
@@ -122,7 +151,7 @@ TEST(ADMMTest, fourAgentSquareNonCompleteBlockStructure)
   p(7,0) =  0.4370445360276376; p(7,1) = -5.7714142992744755; p(7,2) = 0.2531727259898202;
   p(8,0) = -6.1065377928157310; p(8,1) = -5.7852241311701940; p(8,2) = 1.7663507973073431;
 
-  GainMat A = admm.calculateFormationGains(p, adj);
+  GainMat A = admm.solve(p.transpose(), adj.cast<double>());
 
   for (size_t i=0; i<n; ++i) {
     for (size_t j=0; j<n; ++j) {
@@ -134,13 +163,12 @@ TEST(ADMMTest, fourAgentSquareNonCompleteBlockStructure)
       // [ 0  0  c]
 
       bool sym = true;
-      sym = block(0,0) ==  block(1,1) &&
-            block(1,0) == -block(0,1) &&
-            block(0,2) ==  0 &&
-            block(2,0) ==  0 &&
-            block(1,2) ==  0 &&
-            block(2,1) ==  0 &&
-            block(2,2) !=  0;
+      sym = (block(0,0) + -block(1,1))<1e-8 &&
+            (block(1,0) +  block(0,1))<1e-8 &&
+            block(0,2)<1e-8 &&
+            block(2,0)<1e-8 &&
+            block(1,2)<1e-8 &&
+            block(2,1)<1e-8;
 
       EXPECT_TRUE(sym);
     }
@@ -163,12 +191,12 @@ TEST(ADMMTest, fourAgentSquareNonCompleteBlockStructure)
 TEST(ADMMTest, fixedTraceFullyConnected)
 {
   static constexpr size_t n = 20;
-  ADMM admm(n);
+  admm::Solver admm;
 
   AdjMat adj = AdjMat::Ones(n, n) - AdjMat::Identity(n, n);
   PtsMat p = PtsMat::Random(n, 3) * 5;
 
-  GainMat A = admm.calculateFormationGains(p, adj);
+  GainMat A = admm.solve(p.transpose(), adj.cast<double>());
 
   static constexpr double d = 3;
   static constexpr double m = n - 2; // reduced dimension of problem
@@ -182,14 +210,14 @@ TEST(ADMMTest, fixedTraceFullyConnected)
 TEST(ADMMTest, fixedTraceSparse)
 {
   static constexpr size_t n = 20;
-  ADMM admm(n);
+  admm::Solver admm;
 
   AdjMat adj = AdjMat::Ones(n, n) - AdjMat::Identity(n, n);
   adj(0,5) = adj(5,0) = 0;
   adj(3,15) = adj(15,3) = 0;
   PtsMat p = PtsMat::Random(n, 3) * 5;
 
-  GainMat A = admm.calculateFormationGains(p, adj);
+  GainMat A = admm.solve(p.transpose(), adj.cast<double>());
 
   static constexpr double d = 3;
   static constexpr double m = n - 2; // reduced dimension of problem
