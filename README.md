@@ -98,3 +98,11 @@ We use rviz to visualize the formation. In the image below, the elements represe
 <p align="center">
   <img src=".github/aclswarm_sim.png" alt="ACL swarm rviz visualization" />
 </p>
+
+## FAQ
+
+1. How do I create large, random formations in simulation?
+  - The formation name `simformN` is a special keyword, where `N` is the number of vehicles in the formation. For example, `rosrun aclswarm_sim trials.sh -f simform20 -i` will create 20 vehicles with two random formations.
+
+2. In simulation, how do I specify between generating complete or noncomplete formation graphs?
+  - In `aclswarm_sim/scripts/trial.sh:60`, the call the `generate_random_formation.py` allows for the flag `-fc`. Without it, randomly generated formations are noncomplete. With it, they are fully connected.
