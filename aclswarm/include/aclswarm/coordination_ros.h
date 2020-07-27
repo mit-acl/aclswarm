@@ -25,7 +25,7 @@
 #include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/UInt8MultiArray.h>
 
-#include "aclswarm/admm.h"
+#include <admm/solver.h>
 #include "aclswarm/distcntrl.h"
 #include "aclswarm/auctioneer.h"
 #include "aclswarm/utils.h"
@@ -55,7 +55,7 @@ namespace aclswarm {
     std::vector<std::string> vehs_; ///< list of all vehicles in swarm
 
     /// \brief Modules
-    std::unique_ptr<ADMM> admm_; ///< module for 3D gain design
+    std::unique_ptr<admm::Solver> admm_; ///< module for 3D gain design
     std::unique_ptr<DistCntrl> controller_; ///< module for control task
     std::unique_ptr<Auctioneer> auctioneer_; ///< module for assignment task
 

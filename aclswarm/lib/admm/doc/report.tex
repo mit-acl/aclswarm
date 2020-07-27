@@ -1,0 +1,454 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
+
+\documentclass[a4paper]{article}
+
+\usepackage[bottom]{footmisc}
+\usepackage{xltxtra}
+\usepackage{amsfonts}
+\usepackage{polyglossia}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{dsfont}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{enumerate}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage{float}
+
+\usepackage{graphicx}
+\graphicspath{ {figures/} }
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=blue,
+}
+\urlstyle{same}
+
+% Hack to make ieeeconf and natbib get along
+% http://newsgroups.derkeiler.com/Archive/Comp/comp.text.tex/2006-02/msg00834.html
+\makeatletter
+\let\NAT@parse\undefined
+\makeatother
+\usepackage[numbers]{natbib}
+\setcitestyle{aysep={}} % remove comma
+\usepackage{usebib}
+\bibinput{refs}
+
+\geometry{a4paper,left=15mm,right=15mm,top=20mm,bottom=20mm}
+\pagestyle{fancy}
+\lhead{Parker C. Lusk}
+\chead{ACLSwarm Gain Design}
+\rhead{\today}
+\cfoot{\thepage}
+
+\setlength{\headheight}{23pt}
+% \setlength{\parindent}{0.0in}
+\setlength{\parskip}{0.03in}
+
+\newtheorem{prop}{Proposition}
+\newtheorem{defn}{Definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{cor}{Corollary}
+\newtheorem{lem}{Lemma}
+\newtheorem{rem}{Remark}
+
+\DeclarePairedDelimiterX{\inn}[2]{\langle}{\rangle}{#1, #2}
+
+\begin{document}
+\section*{Overview}
+In this note, we derive the semidefinte programming (SDP) and alternating direction method of multipliers (ADMM) gain design strategies used for the distributed motion planner of ACLSwarm~\cite{Lusk2020formation}.
+The original SDP formulation follows Fathian et al.~\cite{Fathian2018,Fathian2019}.
+The SDP formulation derived here is cast in standard form, which is particularly amenable to solving using ADMM methods as outlined in~\cite{Wen2010}.
+For completeness, we first present the distributed motion planning problem~\cite{Fathian2018}.
+
+\section*{Swarm Motion Planning}
+Our goal is to describe the formation flying strategy that brings a swarm of $n$ agents into a desired formation.
+A desired formation is defined by a graph $\mathcal{G}$ with vertices located at 3D points $p_1,\dots,p_n$ and edges connecting the vertices.
+We assume that $\mathcal{G}$ is undirected, connected, and universally rigid~\cite{Gortler2014}.
+Before the motion planning step, each agent in the swarm is assigned a unique formation point in $\mathcal{G}$ through task assignment.
+Here, we assume an identity assignment map for clarity; thus, agent 1 is assigned to $p_1$ and so on.
+
+For motion planning, we model the $i^\text{th}$ agent with single-integrator dynamics
+\begin{equation}\label{eq:agent-dynamics}
+\dot{q}_i = u_i,
+\end{equation}
+where $q_i\in\mathbb{R}^3$ is position in a common global coordinate frame (unknown to the agent) and $u_i\in\mathbb{R}^3$ is the velocity control law.
+To bring the swarm into the desired formation, the control law can be computed as
+\begin{equation}\label{eq:controllaw}
+u_i := \sum_{j\in\mathcal{N}_i} A_{ij}\left(q_j - q_i\right),
+\end{equation}
+where $\mathcal{N}_i$ is the set of neighbors to agent $i$ as defined by $\mathcal{G}$ and $A_{ij}\in\mathbb{A}$ is a constant gain matrix.
+These matrices lie in the space defined by
+\begin{equation}\label{eq:blockstruct}
+\mathbb{A} \stackrel{\text{def}}{=} \left\{ \begin{bmatrix}a&-b&0\\b&a&0\\0&0&c\end{bmatrix} : a,b,c\in\mathbb{R} \right\}.
+\end{equation}
+
+By stacking each agent's position vector into $q=\begin{bmatrix}q_1^\top&\cdots&q_n^\top\end{bmatrix}^\top\in\mathbb{R}^{3n}$, the closed-loop dynamics under the control law~\eqref{eq:controllaw} can be expressed as
+\begin{equation}\label{eq:swarm-dynamics}
+\dot{q}=Aq,
+\end{equation}
+\begin{equation}\label{eq:gainmatrix}
+A \stackrel{\text{def}}{=}
+\begin{bmatrix}
+-\sum_{j} A_{1j} & A_{12} & \cdots & A_{1n} \\
+A_{21} & -\sum_{j} A_{2j} & \cdots & A_{2n} \\
+\vdots &                          & \ddots & \vdots \\
+A_{n1} &       A_{n2}             & \cdots &  -\sum_{j} A_{nj}   
+\end{bmatrix} \in \mathbb{S}^{3n},
+\end{equation}
+where for $j\notin\mathcal{N}_i$ the $A_{ij}$ block is defined as a zero matrix and $\mathbb{S}^m$ is the space of symmetric $m\times m$ matrices.
+
+Given desired formation points $p_1,\dots,p_n$, we would like the swarm to be invariant to scale and formation heading (i.e., orientation about each agent's common $z$-axis).
+For $p_i=\begin{bmatrix}x_i&y_i&z_i\end{bmatrix}^\top$, let $\bar{p}_i\stackrel{\text{def}}{=}\begin{bmatrix}-y_i&x_i&z_i\end{bmatrix}^\top$, $\bar{\bar{p}}_i\stackrel{\text{def}}{=}\begin{bmatrix}0&0&z_i\end{bmatrix}^\top$.
+Let $e_x\stackrel{\text{def}}{=}\begin{bmatrix}1&0&0\end{bmatrix}^\top$, $e_y\stackrel{\text{def}}{=}\begin{bmatrix}0&1&0\end{bmatrix}^\top$, $e_z\stackrel{\text{def}}{=}\begin{bmatrix}0&1&0\end{bmatrix}^\top$.
+Using the matrix
+\begin{equation} \label{eq:N}
+N \stackrel{\text{def}}{=} \begin{bmatrix}
+p_1 & \bar{p}_1 & \bar{\bar{p}}_1 &  e_x & e_y & e_z \\ 
+p_2 & \bar{p}_2 & \bar{\bar{p}}_2 &  e_x & e_y & e_z \\
+\vdots &  \vdots & \vdots & \vdots & \vdots & \vdots \\ 
+p_n & \bar{p}_n & \bar{\bar{p}}_n &  e_x & e_y & e_z 
+\end{bmatrix} \in \mathbb{R}^{3n\times 6}.
+\end{equation}
+we can leverage the following theorem for swarm invariance.
+
+\begin{thm}[See {{\cite{Fathian2019,Fathian2018Dissertation}}}]\label{thm:swarm-invariance}
+Consider a swarm of agents with closed-loop dynamics~\eqref{eq:swarm-dynamics}.
+Assume blocks $A_{ij}$ in \eqref{eq:gainmatrix} are chosen such that
+\begin{enumerate}[(i)]
+  \item the columns of $N$ form a basis for $\ker(A)$,
+  \item all nonzero eigenvalues of $A$ have negative real parts.
+\end{enumerate}
+Then the swarm globally converges to the desired formation up to a translation, a rotation about the common $z$-axis, a scaling along the $z$-direction, and a scaling along the $x$-$y$ directions of the common coordinate frame.
+\end{thm}
+\begin{proof}
+Note that since \eqref{eq:swarm-dynamics} is a linear time-invariant system, trajectories will converge to $\ker(A)$.
+As $N$ is a basis of $\ker(A)$, the aggregate position vector $q$ can converge to any linear combination of the columns of $N$.
+For a complete proof, see \cite[Theorem 3, p. 29]{Fathian2018Dissertation}.
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{SDP Gain Design}
+To satisfy the conditions of Theorem~\ref{thm:swarm-invariance}, we formulate an SDP.
+We begin with the following na\"ive transcription of the swarm motion planning problem
+\begin{equation} \label{eq:naiveoptim}
+\begin{aligned}
+& \underset{A\in\mathcal{S}^{dn}_-}{\text{minimize}}
+& & \lambda_{\text{max}} \left( A \right) & \\
+& \text{subject to}
+& & AN = 0 & \\
+&&& A_{ij} \in \mathbb{A}  & \forall_{i,j} \\
+&&& A_{ij} = 0 \;   & \forall_{i} \ \forall_{j \notin \mathcal{N}_i} \\
+&&& \text{tr}(A) = \text{constant}, \\
+\end{aligned}
+\end{equation}
+where $d$ is the dimension of the $n$ formation points (i.e., 2D or 3D) and the trace constraint on $A$ prevents the problem from becoming unbounded.
+
+Note however that the objective in \eqref{eq:naiveoptim} is not very effective: the constraint that $N$ be in the kernel of $A$ requires that $\dim(N)$ of the eigenvalues of $A$ be zero.
+Hence, the objective to minimize the maximum eigenvalue of $A$ and this constraint are at odds.
+Using the orthogonal complement of $N$ (i.e., $N^\perp$), we can use restrict the optimization objective to only the non-zero eigenvalues of $A$.
+A matrix that spans the orthogonal complement of $N$ is found using the singular value decomposition (SVD) (see, e.g., Beard~\cite{Beard2002}).
+
+Let $N=USV^\top$ be the SVD of $N\in\mathbb{R}^{dn \times r}$, with $\rank(N)=r$ (for the 2D problem, $r=4$).
+The matrix $U\in\mathbb{R}^{dn\times dn}$ is decomposed into $U = \left(U_1 \;\; U_2\right)$, where $\mathcal{R}(N) = \text{span}(U_1)$, $\mathcal{N}(N^\top)=\text{span}(U_2)$, and $U_1\in\mathbb{R}^{dn\times r}\oplus U_2\in\mathbb{R}^{dn\times (dn-r)} = \mathbb{R}^{dn\times dn}$ (i.e., are orthogonal complements).
+Notice that $U_1$ also forms a basis of $\ker(A)$ since $N$ forms a basis of $\ker(A)$ and $\text{span}(U_1) = \mathcal{R}(N)$.
+Thus, the columns of $U_2$ do \textit{not} null $A$---instead, they can be used to restrict $A$ onto the orthogonal complement of $\mathcal{R}(N)$, removing the zero eigenvalues of $A$.
+Note that this restriction yields a $dn-r \times dn-r$ matrix.
+
+Using $Q:=U_2$, we can then write the following more effective optimization problem
+\begin{equation} \label{eq:sdpgain}
+\begin{aligned}
+& \underset{A\in\mathcal{S}^{dn}_-}{\text{minimize}}
+& & \lambda_{\text{max}} \left( Q^\top A Q \right) & \\
+& \text{subject to}
+& & AN = 0 & \\
+&&& A_{ij} \in \mathbb{A}  & \forall_{i,j} \\
+&&& A_{ij} = 0 \;   & \forall_{i} \ \forall_{j \notin \mathcal{N}_i} \\
+&&& \text{tr}(A) = \text{constant}, \\
+\end{aligned}
+\end{equation}
+which is found in equation (5) of~\cite{Lusk2020formation}.
+Note that this SDP gain design, as found in~\cite{Fathian2019}, does not scale well to a large number of vehicles.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Decoupling the 3D Formation Problem}
+Here, we consider a decoupling of the 3D gain design that will allow us to utilize ADMM.
+Observe from \eqref{eq:blockstruct} that $A_{ij}\in\mathbb{A}$ has a block diagonal structure which can be expressed as
+\begin{equation}\label{eq:blockstruct-decoup}
+A_{ij} = \begin{bmatrix}D_{ij} & 0 \\ 0 & c_{ij}\end{bmatrix} \in\mathbb{R}^{3\times 3}.
+\end{equation}
+This structure allows us to conclude that vehicle trajectories along the $x$-$y$ and $z$ components are decoupled and rely only on $D_ij$ and $c_{ij}$, respectively.
+Therefore, solving the 3D gain design problem~\eqref{eq:sdpgain} with $d=3$ is the same as solving a 2D subproblem and a 1D subproblem and the appropriately combining each $ij$ block as in~\eqref{eq:blockstruct-decoup}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{ADMM Gain Design}
+In~\cite{Lusk2020formation} the gain design is formulated using ADMM for SDPs~\cite{Wen2010}, which shows superior scalability and efficiency over the SDP approach.
+We first recast \eqref{eq:sdpgain} into the following standard form suitable for applying ADMM (see~\cite{Wen2010})
+\begin{equation} \label{eq:sdpstandard}
+\begin{aligned}
+& \underset{X\in\mathcal{S}^p_+}{\mathrm{minimize}}
+& & \langle C,X\rangle & \\
+& \mathrm{subject\; to}
+& & \mathcal{A}(X) = b, & \\
+\end{aligned}
+\end{equation}
+where the linear map $\mathcal{A}:\mathcal{S}^p\to\mathbb{R}^l$ is defined as $\mathcal{A}(X):=\begin{bmatrix}\langle A^{(1)}, X\rangle&\dots&\langle A^{(l)}, X\rangle\end{bmatrix}^\top$ for $l$ constraints.
+Note that the constraint $\mathcal{A}(X)=b$ is equivalent to $\mathbf{A}\mathrm{vec}(X)=b$ where
+\begin{equation}
+\mathbf{A}:=
+\begin{bmatrix}\mathrm{vec}\left(A^{(1)}\right)&\dots&\mathrm{vec}\left(A^{(l)}\right)\end{bmatrix}^\top\in\mathbb{R}^{l\times p^2}.
+\end{equation}
+In pursuit of this standard form, we consider the 2D subproblem alone ($d=2$).
+
+\begin{prop}\label{prop:sdpequiv}
+Let $\bar{A}:=-Q^\top A Q\in\mathbb{R}^{dm\times dm}$. Then $A=-Q\bar{A}Q^\top$ and Problem~\eqref{eq:sdpgain} is equivalent to 
+\begin{equation*}
+\begin{aligned}
+& \underset{\bar{A}\in\mathcal{S}^{dm}_+}{\mathrm{maximize}}
+& & \lambda_{\mathrm{min}} \left( \bar{A} \right) & \\
+& \mathrm{subject\; to}
+& & \bar{A}_{ij} \in \mathbb{A}  & \forall_{i,j} \\
+&&& \left[Q\bar{A}Q^\top\right]_{ij} = 0 \;   & \forall_{i} \ \forall_{j \notin \mathcal{N}_i} \\
+&&& \mathrm{tr}(\bar{X}) = \mathrm{constant}, \\
+\end{aligned}
+\end{equation*}
+\end{prop}
+\begin{proof}
+First, we note that $Q$ is orthogonal, therefore $Q^{-1}=Q^\top$ and $A=-Q\bar{A}Q^\top$.
+For the optimization problems to be equivalent, this coordinate transform must preserve the structure of $A$ so that $AN=0$ and $A\in\mathbb{A}$.
+It is clear to see that $AN = -Q\bar{A}Q^\top N = 0$ because $Q^\top N=N^\top Q = 0$ by orthogonality ($\text{span}(Q)=\mathcal{N}(N^\top)$).
+It remains to show that the linear transformation of $\bar{A}$ through $Q$ preserves the structure of $\mathbb{A}$.
+Because $Q$ is orthogonal, the structure of the $2\times 2$ block is simply \textit{rotated}.
+Consider the 2D complex representation of the formation problem for further insights.
+\end{proof}
+
+To bring the result of Proposition~\ref{prop:sdpequiv} into standard form, we need to bring the constraints of the gain design problem into the form of the linear constraint $\mathcal{A}(\bar{A})=\bar{b}$.
+First, we prove the following lemmas.
+
+\begin{lem}\label{lem:trzero}
+Suppose $A$ satisfies Theorem~\ref{thm:swarm-invariance}.
+Then blocks $A_{ij}=0_{3\times 3}$ if and only if $\mathrm{tr}(A_{ij})=0$.
+\end{lem}
+\begin{proof}
+Sufficiency is trivial.
+To see necessity, note that blocks $A_{ij}$ must have eigenvalues with strictly negative real parts (c.f. Theorem~\ref{thm:swarm-invariance} (ii)).
+If $\mathrm{tr}(A_{ij})=0$, then $a=c=0$ and $\lambda_{1,2} = \pm jb$ with $\Re{\lambda_{1,2}}=0$, which is a contradiction.
+\end{proof}
+
+\begin{lem}\label{lem:trblock}
+Given $C = BAB^\top$, where $B^\top=\begin{bmatrix}\mathbf{b}_1&\dots&\mathbf{b}_m\end{bmatrix}\in\mathbb{R}^{n\times m}$, the $ij\mathrm{-th}$ element is $C_{ij} = \mathrm{tr}(\mathbf{b}_j\mathbf{b}_i^\top A)$.
+\end{lem}
+\begin{proof}
+By example.
+% \begin{align*}
+% C = BAB^\top &=
+% \begin{bmatrix} \mathbf{b}^\top_1 \\ \mathbf{b}^\top_2 \end{bmatrix}
+% \begin{bmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{bmatrix}
+% \begin{bmatrix} \mathbf{b}_1 & \mathbf{b}_2 \end{bmatrix} \\
+% &=
+% \begin{bmatrix}
+% a_{11}\mathbf{b}_1 + a_{21}\mathbf{b}_2 &
+% a_{12}\mathbf{b}_1 + a_{22}\mathbf{b}_2
+% \end{bmatrix}
+% \begin{bmatrix} \mathbf{b}^\top_1 \\ \mathbf{b}^\top_2 \end{bmatrix} \\
+% &=
+% a_{11}\mathbf{b}_1\mathbf{b}^\top_1 + a_{21}\mathbf{b}_2\mathbf{b}_1^\top + a_{12}\mathbf{b}_1\mathbf{b}^\top_2 + a_{22}\mathbf{b}_2\mathbf{b}^\top_2 \\
+% &=
+%   a_{11}\begin{bmatrix}b^2_{11} & b_{11}b_{12} \\ b_{11}b_{12} & b^2_{12} \end{bmatrix}
+% + a_{21}\begin{bmatrix}b_{11}b_{21} & b_{12}b_{21} \\ b_{11}b_{22} & b_{12}b_{22} \end{bmatrix}
+% + a_{12}\begin{bmatrix}b_{11}b_{21} & b_{11}b_{22} \\ b_{12}b_{21} & b_{12}b_{22} \end{bmatrix}
+% + a_{22}\begin{bmatrix}b^2_{21} & b_{21}b_{22} \\ b_{21}b_{22} & b^2_{22} \end{bmatrix} \\
+% C_{11} &= a_{11}b^2_{11} + a_{21}b_{11}b_{21} + a_{12}b_{11}b_{21} + a_{22}b^2_{21} \\
+% C_{12} &= a_{11}b_{11}b_{12} + a_{21}b_{12}b_{21} + a_{12}b_{11}b_{22} + a_{22}b_{21}b_{22} \\
+% \end{align*}
+% \begin{align*}
+% \mathrm{tr}(\mathbf{b}_1\mathbf{b}^\top_1 A)
+% &=
+% \mathrm{tr}\left(\begin{bmatrix}b^2_{11} & b_{11}b_{12} \\ b_{11}b_{12} & b^2_{12} \end{bmatrix} A\right)
+% = \mathrm{tr}\left(\begin{bmatrix}a_{11}b^2_{11} + a_{21}b_{11}b_{12} &- \\ -& a_{12}b_{11}b_{12} + a_{22}b^2_{12} \end{bmatrix}\right)
+% = C_{11} \\
+% \mathrm{tr}(\mathbf{b}_1\mathbf{b}^\top_2 A)
+% &=
+% \mathrm{tr}\left(\begin{bmatrix}b_{11}b_{21} & b_{12}b_{21} \\ b_{11}b_{22} & b_{12}b_{22} \end{bmatrix} A\right)
+% = \mathrm{tr}\left(\begin{bmatrix}a_{11}b_{11}b_{21} + a_{21}b_{12}b_{21} &- \\ -& a_{12}b_{11}b_{22} + a_{22}b_{12}b_{22} \end{bmatrix}\right)
+% = C_{12} \\
+% \end{align*}
+% Note that 
+\end{proof}
+
+% \subsection*{Graph Constraint}
+% We start with the constraint that gain blocks $\left[Q\bar{A}Q^\top\right]_{ij} = 0$ for agents $i,j$ that are not neighbors.
+\begin{prop}\label{prop:graphconstraint-vec}
+The constraint that gain blocks $\left[Q\bar{A}Q^\top\right]_{ij} = 0$ for agents $i,j$ that are not neighbors can be written in linear form as
+\begin{equation*}
+\begin{split}
+\mathrm{vec}(\mathbf{q}_s\mathbf{q}^\top_r)^\top \mathrm{vec}(\bar{A}) = 0
+\end{split}
+\qquad\mathrm{and}\qquad
+\begin{split}
+\mathrm{vec}(\mathbf{q}_p\mathbf{q}^\top_q)^\top \mathrm{vec}(\bar{A}) = 0,
+\end{split}
+\end{equation*}
+where $Q^\top=\begin{bmatrix}\mathbf{q}_1&\dots&\mathbf{q}_{dn}\end{bmatrix}\in\mathbb{R}^{dm\times dn}$ and the indices are calculated as
+\begin{align*}
+s &:= d(i-1)+1
+&& r := d(j-1)+1 \\
+p &:= d(i-1)+1
+&& q := d(j-1)+2 \\
+\end{align*}
+where $(s,r)$ corresponds to the $1,1$ entry of $A_{ij}$ and $(p,q)$ corresponds to the $1,2$ entry.
+\end{prop}
+\begin{proof}
+Follows from Lemma~\ref{lem:trzero} and Lemma~\ref{lem:trblock}.
+\end{proof}
+
+\begin{rem}
+In the $d=1$ case, only one constraint in Proposition~\ref{prop:graphconstraint-vec} is added, using the $(s,r)$ indices.
+\end{rem}
+
+\begin{lem}\label{lem:block-index}
+Consider an $md\times md$ matrix $A$ with $d\times d$ blocks $A_{ij}$.
+The $r,c$-th element inside the $i,j$-th block can be indexed as $A_{\bar{r},\bar{c}}$ where
+\begin{align*}
+\bar{r} &= d(i-1) + r \\
+\bar{c} &= d(j-1) + c.
+\end{align*}
+\end{lem}
+
+\begin{lem}\label{lem:vec-index}
+Consider a $p\times p$ matrix $X$.
+Its vectorized form is $x=\mathrm{vec}(X)\in\mathbb{R}^{p^2}$.
+Element $X_{ij} = x_s$ where
+\begin{equation*}
+s = p(j-1) + i.
+\end{equation*}
+\end{lem}
+
+% \subsection*{Structure Constraint}
+\begin{prop}\label{prop:blockstruct-vec}
+The structure constraint $\bar{A}_{ij}\in\mathbb{A}$ (for $d=2$) can be written in linear form as
+\begin{equation*}
+\begin{bmatrix}
+0&\dots&1_{1\times s_1}&\dots&-1_{1\times s_2}&\dots&0 \\
+0&\dots&1_{1\times s_3}&\dots&\hphantom{-}1_{1\times s_4}&\dots&0 \\
+\end{bmatrix}
+\mathrm{vec}(\bar{A}) =
+\begin{bmatrix}0\\0\end{bmatrix}
+\end{equation*}
+where
+\begin{align*}
+s_1 &:= dm([d(j-1)+1]-1)+d(i-1)+1
+&& s_2 := dm([d(j-1)+2]-1)+d(i-1)+2 \\
+s_3 &:= dm([d(j-1)+2]-1)+d(i-1)+1
+&& s_4 := dm([d(j-1)+1]-1)+d(i-1)+2 \\
+\end{align*}
+\end{prop}
+\begin{proof}
+Follows from Lemma~\ref{lem:block-index} and Lemma~\ref{lem:vec-index}.
+\end{proof}
+
+For transforming the minimum eigenvalue objective into standard form, we use the epigraph formulation to recast it as a linear objective.
+Momentarily ignoring the constraints of the gain design problem, we have the following equivalences
+\begin{equation*}
+\begin{split}
+\begin{aligned}
+& \underset{\bar{A}\in\mathcal{S}^{dm}_+}{\mathrm{maximize}}
+& & \lambda_{\mathrm{min}} \left( \bar{A} \right) & \\
+\end{aligned}
+\end{split}
+\qquad\iff\qquad
+\begin{split}
+\begin{aligned}
+& \underset{\bar{A}\in\mathcal{S}^{dm}_+,\;t\in\mathbb{R}}{\mathrm{maximize}}
+& & t & \\
+& \mathrm{subject\; to}
+& & \lambda_{\mathrm{min}} \left( \bar{A} \right) \geq t \\
+\end{aligned}
+\end{split}
+\qquad\iff\qquad
+\begin{split}
+\begin{aligned}
+& \underset{\bar{A}\in\mathcal{S}^{dm}_+,\;t\in\mathbb{R}}{\mathrm{maximize}}
+& & t & \\
+& \mathrm{subject\; to}
+& & \bar{A} \succeq tI \\
+\end{aligned}
+\end{split}
+\end{equation*}
+This is further equivalent to the following minimization problem where the p.s.d constraint on $\bar{A}$ is stated explicitly
+\begin{equation}\label{eq:epigraph-eig}
+\begin{split}
+\begin{aligned}
+& \underset{\bar{A}\in\mathcal{S}^{dm}_+,\;t\in\mathbb{R}}{\mathrm{minimize}}
+& & \bar{t} & \\
+& \mathrm{subject\; to}
+& & \bar{A} - \bar{t}^{-1}I \succeq 0 \\
+&&& \bar{A} \succeq 0. \\
+\end{aligned}
+\end{split}
+\end{equation}
+
+\begin{defn}\label{defn:schur}
+Let $X$ be a symmetric matrix given by $X=\begin{bmatrix}A&B\\B^\top&C\end{bmatrix}$.
+Then the Schur complement of $A$ in $X$ can be written $X/A = C - B^\top A^{-1} B$.
+\end{defn}
+
+\begin{rem}\label{rem:schur-psd}
+Given an $X$ defined as in Definition~\ref{defn:schur}, if $A\succ0$ then $X\succeq0\iff X/A\succeq0$.
+\end{rem}
+
+Using Definition~\ref{defn:schur}, \eqref{eq:epigraph-eig} can be written in standard form as
+\begin{equation}\label{eq:standard-obj}
+\begin{split}
+\begin{aligned}
+& \underset{X\in\mathcal{S}^{2dm}_+}{\mathrm{minimize}}
+& & \langle C,X \rangle & \\
+\end{aligned}
+\end{split}
+\qquad\text{with}\qquad
+\begin{split}
+C:=\begin{bmatrix}I_{dm}&0_{dm}\\0_{dm}&0_{dm}\end{bmatrix}
+\end{split}
+,\;
+\begin{split}
+X:=\begin{bmatrix}tI_{dm}&I_{dm}\\I_{dm}&\bar{A}\end{bmatrix}.
+\end{split}
+\end{equation}
+Note that the p.s.d constraints on $X$ and $\bar{A}-\bar{t}^{-1}I$ are satisfied given Remark~\ref{rem:schur-psd} since $tI_{dm}\succ0$.
+
+\begin{rem}
+Although $X$ is a decision variable of~\eqref{eq:standard-obj}, a specific structure is required of it.
+This structure is enforced by including constraints on blocks $X_{11}$, $X_{12}=X_{21}$ and $\bar{A}$ in the linear constraint set $\mathcal{A}(X)=b$.
+\end{rem}
+
+\begin{prop}
+If the formation graph is fully-connected, then $A = -Q Q^\top$ .
+\end{prop}
+\begin{proof}
+Is this guaranteed? It seems to work empirically.
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Flat Planar Formations}
+Given a matrix $A$ that satisfies Theorem~\ref{thm:swarm-invariance}, a team of robots can achieve 3D formations.
+Alternatively, flat planar formations may also be achieved.
+In this case, note that the rank of $N$ drops by one because $\exists\alpha,\;\alpha\bar{\bar{p}}_i = e_z\;\;\forall i$.
+It is important to detect and adapt to this rank deficiency in the design of the gains $A$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{IEEEtranN}
+\bibliography{refs}
+
+\end{document}

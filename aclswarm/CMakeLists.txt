@@ -31,8 +31,8 @@ find_package(Eigen3 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} (${EIGEN3_DIR})")
 # Note: Eigen 3.2.2 or later is required
 
-## Include MATLAB generated ADMM library
-add_subdirectory(lib/codegen_admm)
+## Include formation gain ADMM solver
+add_subdirectory(lib/admm)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -133,10 +133,6 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(include ${catkin_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
-
-## Declare a C++ library
-add_library(admm src/admm.cpp)
-target_link_libraries(admm ${catkin_LIBRARIES} codegen_admm)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
