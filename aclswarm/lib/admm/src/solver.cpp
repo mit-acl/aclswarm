@@ -385,6 +385,9 @@ void Solver::parse(size_t d, size_t m, size_t n,
       nr0*(d*(d*m)*(d*m));    // each 0 in adj creates d constraints on \bar{A}
   const size_t nrb_X22_adjmat = 0;
 
+  // TODO: see MATLAB impl (ADMMGainDesign3D.m). Do we actually need to remove
+  // trivial constraints, or was that left over from debugging / designing?
+
   // trace constraint on \bar{A}
   const size_t nrA_X22_trace =
       d*m;                    // the sum of each [X_22]_ii == d*m*destrace
