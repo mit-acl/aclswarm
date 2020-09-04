@@ -4,18 +4,24 @@
 - git:
     local-name: behavior_selector
     uri: https://gitlab.com/mit-acl/fsw/behavior_selector.git
+    version: 304975f49a726bdbee1f5bdfed5d1943e9eb349e
 - git:
     local-name: comm_monitor
     uri: https://gitlab.com/mit-acl/fsw/snap-stack/comm_monitor.git
+    version: 91a7ddf207605a2221f280f129b3fca00f751df9
 - git:
     local-name: outer_loop
     uri: https://gitlab.com/mit-acl/fsw/snap-stack/outer_loop.git
+    version: 0d40045971aa816d0d408e9832459180c5414587
 - git:
     local-name: snap
     uri: https://gitlab.com/mit-acl/fsw/snap-stack/snap.git
+    version: b01cfa4731920dbac7b98b0af7311dcf984b7664
 - git:
     local-name: snap_sim
     uri: https://gitlab.com/mit-acl/fsw/snap-stack/snap_sim.git
+    version: abfed533960567e9ba166f02838c92455703ef1d
 - git:
     local-name: snapstack_msgs
     uri: https://gitlab.com/mit-acl/fsw/snap-stack/snapstack_msgs.git
+    version: 46a1911faed1a5b1be479df2f969ee4e17304f29
